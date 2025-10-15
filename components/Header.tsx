@@ -5,6 +5,9 @@ import ChevronDownIcon from './icons-redesign/ChevronDownIcon';
 import UserIcon from './icons-redesign/UserIcon';
 import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon';
 import BellIcon from './icons-redesign/BellIcon';
+import ArrowsPointingOutIcon from './icons-redesign/ArrowsPointingOutIcon';
+import ArrowsPointingInIcon from './icons-redesign/ArrowsPointingInIcon';
+
 
 // Icons for notifications
 import UserPlusIcon from './icons-redesign/UserPlusIcon';
@@ -37,6 +40,8 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
 
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
@@ -59,6 +64,18 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings }) => {
     };
   }, [userDropdownRef, notificationsRef]);
 
+  useEffect(() => {
+    const onFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+
+    return () => {
+        document.removeEventListener('fullscreenchange', onFullscreenChange);
+    };
+}, []);
+
   const handleLogoutClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsUserDropdownOpen(false);
@@ -72,6 +89,18 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings }) => {
   const handleMarkAllAsRead = (e: React.MouseEvent) => {
     e.preventDefault();
     setNotifications(notifications.map(n => ({ ...n, read: true })));
+  };
+
+  const handleToggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch((err) => {
+            alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
   };
 
 
@@ -88,6 +117,19 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings }) => {
       </div>
       
       <div className="flex items-center gap-4">
+        {/* Full Screen Button */}
+        <button
+            onClick={handleToggleFullScreen}
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+            aria-label={isFullscreen ? "Exit full screen" : "Enter full screen"}
+        >
+            {isFullscreen ? (
+                <ArrowsPointingInIcon className="w-6 h-6" />
+            ) : (
+                <ArrowsPointingOutIcon className="w-6 h-6" />
+            )}
+        </button>
+
         {/* Notifications Panel */}
         <div className="relative" ref={notificationsRef}>
             <button
