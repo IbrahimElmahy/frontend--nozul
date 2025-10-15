@@ -4,10 +4,14 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 
-const DashboardPage: React.FC = () => {
+interface DashboardPageProps {
+  onLogout: () => void;
+}
+
+const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout }) => {
   return (
     <div className="flex h-screen bg-slate-50 font-sans">
-      <Sidebar />
+      <Sidebar onLogout={onLogout} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6">
@@ -34,9 +38,13 @@ const App: React.FC = () => {
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+  };
+
   return (
     <>
-      {isAuthenticated ? <DashboardPage /> : <LoginPage onLoginSuccess={handleLogin} />}
+      {isAuthenticated ? <DashboardPage onLogout={handleLogout} /> : <LoginPage onLoginSuccess={handleLogin} />}
     </>
   );
 };

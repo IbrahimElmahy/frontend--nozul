@@ -9,9 +9,10 @@ import ClockIcon from './icons/ClockIcon';
 import CogIcon from './icons/CogIcon';
 import LogoutIcon from './icons/LogoutIcon';
 
-const NavItem: React.FC<{ icon: React.ReactNode; active?: boolean, notification?: boolean }> = ({ icon, active, notification }) => (
+const NavItem: React.FC<{ icon: React.ReactNode; active?: boolean; notification?: boolean; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void }> = ({ icon, active, notification, onClick }) => (
   <a
     href="#"
+    onClick={onClick}
     className={`relative flex items-center justify-center p-3 my-2 rounded-lg transition-colors duration-200 ${
       active ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'
     }`}
@@ -21,7 +22,16 @@ const NavItem: React.FC<{ icon: React.ReactNode; active?: boolean, notification?
   </a>
 );
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+    onLogout: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
+    const handleLogoutClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault();
+        onLogout();
+    };
+    
   return (
     <aside className="w-20 bg-slate-800 text-white flex flex-col items-center py-4">
       <div className="text-2xl font-bold text-blue-400 mb-8">ن</div>
@@ -38,7 +48,7 @@ const Sidebar: React.FC = () => {
 
       <div className="flex flex-col items-center">
         <NavItem icon={<CogIcon />} />
-        <NavItem icon={<LogoutIcon />} />
+        <NavItem icon={<LogoutIcon />} onClick={handleLogoutClick} />
       </div>
     </aside>
   );

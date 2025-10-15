@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Logo from './icons/Logo';
 import EyeIcon from './icons/EyeIcon';
 import EyeOffIcon from './icons/EyeOffIcon';
@@ -12,6 +12,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const rememberedUser = localStorage.getItem('rememberedUser');
+    if (rememberedUser) {
+      setUsername(rememberedUser);
+      setRememberMe(true);
+    }
+  }, []);
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
@@ -21,6 +30,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     event.preventDefault();
     if (username === 'admin' && password === 'password') {
         setError('');
+        if (rememberMe) {
+            localStorage.setItem('rememberedUser', username);
+        } else {
+            localStorage.removeItem('rememberedUser');
+        }
         onLoginSuccess();
     } else {
         setError('اسم المستخدم أو كلمة المرور غير صحيحة.');
@@ -53,6 +67,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             className="w-full px-4 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900"
+                            required
+                            aria-required="true"
+                            aria-invalid={!!error}
+                            aria-describedby={error ? "error-message" : undefined}
                         />
                     </div>
 
@@ -69,12 +87,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-2 pl-10 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900"
+                                required
+                                aria-required="true"
+                                aria-invalid={!!error}
+                                aria-describedby={error ? "error-message" : undefined}
                             />
                             <button
                                 type="button"
                                 onClick={togglePasswordVisibility}
                                 className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 hover:text-gray-600"
                                 aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                                aria-controls="password"
                             >
                                 {isPasswordVisible ? (
                                     <EyeOffIcon className="w-5 h-5" />
@@ -85,7 +108,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         </div>
                     </div>
                     
-                    {error && <p className="text-red-500 text-sm text-right mb-4">{error}</p>}
+                    {error && (
+                        <p
+                            id="error-message"
+                            className="text-red-500 text-sm text-right mb-4"
+                            role="alert"
+                            aria-live="assertive"
+                        >
+                          {error}
+                        </p>
+                    )}
 
                     <div className="flex justify-end items-center mb-6">
                         <label htmlFor="remember-me" className="text-sm text-gray-700 mr-2">تذكرني</label>
@@ -93,6 +125,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                             id="remember-me"
                             type="checkbox"
                             className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-200 rounded"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
                         />
                     </div>
 
