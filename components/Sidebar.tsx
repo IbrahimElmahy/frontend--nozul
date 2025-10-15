@@ -25,8 +25,8 @@ interface NavItemProps {
 
 const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificationCount, hasSubMenu, collapsed, onClick }) => {
     const baseClasses = 'flex items-center w-full p-3 my-1 rounded-lg text-base font-medium transition-colors duration-200';
-    const activeClasses = 'bg-white text-blue-700 shadow-sm';
-    const inactiveClasses = 'text-blue-100 hover:bg-blue-700';
+    const activeClasses = 'bg-white text-[#4395c6] shadow-sm';
+    const inactiveClasses = 'text-blue-100 hover:bg-[#3a82ab]';
 
     return (
         <a
@@ -40,10 +40,10 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificati
                 <>
                     <span className="mr-4 flex-grow text-right">{label}</span>
                     {notificationCount && (
-                        <span className={`flex items-center justify-center text-sm font-bold rounded-full w-6 h-6 ml-2 ${active ? 'bg-blue-100 text-blue-700' : 'bg-blue-500 text-white'}`}>{notificationCount}</span>
+                        <span className={`flex items-center justify-center text-sm font-bold rounded-full w-6 h-6 ml-2 ${active ? 'bg-blue-100 text-[#4395c6]' : 'bg-[#5badd9] text-white'}`}>{notificationCount}</span>
                     )}
                     {hasSubMenu && (
-                        <ChevronLeftIcon className={`w-6 h-6 mr-auto ${active ? 'text-blue-700' : 'text-blue-200'}`} />
+                        <ChevronLeftIcon className={`w-6 h-6 mr-auto ${active ? 'text-[#4395c6]' : 'text-blue-200'}`} />
                     )}
                 </>
             )}
@@ -55,7 +55,7 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificati
 const NavHeader: React.FC<{ collapsed: boolean, children: React.ReactNode }> = ({ collapsed, children }) => {
     if (collapsed) return null;
     return (
-        <h3 className="px-3 pt-4 pb-2 text-sm font-semibold text-blue-300 uppercase tracking-wider text-right">
+        <h3 className="px-3 pt-4 pb-2 text-sm font-semibold text-[#a4d3ed] uppercase tracking-wider text-right">
             {children}
         </h3>
     );
@@ -112,17 +112,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     
   return (
     <aside 
-        className={`bg-blue-600 text-white flex flex-col transition-all duration-300 ease-in-out ${isCollapsed ? 'w-24' : 'w-72'}`}
+        className={`bg-[#4395c6] text-white flex flex-col transition-all duration-300 ease-in-out ${isCollapsed ? 'w-24' : 'w-72'}`}
         onMouseEnter={() => setIsCollapsed(false)}
         onMouseLeave={() => setIsCollapsed(true)}
     >
-        <div className="border-b border-blue-700 transition-all duration-300 flex items-center justify-center h-20 px-4">
+        <div className="border-b border-[#3a82ab] transition-all duration-300 flex items-center justify-center h-20 px-4">
             <h1 className={`font-bold whitespace-nowrap ${isCollapsed ? 'text-2xl' : 'text-xl'}`}>
                 {isCollapsed ? 'نزلكم' : 'نزلكم لإدارة الفنادق'}
             </h1>
         </div>
 
-      <nav className="flex-grow p-3 overflow-y-auto">
+      <nav className="flex-grow p-3 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {navigationSections.map((section, index) => (
             <div key={index}>
                 <NavHeader collapsed={isCollapsed}>{section.header}</NavHeader>
@@ -137,7 +137,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
         ))}
       </nav>
 
-      <div className="p-3 border-t border-blue-700">
+      <div className="p-3 border-t border-[#3a82ab]">
         <NavItem label="تسجيل الخروج" icon={ArrowLeftOnRectangleIcon} collapsed={isCollapsed} onClick={handleLogoutClick} />
       </div>
     </aside>
