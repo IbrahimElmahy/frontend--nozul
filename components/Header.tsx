@@ -11,9 +11,6 @@ const Header: React.FC = () => {
       </div>
 
       <div className="flex items-center space-x-4 space-x-reverse">
-        <div className="relative">
-            <input type="text" placeholder="بحث..." className="w-48 px-3 py-1.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-        </div>
         <div className="flex items-center space-x-2 space-x-reverse">
           <img
             src="https://picsum.photos/id/237/200/200"
