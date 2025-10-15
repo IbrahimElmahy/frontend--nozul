@@ -13,14 +13,14 @@ interface DonutChartCardProps {
 
 const DonutChartCard: React.FC<DonutChartCardProps> = ({ title, data, centerLabel, centerValue, total, stats }) => {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm h-full flex flex-col">
-      <h3 className="text-lg font-bold text-slate-800 mb-4">{title}</h3>
+    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm h-full flex flex-col">
+      <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">{title}</h3>
       {stats && (
-          <div className="grid grid-cols-3 text-center mb-4 border-b pb-4">
+          <div className="grid grid-cols-3 text-center mb-4 border-b pb-4 dark:border-slate-700">
               {stats.map((stat, index) => (
                   <div key={index} className="px-2">
-                      <p className="text-2xl font-bold">{stat.value}</p>
-                      <p className="text-xs text-gray-500">{stat.label}</p>
+                      <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{stat.value}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
                   </div>
               ))}
           </div>
@@ -47,8 +47,8 @@ const DonutChartCard: React.FC<DonutChartCardProps> = ({ title, data, centerLabe
             </PieChart>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-sm text-gray-500">{centerLabel}</span>
-            <span className="text-3xl font-bold text-slate-800">{centerValue}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">{centerLabel}</span>
+            <span className="text-3xl font-bold text-slate-800 dark:text-slate-200">{centerValue}</span>
           </div>
         </div>
       </div>
@@ -56,7 +56,7 @@ const DonutChartCard: React.FC<DonutChartCardProps> = ({ title, data, centerLabe
           {data.map((entry, index) => (
             <div key={index} className="flex items-center">
               <span className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></span>
-              <span className="mr-2 text-sm text-gray-600">{entry.name} ({entry.value})</span>
+              <span className="mr-2 text-sm text-gray-600 dark:text-gray-300">{entry.name} ({entry.value})</span>
             </div>
           ))}
         </div>

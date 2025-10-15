@@ -25,7 +25,7 @@ interface NavItemProps {
 
 const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificationCount, hasSubMenu, collapsed, onClick }) => {
     const baseClasses = 'flex items-center w-full p-3 my-1 rounded-lg text-base font-medium transition-colors duration-200';
-    const activeClasses = 'bg-white text-[#4395c6] shadow-sm';
+    const activeClasses = 'bg-white text-[#4395c6] dark:bg-slate-700 dark:text-white shadow-sm';
     const inactiveClasses = 'text-blue-100 hover:bg-[#3a82ab]';
 
     return (
@@ -40,10 +40,10 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificati
                 <>
                     <span className="mr-4 flex-grow text-right">{label}</span>
                     {notificationCount && (
-                        <span className={`flex items-center justify-center text-sm font-bold rounded-full w-6 h-6 ml-2 ${active ? 'bg-blue-100 text-[#4395c6]' : 'bg-[#5badd9] text-white'}`}>{notificationCount}</span>
+                        <span className={`flex items-center justify-center text-sm font-bold rounded-full w-6 h-6 ml-2 ${active ? 'bg-blue-100 text-[#4395c6] dark:bg-slate-500 dark:text-white' : 'bg-[#5badd9] text-white'}`}>{notificationCount}</span>
                     )}
                     {hasSubMenu && (
-                        <ChevronLeftIcon className={`w-6 h-6 mr-auto ${active ? 'text-[#4395c6]' : 'text-blue-200'}`} />
+                        <ChevronLeftIcon className={`w-6 h-6 mr-auto ${active ? 'text-[#4395c6] dark:text-slate-300' : 'text-blue-200'}`} />
                     )}
                 </>
             )}
