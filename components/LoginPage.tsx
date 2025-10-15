@@ -46,8 +46,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       {/* Login Form Section */}
       <div className="w-full lg:w-2/5 xl:w-1/3 bg-white flex flex-col p-8 lg:p-12">
         <div className="flex flex-col items-end">
-            <Logo className="w-20 h-auto"/>
-            <p className="text-xs text-gray-500 mt-1">سراكم لإدارة الأملاك</p>
+            <Logo className="w-32 h-auto"/>
         </div>
 
         <div className="flex-grow flex items-center justify-center">

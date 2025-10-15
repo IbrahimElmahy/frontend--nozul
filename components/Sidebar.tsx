@@ -13,6 +13,7 @@ import PaperAirplaneIcon from './icons-redesign/PaperAirplaneIcon';
 import CogIcon from './icons-redesign/CogIcon';
 import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
+import Logo from './icons/Logo';
 
 interface NavItemProps {
     label: string;
@@ -228,9 +229,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         onMouseLeave={() => setIsDesktopCollapsed(true)}
     >
         <div className={`border-b ${borderColor[effectiveSidebarColor]} transition-all duration-300 flex items-center justify-center h-20 px-4`}>
-            <h1 className={`font-bold whitespace-nowrap ${isEffectivelyCollapsed ? 'text-2xl' : 'text-xl'}`}>
-                {isEffectivelyCollapsed ? 'نزلكم' : 'نزلكم لإدارة الفنادق'}
-            </h1>
+            <Logo className={`transition-all duration-300 ${isEffectivelyCollapsed ? 'h-8' : 'h-10'}`} />
         </div>
 
       <nav className="flex-grow p-3 overflow-y-auto">
