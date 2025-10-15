@@ -72,12 +72,12 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
     };
 
     return (
-        <div className="fixed bottom-6 left-6 z-50">
+        <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50">
             <div
                 ref={panelRef}
                 className={`transform transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 visible scale-100 translate-y-0' : 'opacity-0 invisible scale-95 -translate-y-2'}`}
             >
-                <div className="absolute bottom-full left-0 mb-3 w-72 bg-white dark:bg-slate-800 rounded-lg shadow-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-700 flex flex-col max-h-[80vh]">
+                <div className="absolute bottom-full left-0 mb-3 w-[calc(100vw-2rem)] max-w-xs sm:w-72 bg-white dark:bg-slate-800 rounded-lg shadow-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-700 flex flex-col max-h-[80vh]">
                     <div className="text-right p-4 border-b dark:border-slate-700 flex-shrink-0">
                         <h4 className="font-bold text-slate-800 dark:text-slate-200">إعدادات شكل النظام</h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400">التخصيص مخطط الألوان العام ، قائمة الشريط الجانبي ، إلخ.</p>

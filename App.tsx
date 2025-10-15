@@ -31,15 +31,24 @@ interface DashboardPageProps {
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSettings }) => {
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const layoutWidthClass = settings.layoutWidth === 'boxed' ? 'max-w-screen-xl mx-auto shadow-2xl' : 'w-full';
 
   return (
     <div className={`${layoutWidthClass} h-screen overflow-hidden`}>
-        <div className={`flex h-full bg-slate-50 dark:bg-slate-900 font-sans`}>
-            <Sidebar onLogout={onLogout} settings={settings} />
-            <div className="flex-1 flex flex-col">
-                <Header onLogout={onLogout} settings={settings} />
-                <main className={`flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 p-6`}>
+        <div className={`relative flex h-full bg-slate-50 dark:bg-slate-900 font-sans`}>
+            {/* Overlay for mobile sidebar */}
+            {isMobileMenuOpen && (
+              <div
+                className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-hidden="true"
+              ></div>
+            )}
+            <Sidebar onLogout={onLogout} settings={settings} isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}/>
+            <div className="flex-1 flex flex-col min-w-0">
+                <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} />
+                <main className={`flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 sm:p-6`}>
                     <Dashboard />
                 </main>
             </div>

@@ -158,16 +158,29 @@ const navigationSections = [
 interface SidebarProps {
     onLogout: () => void;
     settings: ThemeSettings;
+    isMobileMenuOpen: boolean;
+    setMobileMenuOpen: (open: boolean) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings }) => {
-    const [isCollapsed, setIsCollapsed] = useState(true);
+const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen, setMobileMenuOpen }) => {
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
 
     const handleLogoutClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
         onLogout();
     };
     
+    const handleNavItemClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        if (isMobileMenuOpen) {
+            setMobileMenuOpen(false);
+        }
+    };
+    
+    const handleLogoutAndMenuClose = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        handleNavItemClick(e);
+        handleLogoutClick(e);
+    }
+
     const { sidebarColor, sidebarSize, showUserInfo, colorScheme } = settings;
 
     // When the global theme is dark, force light/brand sidebars to become dark for consistency.
@@ -183,9 +196,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings }) => {
     };
 
     const sizeClasses = {
-        default: { collapsed: 'w-24', expanded: 'w-72' },
-        compact: { collapsed: 'w-20', expanded: 'w-64' },
-        condensed: { collapsed: 'w-20', expanded: 'w-56' }
+        default: { collapsed: 'lg:w-24', expanded: 'lg:w-72' },
+        compact: { collapsed: 'lg:w-20', expanded: 'lg:w-64' },
+        condensed: { collapsed: 'lg:w-20', expanded: 'lg:w-56' }
     };
     
     const borderColor = {
@@ -195,30 +208,32 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings }) => {
         gradient: 'border-white/10'
     }
 
-    const widthClass = isCollapsed ? sizeClasses[sidebarSize].collapsed : sizeClasses[sidebarSize].expanded;
+    const widthClass = isDesktopCollapsed ? sizeClasses[sidebarSize].collapsed : sizeClasses[sidebarSize].expanded;
+    const isEffectivelyCollapsed = isMobileMenuOpen ? false : isDesktopCollapsed;
 
   return (
     <aside 
-        className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-all duration-300 ease-in-out ${widthClass}`}
-        onMouseEnter={() => setIsCollapsed(false)}
-        onMouseLeave={() => setIsCollapsed(true)}
+        className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-transform duration-300 ease-in-out lg:transition-all lg:duration-300 h-screen fixed lg:relative z-50 right-0 w-72 lg:w-auto ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} lg:translate-x-0 ${widthClass}`}
+        onMouseEnter={() => setIsDesktopCollapsed(false)}
+        onMouseLeave={() => setIsDesktopCollapsed(true)}
     >
         <div className={`border-b ${borderColor[effectiveSidebarColor]} transition-all duration-300 flex items-center justify-center h-20 px-4`}>
-            <h1 className={`font-bold whitespace-nowrap ${isCollapsed ? 'text-2xl' : 'text-xl'}`}>
-                {isCollapsed ? 'نزلكم' : 'نزلكم لإدارة الفنادق'}
+            <h1 className={`font-bold whitespace-nowrap ${isEffectivelyCollapsed ? 'text-2xl' : 'text-xl'}`}>
+                {isEffectivelyCollapsed ? 'نزلكم' : 'نزلكم لإدارة الفنادق'}
             </h1>
         </div>
 
       <nav className="flex-grow p-3 overflow-y-auto">
         {navigationSections.map((section, index) => (
             <div key={index}>
-                <NavHeader collapsed={isCollapsed} sidebarColor={effectiveSidebarColor}>{section.header}</NavHeader>
+                <NavHeader collapsed={isEffectivelyCollapsed} sidebarColor={effectiveSidebarColor}>{section.header}</NavHeader>
                 {section.items.map((item, itemIndex) => (
                     <NavItem 
                         key={itemIndex}
                         {...item}
-                        collapsed={isCollapsed}
+                        collapsed={isEffectivelyCollapsed}
                         sidebarColor={effectiveSidebarColor}
+                        onClick={handleNavItemClick}
                     />
                 ))}
             </div>
@@ -226,8 +241,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings }) => {
       </nav>
 
       <div className={`p-3 border-t ${borderColor[effectiveSidebarColor]}`}>
-        {showUserInfo && <UserInfoBlock collapsed={isCollapsed} />}
-        <NavItem label="تسجيل الخروج" icon={ArrowLeftOnRectangleIcon} collapsed={isCollapsed} onClick={handleLogoutClick} sidebarColor={effectiveSidebarColor} />
+        {showUserInfo && <UserInfoBlock collapsed={isEffectivelyCollapsed} />}
+        <NavItem label="تسجيل الخروج" icon={ArrowLeftOnRectangleIcon} collapsed={isEffectivelyCollapsed} onClick={handleLogoutAndMenuClose} sidebarColor={effectiveSidebarColor} />
       </div>
     </aside>
   );

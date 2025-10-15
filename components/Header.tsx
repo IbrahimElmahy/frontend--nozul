@@ -7,6 +7,7 @@ import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon'
 import BellIcon from './icons-redesign/BellIcon';
 import ArrowsPointingOutIcon from './icons-redesign/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons-redesign/ArrowsPointingInIcon';
+import Bars3Icon from './icons-redesign/Bars3Icon';
 
 
 // Icons for notifications
@@ -34,9 +35,10 @@ const initialNotifications: Notification[] = [
 interface HeaderProps {
   onLogout: () => void;
   settings: ThemeSettings;
+  onMenuButtonClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onLogout, settings }) => {
+const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
@@ -109,14 +111,23 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings }) => {
     : 'bg-white dark:bg-slate-800 dark:border-b dark:border-slate-700';
 
   return (
-    <header className={`${headerColorClass} shadow-sm p-4 flex justify-between items-center flex-shrink-0`}>
-      <div className="flex items-center text-sm">
+    <header className={`${headerColorClass} shadow-sm p-4 flex justify-between items-center flex-shrink-0 h-20`}>
+      <div className="flex items-center gap-2">
+         <button 
+            onClick={onMenuButtonClick} 
+            className="lg:hidden text-slate-500 dark:text-slate-400 p-1 -mr-2"
+            aria-label="Open menu"
+          >
+              <Bars3Icon className="w-6 h-6" />
+          </button>
         <h1 className="text-lg font-bold text-slate-800 dark:text-slate-200">لوحة التحكم</h1>
-        <ChevronLeftIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 mx-2" />
-        <span className="text-gray-500 dark:text-gray-400">شقق ساس المصيف الفندقيه</span>
+        <div className="hidden md:flex items-center text-sm">
+            <ChevronLeftIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 mx-2" />
+            <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">شقق ساس المصيف الفندقيه</span>
+        </div>
       </div>
       
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         {/* Full Screen Button */}
         <button
             onClick={handleToggleFullScreen}
@@ -190,7 +201,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings }) => {
                 alt="User Avatar"
                 className="w-10 h-10 rounded-full"
             />
-            <div>
+            <div className="hidden sm:block">
                 <div className="font-semibold text-sm text-slate-700 dark:text-slate-300 text-right">وليد الله</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 text-right">مدير</div>
             </div>
