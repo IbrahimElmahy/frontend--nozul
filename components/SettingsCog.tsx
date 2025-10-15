@@ -22,10 +22,10 @@ const SettingsRadioOption: React.FC<SettingsRadioOptionProps> = ({ name, value, 
             htmlFor={`${name}-${value}`}
             className={`flex items-center justify-center cursor-pointer min-h-[3.25rem] w-full p-2 text-center text-sm rounded-lg border-2 transition-colors duration-200
             peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-500/10 peer-checked:text-blue-600 dark:peer-checked:text-blue-400 font-semibold
-            bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600
+            bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-800 dark:hover:text-slate-200
             `}
         >
-           {checked && (<span>{label}</span>)}
+           <span>{label}</span>
         </label>
     </div>
 );
@@ -83,7 +83,7 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                         <p className="text-xs text-gray-500 dark:text-gray-400">التخصيص مخطط الألوان العام ، قائمة الشريط الجانبي ، إلخ.</p>
                     </div>
 
-                    <div className="p-4 space-y-6 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div className="p-4 space-y-6 overflow-y-auto">
                         <SettingsSection title="نظام الألوان">
                             <div className="flex gap-2">
                                 <SettingsRadioOption name="colorScheme" value="light" label="النظام الفاتح" checked={settings.colorScheme === 'light'} onChange={handleSettingChange('colorScheme')} />

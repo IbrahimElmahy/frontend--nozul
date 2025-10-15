@@ -209,7 +209,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings }) => {
             </h1>
         </div>
 
-      <nav className="flex-grow p-3 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <nav className="flex-grow p-3 overflow-y-auto">
         {navigationSections.map((section, index) => (
             <div key={index}>
                 <NavHeader collapsed={isCollapsed} sidebarColor={effectiveSidebarColor}>{section.header}</NavHeader>
