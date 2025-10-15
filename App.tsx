@@ -3,6 +3,7 @@ import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
+import UserProfilePage from './components/UserProfilePage';
 import SettingsCog from './components/SettingsCog';
 
 export interface ThemeSettings {
@@ -13,6 +14,8 @@ export interface ThemeSettings {
   showUserInfo: boolean;
   topbarColor: 'light' | 'dark';
 }
+
+export type Page = 'dashboard' | 'profile';
 
 const defaultSettings: ThemeSettings = {
   colorScheme: 'light',
@@ -32,6 +35,8 @@ interface DashboardPageProps {
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSettings }) => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
+
   const layoutWidthClass = settings.layoutWidth === 'boxed' ? 'max-w-screen-xl mx-auto shadow-2xl' : 'w-full';
 
   return (
@@ -45,11 +50,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                 aria-hidden="true"
               ></div>
             )}
-            <Sidebar onLogout={onLogout} settings={settings} isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen}/>
+            <Sidebar onLogout={onLogout} settings={settings} isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} setCurrentPage={setCurrentPage} />
             <div className="flex-1 flex flex-col min-w-0">
-                <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} />
+                <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} setCurrentPage={setCurrentPage} currentPage={currentPage} />
                 <main className={`flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 sm:p-6`}>
-                    <Dashboard />
+                    {currentPage === 'dashboard' && <Dashboard />}
+                    {currentPage === 'profile' && <UserProfilePage />}
                 </main>
             </div>
             <SettingsCog settings={settings} setSettings={setSettings} />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ThemeSettings } from '../App';
+import { ThemeSettings, Page } from '../App';
 import DashboardIcon from './icons-redesign/DashboardIcon';
 import CalendarIcon from './icons-redesign/CalendarIcon';
 import BriefcaseIcon from './icons-redesign/BriefcaseIcon';
@@ -160,9 +160,10 @@ interface SidebarProps {
     settings: ThemeSettings;
     isMobileMenuOpen: boolean;
     setMobileMenuOpen: (open: boolean) => void;
+    setCurrentPage: (page: Page) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen, setMobileMenuOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen, setMobileMenuOpen, setCurrentPage }) => {
     const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
 
     const handleLogoutClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -170,14 +171,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         onLogout();
     };
     
-    const handleNavItemClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const handleNavItemClick = (e: React.MouseEvent<HTMLAnchorElement>, itemLabel: string) => {
+        e.preventDefault();
+        if (itemLabel === 'لوحة التحكم') {
+            setCurrentPage('dashboard');
+        }
+        // For now, all links go to dashboard
+        setCurrentPage('dashboard');
+
         if (isMobileMenuOpen) {
             setMobileMenuOpen(false);
         }
     };
     
     const handleLogoutAndMenuClose = (e: React.MouseEvent<HTMLAnchorElement>) => {
-        handleNavItemClick(e);
+        if (isMobileMenuOpen) {
+            setMobileMenuOpen(false);
+        }
         handleLogoutClick(e);
     }
 
@@ -233,7 +243,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
                         {...item}
                         collapsed={isEffectivelyCollapsed}
                         sidebarColor={effectiveSidebarColor}
-                        onClick={handleNavItemClick}
+                        onClick={(e) => handleNavItemClick(e, item.label)}
                     />
                 ))}
             </div>

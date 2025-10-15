@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ThemeSettings } from '../App';
+import { ThemeSettings, Page } from '../App';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronDownIcon from './icons-redesign/ChevronDownIcon';
 import UserIcon from './icons-redesign/UserIcon';
@@ -36,9 +36,11 @@ interface HeaderProps {
   onLogout: () => void;
   settings: ThemeSettings;
   onMenuButtonClick: () => void;
+  setCurrentPage: (page: Page) => void;
+  currentPage: Page;
 }
 
-const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick }) => {
+const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
@@ -104,6 +106,12 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick }
         }
     }
   };
+  
+  const handleProfileClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      setCurrentPage('profile');
+      setIsUserDropdownOpen(false);
+  }
 
 
   const headerColorClass = topbarColor === 'dark' 
@@ -120,10 +128,14 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick }
           >
               <Bars3Icon className="w-6 h-6" />
           </button>
-        <h1 className="text-lg font-bold text-slate-800 dark:text-slate-200">لوحة التحكم</h1>
+        <h1 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+            {currentPage === 'dashboard' ? 'لوحة التحكم' : 'معلومات المستخدم'}
+        </h1>
         <div className="hidden md:flex items-center text-sm">
             <ChevronLeftIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 mx-2" />
-            <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">شقق ساس المصيف الفندقيه</span>
+            <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                {currentPage === 'dashboard' ? 'شقق ساس المصيف الفندقيه' : 'لوحة التحكم'}
+            </span>
         </div>
       </div>
       
@@ -211,6 +223,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick }
             <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-20">
                 <a
                 href="#"
+                onClick={handleProfileClick}
                 className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700"
                 >
                 <UserIcon className="w-5 h-5 ml-3" />
