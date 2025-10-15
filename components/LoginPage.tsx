@@ -3,11 +3,28 @@ import Logo from './icons/Logo';
 import EyeIcon from './icons/EyeIcon';
 import EyeOffIcon from './icons/EyeOffIcon';
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+    onLoginSuccess: () => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (username === 'admin' && password === 'password') {
+        setError('');
+        onLoginSuccess();
+    } else {
+        setError('اسم المستخدم أو كلمة المرور غير صحيحة.');
+    }
   };
 
   return (
@@ -26,14 +43,16 @@ const LoginPage: React.FC = () => {
                     <p className="text-gray-500">أدخل اسم المستخدم وكلمة المرور للوصول إلى لوحة التحكم.</p>
                 </div>
 
-                <form noValidate>
+                <form noValidate onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label htmlFor="username" className="block text-sm font-medium text-gray-700 text-right mb-1">اسم المستخدم</label>
                         <input
                             type="text"
                             id="username"
                             placeholder="أدخل اسم المستخدم"
-                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900"
                         />
                     </div>
 
@@ -47,7 +66,9 @@ const LoginPage: React.FC = () => {
                                 type={isPasswordVisible ? 'text' : 'password'}
                                 id="password"
                                 placeholder="أدخل كلمة المرور"
-                                className="w-full px-4 py-2 pl-10 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full px-4 py-2 pl-10 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900"
                             />
                             <button
                                 type="button"
@@ -63,6 +84,8 @@ const LoginPage: React.FC = () => {
                             </button>
                         </div>
                     </div>
+                    
+                    {error && <p className="text-red-500 text-sm text-right mb-4">{error}</p>}
 
                     <div className="flex justify-end items-center mb-6">
                         <label htmlFor="remember-me" className="text-sm text-gray-700 mr-2">تذكرني</label>
@@ -75,7 +98,6 @@ const LoginPage: React.FC = () => {
 
                     <button
                         type="submit"
-                        onClick={(e) => e.preventDefault()}
                         className="w-full bg-blue-500 text-white py-2.5 rounded-md font-bold hover:bg-blue-600 transition-colors duration-200"
                     >
                         تسجيل الدخول
