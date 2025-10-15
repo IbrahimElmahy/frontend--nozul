@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ThemeSettings } from '../App';
 import DashboardIcon from './icons-redesign/DashboardIcon';
 import CalendarIcon from './icons-redesign/CalendarIcon';
 import BriefcaseIcon from './icons-redesign/BriefcaseIcon';
@@ -20,30 +21,62 @@ interface NavItemProps {
     notificationCount?: number;
     hasSubMenu?: boolean;
     collapsed: boolean;
+    sidebarColor: ThemeSettings['sidebarColor'];
     onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificationCount, hasSubMenu, collapsed, onClick }) => {
-    const baseClasses = 'flex items-center w-full p-3 my-1 rounded-lg text-base font-medium transition-colors duration-200';
-    const activeClasses = 'bg-white text-[#4395c6] dark:bg-slate-700 dark:text-white shadow-sm';
-    const inactiveClasses = 'text-blue-100 hover:bg-[#3a82ab]';
+const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificationCount, hasSubMenu, collapsed, sidebarColor, onClick }) => {
+    
+    const colorStyles = {
+        light: {
+            base: 'text-slate-600 hover:bg-slate-100',
+            active: 'bg-blue-50 text-blue-600 dark:bg-slate-700 dark:text-white',
+            notificationBase: 'bg-slate-200 text-slate-600',
+            notificationActive: 'bg-blue-200 text-blue-600 dark:bg-slate-500 dark:text-white',
+            chevron: 'text-slate-400'
+        },
+        dark: {
+            base: 'text-slate-300 hover:bg-slate-700',
+            active: 'bg-slate-600 text-white',
+            notificationBase: 'bg-slate-700 text-white',
+            notificationActive: 'bg-slate-500 text-white',
+            chevron: 'text-slate-400'
+        },
+        brand: {
+            base: 'text-blue-100 hover:bg-[#3a82ab]',
+            active: 'bg-white text-[#4395c6] shadow-sm',
+            notificationBase: 'bg-[#5badd9] text-white',
+            notificationActive: 'bg-blue-100 text-[#4395c6]',
+            chevron: 'text-blue-200'
+        },
+        gradient: {
+            base: 'text-purple-100 hover:bg-white/10',
+            active: 'bg-white/20 text-white shadow-sm',
+            notificationBase: 'bg-white/20 text-white',
+            notificationActive: 'bg-purple-100 text-purple-700',
+            chevron: 'text-purple-200'
+        }
+    };
 
+    const styles = colorStyles[sidebarColor] || colorStyles.brand;
+    const baseClasses = 'flex items-center w-full p-3 my-1 rounded-lg text-base font-medium transition-colors duration-200';
+    
     return (
         <a
             href="#"
             onClick={onClick}
             title={collapsed ? label : undefined}
-            className={`${baseClasses} ${active ? activeClasses : inactiveClasses} ${collapsed ? 'justify-center' : ''}`}
+            className={`${baseClasses} ${active ? styles.active : styles.base} ${collapsed ? 'justify-center' : ''}`}
         >
             <Icon className="w-6 h-6 flex-shrink-0" />
             {!collapsed && (
                 <>
                     <span className="mr-4 flex-grow text-right">{label}</span>
                     {notificationCount && (
-                        <span className={`flex items-center justify-center text-sm font-bold rounded-full w-6 h-6 ml-2 ${active ? 'bg-blue-100 text-[#4395c6] dark:bg-slate-500 dark:text-white' : 'bg-[#5badd9] text-white'}`}>{notificationCount}</span>
+                        <span className={`flex items-center justify-center text-sm font-bold rounded-full w-6 h-6 ml-2 ${active ? styles.notificationActive : styles.notificationBase}`}>{notificationCount}</span>
                     )}
                     {hasSubMenu && (
-                        <ChevronLeftIcon className={`w-6 h-6 mr-auto ${active ? 'text-[#4395c6] dark:text-slate-300' : 'text-blue-200'}`} />
+                        <ChevronLeftIcon className={`w-6 h-6 mr-auto ${active ? '' : styles.chevron}`} />
                     )}
                 </>
             )}
@@ -52,14 +85,38 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificati
 };
 
 
-const NavHeader: React.FC<{ collapsed: boolean, children: React.ReactNode }> = ({ collapsed, children }) => {
+const NavHeader: React.FC<{ collapsed: boolean; sidebarColor: ThemeSettings['sidebarColor']; children: React.ReactNode }> = ({ collapsed, sidebarColor, children }) => {
     if (collapsed) return null;
+
+    const headerColors = {
+        light: 'text-slate-400',
+        dark: 'text-slate-500',
+        brand: 'text-[#a4d3ed]',
+        gradient: 'text-purple-200'
+    }
+
     return (
-        <h3 className="px-3 pt-4 pb-2 text-sm font-semibold text-[#a4d3ed] uppercase tracking-wider text-right">
+        <h3 className={`px-3 pt-4 pb-2 text-sm font-semibold uppercase tracking-wider text-right ${headerColors[sidebarColor]}`}>
             {children}
         </h3>
     );
 };
+
+const UserInfoBlock: React.FC<{ collapsed: boolean }> = ({ collapsed }) => (
+    <div className={`p-4 flex items-center ${collapsed ? 'justify-center' : ''}`}>
+        <img
+            src="https://picsum.photos/id/237/200/200"
+            alt="User Avatar"
+            className="w-10 h-10 rounded-full flex-shrink-0"
+          />
+          {!collapsed && (
+            <div className="mr-3 text-right">
+                <div className="font-semibold text-sm">وليد الله</div>
+                <div className="text-xs opacity-80">مدير</div>
+            </div>
+          )}
+    </div>
+);
 
 
 const navigationSections = [
@@ -100,9 +157,10 @@ const navigationSections = [
 
 interface SidebarProps {
     onLogout: () => void;
+    settings: ThemeSettings;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings }) => {
     const [isCollapsed, setIsCollapsed] = useState(true);
 
     const handleLogoutClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -110,13 +168,37 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
         onLogout();
     };
     
+    const { sidebarColor, sidebarSize, showUserInfo } = settings;
+
+    const colorClasses = {
+        light: 'bg-white text-slate-700 border-r dark:bg-slate-900/70 dark:border-slate-700',
+        dark: 'bg-slate-800 text-white',
+        brand: 'bg-[#4395c6] text-white',
+        gradient: 'bg-gradient-to-b from-blue-600 to-indigo-700 text-white'
+    };
+
+    const sizeClasses = {
+        default: { collapsed: 'w-24', expanded: 'w-72' },
+        compact: { collapsed: 'w-20', expanded: 'w-64' },
+        condensed: { collapsed: 'w-20', expanded: 'w-56' }
+    };
+    
+    const borderColor = {
+        light: 'border-slate-200 dark:border-slate-700',
+        dark: 'border-slate-700',
+        brand: 'border-[#3a82ab]',
+        gradient: 'border-white/10'
+    }
+
+    const widthClass = isCollapsed ? sizeClasses[sidebarSize].collapsed : sizeClasses[sidebarSize].expanded;
+
   return (
     <aside 
-        className={`bg-[#4395c6] text-white flex flex-col transition-all duration-300 ease-in-out ${isCollapsed ? 'w-24' : 'w-72'}`}
+        className={`${colorClasses[sidebarColor]} flex flex-col transition-all duration-300 ease-in-out ${widthClass}`}
         onMouseEnter={() => setIsCollapsed(false)}
         onMouseLeave={() => setIsCollapsed(true)}
     >
-        <div className="border-b border-[#3a82ab] transition-all duration-300 flex items-center justify-center h-20 px-4">
+        <div className={`border-b ${borderColor[sidebarColor]} transition-all duration-300 flex items-center justify-center h-20 px-4`}>
             <h1 className={`font-bold whitespace-nowrap ${isCollapsed ? 'text-2xl' : 'text-xl'}`}>
                 {isCollapsed ? 'نزلكم' : 'نزلكم لإدارة الفنادق'}
             </h1>
@@ -125,20 +207,22 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
       <nav className="flex-grow p-3 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {navigationSections.map((section, index) => (
             <div key={index}>
-                <NavHeader collapsed={isCollapsed}>{section.header}</NavHeader>
+                <NavHeader collapsed={isCollapsed} sidebarColor={sidebarColor}>{section.header}</NavHeader>
                 {section.items.map((item, itemIndex) => (
                     <NavItem 
                         key={itemIndex}
                         {...item}
                         collapsed={isCollapsed}
+                        sidebarColor={sidebarColor}
                     />
                 ))}
             </div>
         ))}
       </nav>
 
-      <div className="p-3 border-t border-[#3a82ab]">
-        <NavItem label="تسجيل الخروج" icon={ArrowLeftOnRectangleIcon} collapsed={isCollapsed} onClick={handleLogoutClick} />
+      <div className={`p-3 border-t ${borderColor[sidebarColor]}`}>
+        {showUserInfo && <UserInfoBlock collapsed={isCollapsed} />}
+        <NavItem label="تسجيل الخروج" icon={ArrowLeftOnRectangleIcon} collapsed={isCollapsed} onClick={handleLogoutClick} sidebarColor={sidebarColor} />
       </div>
     </aside>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ThemeSettings } from '../App';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronDownIcon from './icons-redesign/ChevronDownIcon';
 import UserIcon from './icons-redesign/UserIcon';
@@ -6,11 +7,14 @@ import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon'
 
 interface HeaderProps {
   onLogout: () => void;
+  settings: ThemeSettings;
 }
 
-const Header: React.FC<HeaderProps> = ({ onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ onLogout, settings }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const { topbarColor } = settings;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -30,8 +34,12 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
     onLogout();
   }
 
+  const headerColorClass = topbarColor === 'dark' 
+    ? 'bg-slate-800 text-slate-300 border-b border-slate-700' 
+    : 'bg-white dark:bg-slate-800 dark:border-b dark:border-slate-700';
+
   return (
-    <header className="bg-white dark:bg-slate-800 dark:border-b dark:border-slate-700 shadow-sm p-4 flex justify-between items-center">
+    <header className={`${headerColorClass} shadow-sm p-4 flex justify-between items-center flex-shrink-0`}>
       <div className="flex items-center text-sm">
         <h1 className="text-lg font-bold text-slate-800 dark:text-slate-200">لوحة التحكم</h1>
         <ChevronLeftIcon className="w-5 h-5 text-gray-400 dark:text-gray-500 mx-2" />

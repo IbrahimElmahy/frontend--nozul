@@ -1,40 +1,139 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
 import CogIcon from './icons-redesign/CogIcon';
+import { ThemeSettings } from '../App';
 
 interface SettingsCogProps {
-    theme: string;
-    setTheme: (theme: string) => void;
+    settings: ThemeSettings;
+    setSettings: (settings: ThemeSettings | ((prev: ThemeSettings) => ThemeSettings)) => void;
 }
 
-const SettingsCog: React.FC<SettingsCogProps> = ({ theme, setTheme }) => {
-    const [isOpen, setIsOpen] = useState(false);
+interface SettingsRadioOptionProps {
+    name: string;
+    value: string;
+    label: string;
+    checked: boolean;
+    onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+}
 
-    const toggleTheme = () => {
-        setTheme(theme === 'light' ? 'dark' : 'light');
+const SettingsRadioOption: React.FC<SettingsRadioOptionProps> = ({ name, value, label, checked, onChange }) => (
+    <div>
+        <input type="radio" id={`${name}-${value}`} name={name} value={value} checked={checked} onChange={onChange} className="sr-only peer" />
+        <label htmlFor={`${name}-${value}`} className={`block cursor-pointer py-2 px-3 text-center text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400 dark:hover:border-blue-500 transition-colors duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-500/10 peer-checked:text-blue-600 font-medium`}>
+            {label}
+        </label>
+    </div>
+);
+
+
+const SettingsSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+    <div>
+        <h5 className="font-medium text-sm text-slate-500 dark:text-slate-400 mb-3 text-right">{title}</h5>
+        {children}
+    </div>
+);
+
+
+const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const panelRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                panelRef.current &&
+                !panelRef.current.contains(event.target as Node) &&
+                buttonRef.current &&
+                !buttonRef.current.contains(event.target as Node)
+            ) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const handleSettingChange = (key: keyof ThemeSettings) => (e: ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        setSettings(prev => ({...prev, [key]: value}));
     };
 
     return (
         <div className="fixed bottom-6 left-6 z-50">
-            <div className={`transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100' : 'opacity-0 invisible'}`}>
-                <div className="absolute bottom-full left-0 mb-3 w-60 bg-white dark:bg-slate-800 rounded-lg shadow-2xl border dark:border-slate-700 p-4">
-                    <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-3 text-right">الإعدادات</h4>
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">الوضع الداكن</span>
-                        <label htmlFor="dark-mode-toggle" className="relative inline-flex items-center cursor-pointer">
-                            <input
-                                type="checkbox"
-                                id="dark-mode-toggle"
-                                className="sr-only peer"
-                                checked={theme === 'dark'}
-                                onChange={toggleTheme}
-                            />
-                            <div className="w-11 h-6 bg-gray-200 dark:bg-slate-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
+            <div
+                ref={panelRef}
+                className={`transform transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 visible scale-100 translate-y-0' : 'opacity-0 invisible scale-95 -translate-y-2'}`}
+            >
+                <div className="absolute bottom-full left-0 mb-3 w-72 bg-white dark:bg-slate-800 rounded-lg shadow-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-700 flex flex-col max-h-[80vh]">
+                    <div className="text-right p-4 border-b dark:border-slate-700 flex-shrink-0">
+                        <h4 className="font-bold text-slate-800 dark:text-slate-200">إعدادات شكل النظام</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">التخصيص مخطط الألوان العام ، قائمة الشريط الجانبي ، إلخ.</p>
+                    </div>
+
+                    <div className="p-4 space-y-6 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                        <SettingsSection title="نظام الألوان">
+                            <div className="grid grid-cols-2 gap-2">
+                                <SettingsRadioOption name="colorScheme" value="light" label="النظام الفاتح" checked={settings.colorScheme === 'light'} onChange={handleSettingChange('colorScheme')} />
+                                <SettingsRadioOption name="colorScheme" value="dark" label="النظام الليلي" checked={settings.colorScheme === 'dark'} onChange={handleSettingChange('colorScheme')} />
+                            </div>
+                        </SettingsSection>
+
+                        <SettingsSection title="النطاق">
+                            <div className="grid grid-cols-2 gap-2">
+                                <SettingsRadioOption name="layoutWidth" value="full" label="نطاق كامل" checked={settings.layoutWidth === 'full'} onChange={handleSettingChange('layoutWidth')} />
+                                <SettingsRadioOption name="layoutWidth" value="boxed" label="نطاق صندوق" checked={settings.layoutWidth === 'boxed'} onChange={handleSettingChange('layoutWidth')} />
+                            </div>
+                        </SettingsSection>
+                        
+                        <SettingsSection title="لون الشريط الجانبي الأيسر">
+                            <div className="grid grid-cols-2 gap-2">
+                                <SettingsRadioOption name="sidebarColor" value="light" label="فاتح" checked={settings.sidebarColor === 'light'} onChange={handleSettingChange('sidebarColor')} />
+                                <SettingsRadioOption name="sidebarColor" value="dark" label="ليلي" checked={settings.sidebarColor === 'dark'} onChange={handleSettingChange('sidebarColor')} />
+                                <SettingsRadioOption name="sidebarColor" value="brand" label="ماركة" checked={settings.sidebarColor === 'brand'} onChange={handleSettingChange('sidebarColor')} />
+                                <SettingsRadioOption name="sidebarColor" value="gradient" label="انحدار" checked={settings.sidebarColor === 'gradient'} onChange={handleSettingChange('sidebarColor')} />
+                            </div>
+                        </SettingsSection>
+
+                        <SettingsSection title="حجم الشريط الجانبي الأيسر">
+                            <div className="grid grid-cols-3 gap-2">
+                                <SettingsRadioOption name="sidebarSize" value="default" label="افتراضي" checked={settings.sidebarSize === 'default'} onChange={handleSettingChange('sidebarSize')} />
+                                <SettingsRadioOption name="sidebarSize" value="compact" label="صغير" checked={settings.sidebarSize === 'compact'} onChange={handleSettingChange('sidebarSize')} />
+                                <SettingsRadioOption name="sidebarSize" value="condensed" label="صغير جدًا" checked={settings.sidebarSize === 'condensed'} onChange={handleSettingChange('sidebarSize')} />
+                            </div>
+                        </SettingsSection>
+                        
+                        <SettingsSection title="الشريط العلوي">
+                            <div className="grid grid-cols-2 gap-2">
+                                <SettingsRadioOption name="topbarColor" value="light" label="فاتح" checked={settings.topbarColor === 'light'} onChange={handleSettingChange('topbarColor')} />
+                                <SettingsRadioOption name="topbarColor" value="dark" label="ليلي" checked={settings.topbarColor === 'dark'} onChange={handleSettingChange('topbarColor')} />
+                            </div>
+                        </SettingsSection>
+
+                        <SettingsSection title="معلومات مستخدم في الشريط الجانبي">
+                             <div className="flex items-center justify-between">
+                                <label htmlFor="user-info-toggle" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                                    تفعيل
+                                </label>
+                                <div className="relative inline-flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        id="user-info-toggle"
+                                        className="sr-only peer"
+                                        checked={settings.showUserInfo}
+                                        onChange={handleSettingChange('showUserInfo')}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                                </div>
+                            </div>
+                        </SettingsSection>
                     </div>
                 </div>
             </div>
 
             <button
+                ref={buttonRef}
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-14 h-14 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 transition-all duration-200 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 aria-label="Open settings"
