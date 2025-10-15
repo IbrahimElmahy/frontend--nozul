@@ -5,13 +5,19 @@ import BarChartCard from './BarChartCard';
 
 import { DonutChartData, ChartData } from '../types';
 
-// FIX: Use 'as const' to ensure color properties are inferred as literal types
-// instead of the general 'string' type, which resolves the type mismatch with StatCardProps.
+// Import icons for StatCards
+import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon';
+import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
+import DesktopComputerIcon from './icons-redesign/DesktopComputerIcon';
+import ArrowRightOnRectangleIcon from './icons-redesign/ArrowRightOnRectangleIcon';
+
+
+// Corrected data and order for stat cards
 const statCardsData = [
-    { title: 'مسجلين الخروج', value: 19, color: 'orange' },
-    { title: 'المغادرين', value: 19, color: 'cyan' },
-    { title: 'مسجلين الدخول', value: 3, color: 'teal' },
-    { title: 'الواصلين', value: 0, color: 'purple' },
+    { title: 'الواصلين', value: 0, color: 'green', icon: ArrowRightOnRectangleIcon },
+    { title: 'مسجلين الدخول', value: 3, color: 'blue', icon: DesktopComputerIcon },
+    { title: 'المغادرين', value: 21, color: 'yellow', icon: ArrowPathIcon },
+    { title: 'مسجلين الخروج', value: 21, color: 'orange', icon: ArrowLeftOnRectangleIcon },
 ] as const;
 
 const apartmentAvailabilityData: DonutChartData[] = [
@@ -62,7 +68,7 @@ const Dashboard: React.FC = () => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {statCardsData.map((card, index) => (
-                <StatCard key={index} title={card.title} value={card.value} color={card.color} />
+                <StatCard key={index} title={card.title} value={card.value} color={card.color} icon={card.icon} />
             ))}
 
             <div className="md:col-span-2 lg:col-span-2">

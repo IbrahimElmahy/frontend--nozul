@@ -1,27 +1,29 @@
 import React from 'react';
+import { IconProps } from './icons/Icon';
 
 interface StatCardProps {
   title: string;
   value: number | string;
-  color: 'orange' | 'cyan' | 'teal' | 'purple';
+  color: 'orange' | 'yellow' | 'blue' | 'green';
+  icon: React.ComponentType<IconProps>;
 }
 
 const colorClasses = {
-    orange: 'bg-orange-100 text-orange-600',
-    cyan: 'bg-cyan-100 text-cyan-600',
-    teal: 'bg-teal-100 text-teal-600',
-    purple: 'bg-purple-100 text-purple-600',
+    orange: 'bg-orange-400',
+    yellow: 'bg-amber-400',
+    blue: 'bg-cyan-400',
+    green: 'bg-teal-400',
 };
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, color }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon: Icon }) => {
   return (
     <div className="bg-white p-5 rounded-xl shadow-sm flex items-center justify-between">
       <div>
         <p className="text-gray-500 text-sm font-medium">{title}</p>
         <p className="text-2xl font-bold text-slate-800">{value}</p>
       </div>
-      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${colorClasses[color]}`}>
-        {/* Placeholder for icon */}
+      <div className={`w-14 h-14 rounded-full flex items-center justify-center ${colorClasses[color]}`}>
+        <Icon className="w-7 h-7 text-white" />
       </div>
     </div>
   );
