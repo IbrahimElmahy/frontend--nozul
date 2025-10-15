@@ -168,7 +168,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings }) => {
         onLogout();
     };
     
-    const { sidebarColor, sidebarSize, showUserInfo } = settings;
+    const { sidebarColor, sidebarSize, showUserInfo, colorScheme } = settings;
+
+    // When the global theme is dark, force light/brand sidebars to become dark for consistency.
+    const effectiveSidebarColor = colorScheme === 'dark' && (sidebarColor === 'light' || sidebarColor === 'brand')
+        ? 'dark'
+        : sidebarColor;
 
     const colorClasses = {
         light: 'bg-white text-slate-700 border-r dark:bg-slate-900/70 dark:border-slate-700',
@@ -194,11 +199,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings }) => {
 
   return (
     <aside 
-        className={`${colorClasses[sidebarColor]} flex flex-col transition-all duration-300 ease-in-out ${widthClass}`}
+        className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-all duration-300 ease-in-out ${widthClass}`}
         onMouseEnter={() => setIsCollapsed(false)}
         onMouseLeave={() => setIsCollapsed(true)}
     >
-        <div className={`border-b ${borderColor[sidebarColor]} transition-all duration-300 flex items-center justify-center h-20 px-4`}>
+        <div className={`border-b ${borderColor[effectiveSidebarColor]} transition-all duration-300 flex items-center justify-center h-20 px-4`}>
             <h1 className={`font-bold whitespace-nowrap ${isCollapsed ? 'text-2xl' : 'text-xl'}`}>
                 {isCollapsed ? 'نزلكم' : 'نزلكم لإدارة الفنادق'}
             </h1>
@@ -207,22 +212,22 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings }) => {
       <nav className="flex-grow p-3 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {navigationSections.map((section, index) => (
             <div key={index}>
-                <NavHeader collapsed={isCollapsed} sidebarColor={sidebarColor}>{section.header}</NavHeader>
+                <NavHeader collapsed={isCollapsed} sidebarColor={effectiveSidebarColor}>{section.header}</NavHeader>
                 {section.items.map((item, itemIndex) => (
                     <NavItem 
                         key={itemIndex}
                         {...item}
                         collapsed={isCollapsed}
-                        sidebarColor={sidebarColor}
+                        sidebarColor={effectiveSidebarColor}
                     />
                 ))}
             </div>
         ))}
       </nav>
 
-      <div className={`p-3 border-t ${borderColor[sidebarColor]}`}>
+      <div className={`p-3 border-t ${borderColor[effectiveSidebarColor]}`}>
         {showUserInfo && <UserInfoBlock collapsed={isCollapsed} />}
-        <NavItem label="تسجيل الخروج" icon={ArrowLeftOnRectangleIcon} collapsed={isCollapsed} onClick={handleLogoutClick} sidebarColor={sidebarColor} />
+        <NavItem label="تسجيل الخروج" icon={ArrowLeftOnRectangleIcon} collapsed={isCollapsed} onClick={handleLogoutClick} sidebarColor={effectiveSidebarColor} />
       </div>
     </aside>
   );
