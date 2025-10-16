@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
+import React, { useState, useRef, useEffect, ChangeEvent, useContext } from 'react';
 import CogIcon from './icons-redesign/CogIcon';
 import { ThemeSettings } from '../App';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface SettingsCogProps {
     settings: ThemeSettings;
@@ -31,18 +32,22 @@ const SettingsRadioOption: React.FC<SettingsRadioOptionProps> = ({ name, value, 
 );
 
 
-const SettingsSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div>
-        <h5 className="font-medium text-sm text-slate-500 dark:text-slate-400 mb-3 text-right">{title}</h5>
-        {children}
-    </div>
-);
+const SettingsSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
+    const { language } = useContext(LanguageContext);
+    return (
+        <div>
+            <h5 className={`font-medium text-sm text-slate-500 dark:text-slate-400 mb-3 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{title}</h5>
+            {children}
+        </div>
+    );
+};
 
 
 const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
     const [isOpen, setIsOpen] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
+    const { t, language } = useContext(LanguageContext);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -70,62 +75,64 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
         const value = e.target.value === 'true';
         setSettings(prev => ({ ...prev, [key]: value }));
     };
+    
+    const panelPositionClass = language === 'ar' ? 'left-auto right-4 sm:right-6' : 'left-4 sm:left-6';
 
     return (
-        <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50">
+        <div className={`fixed bottom-4 sm:bottom-6 z-50 ${panelPositionClass}`}>
             <div
                 ref={panelRef}
                 className={`transform transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 visible scale-100 translate-y-0' : 'opacity-0 invisible scale-95 -translate-y-2'}`}
             >
-                <div className="absolute bottom-full left-0 mb-3 w-[calc(100vw-2rem)] max-w-xs sm:w-72 bg-white dark:bg-slate-800 rounded-lg shadow-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-700 flex flex-col max-h-[80vh]">
-                    <div className="text-right p-4 border-b dark:border-slate-700 flex-shrink-0">
-                        <h4 className="font-bold text-slate-800 dark:text-slate-200">إعدادات شكل النظام</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">التخصيص مخطط الألوان العام ، قائمة الشريط الجانبي ، إلخ.</p>
+                <div className="absolute bottom-full mb-3 w-[calc(100vw-2rem)] max-w-xs sm:w-72 bg-white dark:bg-slate-800 rounded-lg shadow-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-700 flex flex-col max-h-[80vh]">
+                    <div className={`p-4 border-b dark:border-slate-700 flex-shrink-0 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                        <h4 className="font-bold text-slate-800 dark:text-slate-200">{t('settings.title')}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('settings.subtitle')}</p>
                     </div>
 
                     <div className="p-4 space-y-6 overflow-y-auto">
-                        <SettingsSection title="نظام الألوان">
+                        <SettingsSection title={t('settings.colorScheme')}>
                             <div className="flex gap-2">
-                                <SettingsRadioOption name="colorScheme" value="light" label="النظام الفاتح" checked={settings.colorScheme === 'light'} onChange={handleSettingChange('colorScheme')} />
-                                <SettingsRadioOption name="colorScheme" value="dark" label="النظام الليلي" checked={settings.colorScheme === 'dark'} onChange={handleSettingChange('colorScheme')} />
+                                <SettingsRadioOption name="colorScheme" value="light" label={t('settings.lightScheme')} checked={settings.colorScheme === 'light'} onChange={handleSettingChange('colorScheme')} />
+                                <SettingsRadioOption name="colorScheme" value="dark" label={t('settings.darkScheme')} checked={settings.colorScheme === 'dark'} onChange={handleSettingChange('colorScheme')} />
                             </div>
                         </SettingsSection>
 
-                        <SettingsSection title="النطاق">
+                        <SettingsSection title={t('settings.layoutWidth')}>
                             <div className="flex gap-2">
-                                <SettingsRadioOption name="layoutWidth" value="full" label="نطاق كامل" checked={settings.layoutWidth === 'full'} onChange={handleSettingChange('layoutWidth')} />
-                                <SettingsRadioOption name="layoutWidth" value="boxed" label="نطاق صندوق" checked={settings.layoutWidth === 'boxed'} onChange={handleSettingChange('layoutWidth')} />
+                                <SettingsRadioOption name="layoutWidth" value="full" label={t('settings.fullWidth')} checked={settings.layoutWidth === 'full'} onChange={handleSettingChange('layoutWidth')} />
+                                <SettingsRadioOption name="layoutWidth" value="boxed" label={t('settings.boxedWidth')} checked={settings.layoutWidth === 'boxed'} onChange={handleSettingChange('layoutWidth')} />
                             </div>
                         </SettingsSection>
                         
-                        <SettingsSection title="لون الشريط الجانبي الأيسر">
+                        <SettingsSection title={t('settings.sidebarColor')}>
                             <div className="grid grid-cols-2 gap-2">
-                                <SettingsRadioOption name="sidebarColor" value="light" label="فاتح" checked={settings.sidebarColor === 'light'} onChange={handleSettingChange('sidebarColor')} />
-                                <SettingsRadioOption name="sidebarColor" value="dark" label="ليلي" checked={settings.sidebarColor === 'dark'} onChange={handleSettingChange('sidebarColor')} />
-                                <SettingsRadioOption name="sidebarColor" value="brand" label="ماركة" checked={settings.sidebarColor === 'brand'} onChange={handleSettingChange('sidebarColor')} />
-                                <SettingsRadioOption name="sidebarColor" value="gradient" label="انحدار" checked={settings.sidebarColor === 'gradient'} onChange={handleSettingChange('sidebarColor')} />
+                                <SettingsRadioOption name="sidebarColor" value="light" label={t('settings.light')} checked={settings.sidebarColor === 'light'} onChange={handleSettingChange('sidebarColor')} />
+                                <SettingsRadioOption name="sidebarColor" value="dark" label={t('settings.dark')} checked={settings.sidebarColor === 'dark'} onChange={handleSettingChange('sidebarColor')} />
+                                <SettingsRadioOption name="sidebarColor" value="brand" label={t('settings.brand')} checked={settings.sidebarColor === 'brand'} onChange={handleSettingChange('sidebarColor')} />
+                                <SettingsRadioOption name="sidebarColor" value="gradient" label={t('settings.gradient')} checked={settings.sidebarColor === 'gradient'} onChange={handleSettingChange('sidebarColor')} />
                             </div>
                         </SettingsSection>
 
-                        <SettingsSection title="حجم الشريط الجانبي الأيسر">
+                        <SettingsSection title={t('settings.sidebarSize')}>
                             <div className="flex gap-2">
-                                <SettingsRadioOption name="sidebarSize" value="default" label="افتراضي" checked={settings.sidebarSize === 'default'} onChange={handleSettingChange('sidebarSize')} />
-                                <SettingsRadioOption name="sidebarSize" value="compact" label="صغير" checked={settings.sidebarSize === 'compact'} onChange={handleSettingChange('sidebarSize')} />
-                                <SettingsRadioOption name="sidebarSize" value="condensed" label="صغير جدًا" checked={settings.sidebarSize === 'condensed'} onChange={handleSettingChange('sidebarSize')} />
+                                <SettingsRadioOption name="sidebarSize" value="default" label={t('settings.default')} checked={settings.sidebarSize === 'default'} onChange={handleSettingChange('sidebarSize')} />
+                                <SettingsRadioOption name="sidebarSize" value="compact" label={t('settings.compact')} checked={settings.sidebarSize === 'compact'} onChange={handleSettingChange('sidebarSize')} />
+                                <SettingsRadioOption name="sidebarSize" value="condensed" label={t('settings.condensed')} checked={settings.sidebarSize === 'condensed'} onChange={handleSettingChange('sidebarSize')} />
                             </div>
                         </SettingsSection>
                         
-                        <SettingsSection title="الشريط العلوي">
+                        <SettingsSection title={t('settings.topbar')}>
                             <div className="flex gap-2">
-                                <SettingsRadioOption name="topbarColor" value="light" label="فاتح" checked={settings.topbarColor === 'light'} onChange={handleSettingChange('topbarColor')} />
-                                <SettingsRadioOption name="topbarColor" value="dark" label="ليلي" checked={settings.topbarColor === 'dark'} onChange={handleSettingChange('topbarColor')} />
+                                <SettingsRadioOption name="topbarColor" value="light" label={t('settings.light')} checked={settings.topbarColor === 'light'} onChange={handleSettingChange('topbarColor')} />
+                                <SettingsRadioOption name="topbarColor" value="dark" label={t('settings.dark')} checked={settings.topbarColor === 'dark'} onChange={handleSettingChange('topbarColor')} />
                             </div>
                         </SettingsSection>
 
-                        <SettingsSection title="معلومات مستخدم في الشريط الجانبي">
+                        <SettingsSection title={t('settings.userInfo')}>
                              <div className="flex gap-2">
-                                <SettingsRadioOption name="showUserInfo" value="true" label="تفعيل" checked={settings.showUserInfo === true} onChange={handleBooleanSettingChange('showUserInfo')} />
-                                <SettingsRadioOption name="showUserInfo" value="false" label="إلغاء التفعيل" checked={settings.showUserInfo === false} onChange={handleBooleanSettingChange('showUserInfo')} />
+                                <SettingsRadioOption name="showUserInfo" value="true" label={t('settings.enable')} checked={settings.showUserInfo === true} onChange={handleBooleanSettingChange('showUserInfo')} />
+                                <SettingsRadioOption name="showUserInfo" value="false" label={t('settings.disable')} checked={settings.showUserInfo === false} onChange={handleBooleanSettingChange('showUserInfo')} />
                             </div>
                         </SettingsSection>
                     </div>

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import ProfileStatCard from './ProfileStatCard';
 import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
 import DatePicker from './DatePicker';
 import PhoneNumberInput from './PhoneNumberInput'; // Import the new component
+import { LanguageContext } from '../contexts/LanguageContext';
 
 // Icons for stat cards
 import HeartIcon from './icons-redesign/HeartIcon';
@@ -13,6 +14,7 @@ import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 
 
 const UserProfilePage: React.FC = () => {
+    const { t, language } = useContext(LanguageContext);
     const [profileData, setProfileData] = useState({
         name: 'وليد',
         gender: 'ذكر',
@@ -35,32 +37,37 @@ const UserProfilePage: React.FC = () => {
     const handlePhoneChange = (newNumber: string) => {
         setProfileData(prev => ({ ...prev, phoneNumber: newNumber }));
     };
-
+    
+    const textAlignClass = language === 'ar' ? 'text-right' : 'text-left';
+    const labelAlignClass = `block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ${textAlignClass}`;
+    const inputBaseClass = `w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200`;
+    const fileInputClass = `block w-full text-sm text-slate-500 dark:text-slate-400 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-500/10 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-500/20 cursor-pointer ${language === 'ar' ? 'file:ml-4' : 'file:mr-4'}`;
+    
     return (
         <div className="space-y-6">
             {/* Top Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <ProfileStatCard
-                    title="الخطة A"
-                    subtitle="الخطة"
+                    title={t('profile.planA')}
+                    subtitle={t('profile.plan')}
                     icon={HeartIcon}
                     iconBgColor="bg-purple-500"
                 />
                 <ProfileStatCard
                     title="09 ديسمبر 2024"
-                    subtitle="تاريخ الاشتراك"
+                    subtitle={t('profile.subscriptionDate')}
                     icon={ArrowRightCircleIcon}
                     iconBgColor="bg-cyan-500"
                 />
                 <ProfileStatCard
                     title="09 ديسمبر 2025"
-                    subtitle="تاريخ إنتهاء الاشتراك"
+                    subtitle={t('profile.subscriptionEndDate')}
                     icon={ArrowLeftCircleIcon}
                     iconBgColor="bg-red-500"
                 />
                 <ProfileStatCard
                     title="131"
-                    subtitle="رصيد الرسائل"
+                    subtitle={t('profile.messageBalance')}
                     icon={DesktopComputerIcon}
                     iconBgColor="bg-slate-700"
                 />
@@ -68,79 +75,79 @@ const UserProfilePage: React.FC = () => {
 
             {/* User Info Form */}
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm">
-                <div className="p-4 border-b dark:border-slate-700">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <div className={`p-4 border-b dark:border-slate-700`}>
+                    <h3 className={`text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         <InformationCircleIcon className="w-6 h-6 text-slate-500" />
-                        <span>معلومات الحساب</span>
+                        <span>{t('profile.accountInfo')}</span>
                     </h3>
                 </div>
                 <form className="p-6 space-y-6" onSubmit={(e) => e.preventDefault()}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         {/* Name */}
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-right">الاسم</label>
-                            <input type="text" id="name" name="name" value={profileData.name} onChange={handleInputChange} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900 dark:text-slate-200" />
+                            <label htmlFor="name" className={labelAlignClass}>{t('profile.name')}</label>
+                            <input type="text" id="name" name="name" value={profileData.name} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`} />
                         </div>
 
                         {/* Gender */}
                         <div>
-                            <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-right">الجنس</label>
-                            <select id="gender" name="gender" value={profileData.gender} onChange={handleInputChange} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900 dark:text-slate-200">
-                                <option>الجنس</option>
-                                <option>ذكر</option>
-                                <option>أنثى</option>
+                            <label htmlFor="gender" className={labelAlignClass}>{t('profile.gender')}</label>
+                            <select id="gender" name="gender" value={profileData.gender} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`}>
+                                <option>{t('profile.genderSelect')}</option>
+                                <option>{t('profile.male')}</option>
+                                <option>{t('profile.female')}</option>
                             </select>
                         </div>
                         
                         {/* Date of Birth */}
                         <div>
-                            <label htmlFor="dob" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-right">تاريخ الميلاد</label>
+                            <label htmlFor="dob" className={labelAlignClass}>{t('profile.dob')}</label>
                             <DatePicker value={profileData.dob} onChange={handleDateChange} />
                         </div>
 
                         {/* Photo */}
                         <div>
-                             <label htmlFor="photo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-right">الصورة</label>
-                             <input type="file" id="photo" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:ml-2 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-500/10 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-500/20 cursor-pointer"/>
+                             <label htmlFor="photo" className={labelAlignClass}>{t('profile.photo')}</label>
+                             <input type="file" id="photo" className={fileInputClass}/>
                         </div>
                     </div>
                     
                     {/* Notes */}
                     <div>
-                        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-right">الملاحظات</label>
-                        <textarea id="notes" name="notes" rows={4} placeholder="اكتب بعض الملاحظات ..." value={profileData.notes} onChange={handleInputChange} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900 dark:text-slate-200"></textarea>
+                        <label htmlFor="notes" className={labelAlignClass}>{t('profile.notes')}</label>
+                        <textarea id="notes" name="notes" rows={4} placeholder={t('profile.notesPlaceholder')} value={profileData.notes} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`}></textarea>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                          {/* Username */}
                         <div>
-                            <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-right">اسم المستخدم</label>
-                            <input type="text" id="username" name="username" value={profileData.username} onChange={handleInputChange} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900 dark:text-slate-200" />
+                            <label htmlFor="username" className={labelAlignClass}>{t('profile.username')}</label>
+                            <input type="text" id="username" name="username" value={profileData.username} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`} />
                         </div>
 
                          {/* Mobile Number */}
                         <div>
-                            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-right">رقم الجوال</label>
+                            <label htmlFor="phoneNumber" className={labelAlignClass}>{t('profile.mobileNumber')}</label>
                             <PhoneNumberInput value={profileData.phoneNumber} onChange={handlePhoneChange} />
                         </div>
 
                          {/* Email */}
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-right">عنوان البريد الإلكتروني</label>
-                            <input type="email" id="email" name="email" value={profileData.email} onChange={handleInputChange} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900 dark:text-slate-200" />
+                            <label htmlFor="email" className={labelAlignClass}>{t('profile.email')}</label>
+                            <input type="email" id="email" name="email" value={profileData.email} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`} />
                         </div>
                         
                          {/* User Role */}
                          <div>
-                            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-right">دور المستخدم</label>
-                            <input type="text" id="role" name="role" defaultValue="الفندق" className="w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-right text-gray-500 dark:text-slate-400" readOnly />
+                            <label htmlFor="role" className={labelAlignClass}>{t('profile.userRole')}</label>
+                            <input type="text" id="role" name="role" value={t('profile.hotel')} className={`w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-gray-500 dark:text-slate-400 ${textAlignClass}`} readOnly />
                         </div>
                     </div>
                     
-                    <div className="flex justify-start pt-4">
+                    <div className={`flex ${language === 'ar' ? 'justify-start' : 'justify-start'} pt-4`}>
                         <button type="submit" className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
                             <CheckCircleIcon className="w-5 h-5" />
-                            <span>حفظ</span>
+                            <span>{t('profile.save')}</span>
                         </button>
                     </div>
                 </form>

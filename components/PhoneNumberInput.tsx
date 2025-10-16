@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import ChevronDownIcon from './icons-redesign/ChevronDownIcon';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface Country {
     name: string;
@@ -28,6 +29,7 @@ interface PhoneNumberInputProps {
 }
 
 const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({ value, onChange }) => {
+    const { t } = useContext(LanguageContext);
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCountry, setSelectedCountry] = useState<Country>(sortedCountries.find(c => c.iso === 'SA') || sortedCountries[0]);
@@ -111,7 +113,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({ value, onChange }) 
                             <div className="p-2">
                                 <input
                                     type="text"
-                                    placeholder="Search country..."
+                                    placeholder={t('phone.search')}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-sm"

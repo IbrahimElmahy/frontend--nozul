@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { IconProps } from './icons/Icon';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface ProfileStatCardProps {
     title: string;
@@ -9,9 +10,11 @@ interface ProfileStatCardProps {
 }
 
 const ProfileStatCard: React.FC<ProfileStatCardProps> = ({ title, subtitle, icon: Icon, iconBgColor }) => {
+    const { language } = useContext(LanguageContext);
+    
     return (
         <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm flex items-center justify-between">
-            <div className="text-right">
+            <div className={language === 'ar' ? 'text-right' : 'text-left'}>
                 <p className="text-xl font-bold text-slate-800 dark:text-slate-200">{title}</p>
                 <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">{subtitle}</p>
             </div>

@@ -1,18 +1,22 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { translations, TranslationKey } from '../translations';
+import { translations, TranslationKey, translations as translationsData } from '../translations';
 
 type Language = 'ar' | 'en';
+
+type TranslationDataObject = typeof translationsData.ar;
 
 interface LanguageContextType {
     language: Language;
     setLanguage: (language: Language) => void;
     t: (key: TranslationKey, ...args: any[]) => string;
+    translationData: TranslationDataObject;
 }
 
 export const LanguageContext = createContext<LanguageContextType>({
     language: 'ar',
     setLanguage: () => {},
     t: () => '',
+    translationData: translationsData.ar,
 });
 
 interface LanguageProviderProps {
@@ -61,7 +65,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
 
     return (
-        <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
+        <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t, translationData: translationsData[language] }}>
             {children}
         </LanguageContext.Provider>
     );

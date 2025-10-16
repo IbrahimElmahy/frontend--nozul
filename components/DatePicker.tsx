@@ -1,22 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface DatePickerProps {
     value: string;
     onChange: (date: string) => void;
 }
 
-const MONTH_NAMES = [
-    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-];
-const DAYS_OF_WEEK = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
-
 const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
+    const { language, translationData } = useContext(LanguageContext);
     const [isOpen, setIsOpen] = useState(false);
     const [viewDate, setViewDate] = useState(new Date(value || Date.now()));
     const datepickerRef = useRef<HTMLDivElement>(null);
+
+    const MONTH_NAMES = translationData.datepicker.months;
+    const DAYS_OF_WEEK = translationData.datepicker.days;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -61,9 +60,9 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         
         const selectedDate = new Date(value);
-        const selectedDay = selectedDate.getDate();
-        const selectedMonth = selectedDate.getMonth();
-        const selectedYear = selectedDate.getFullYear();
+        const selectedDay = !isNaN(selectedDate.getTime()) ? selectedDate.getDate() : -1;
+        const selectedMonth = !isNaN(selectedDate.getTime()) ? selectedDate.getMonth() : -1;
+        const selectedYear = !isNaN(selectedDate.getTime()) ? selectedDate.getFullYear() : -1;
 
         const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => <div key={`blank-${i}`} />);
         const days = Array.from({ length: daysInMonth }, (_, i) => {
@@ -99,6 +98,8 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
         );
     };
 
+    const popoverPositionClass = language === 'ar' ? 'right-0' : 'left-0';
+
     return (
         <div className="relative" ref={datepickerRef}>
             <input
@@ -106,19 +107,19 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
                 readOnly
                 value={value}
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900 dark:text-slate-200 cursor-pointer"
+                className={`w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 cursor-pointer ${language === 'ar' ? 'text-right' : 'text-left'}`}
             />
             {isOpen && (
-                <div className="absolute top-full mt-2 right-0 z-10 w-72 bg-white dark:bg-slate-800 rounded-lg shadow-lg border dark:border-slate-700 p-2">
+                <div className={`absolute top-full mt-2 z-10 w-72 bg-white dark:bg-slate-800 rounded-lg shadow-lg border dark:border-slate-700 p-2 ${popoverPositionClass}`}>
                     <div className="flex justify-between items-center mb-2 px-2">
-                        <button onClick={() => changeMonth(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                        <button onClick={() => changeMonth(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
                         <div className="font-semibold text-gray-800 dark:text-gray-200">{MONTH_NAMES[viewDate.getMonth()]}</div>
-                        <button onClick={() => changeMonth(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                        <button onClick={() => changeMonth(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
                     </div>
                     <div className="flex justify-between items-center mb-2 px-2">
-                         <button onClick={() => changeYear(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                         <button onClick={() => changeYear(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
                         <div className="font-semibold text-gray-800 dark:text-gray-200">{viewDate.getFullYear()}</div>
-                         <button onClick={() => changeYear(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                         <button onClick={() => changeYear(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
                     </div>
                     {renderCalendar()}
                 </div>
