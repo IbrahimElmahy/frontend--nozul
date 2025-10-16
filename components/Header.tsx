@@ -10,6 +10,7 @@ import ArrowsPointingInIcon from './icons-redesign/ArrowsPointingInIcon';
 import Bars3Icon from './icons-redesign/Bars3Icon';
 import GlobeAltIcon from './icons-redesign/GlobeAltIcon';
 import { LanguageContext } from '../contexts/LanguageContext';
+import { TranslationKey } from '../translations';
 
 
 // Icons for notifications
@@ -40,6 +41,12 @@ interface HeaderProps {
   onMenuButtonClick: () => void;
   setCurrentPage: (page: Page) => void;
   currentPage: Page;
+}
+
+const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationKey, parent?: TranslationKey}> = {
+    dashboard: { title: 'header.dashboard', breadcrumb: 'header.hotelName' },
+    profile: { title: 'header.userInformation', breadcrumb: 'header.dashboard', parent: 'header.dashboard' },
+    units: { title: 'header.units', breadcrumb: 'sidebar.residentialRooms', parent: 'header.dashboard' }
 }
 
 const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage }) => {
@@ -121,6 +128,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
       setIsUserDropdownOpen(false);
   }
 
+  const currentDetails = pageDetails[currentPage];
 
   const headerColorClass = topbarColor === 'dark' 
     ? 'bg-slate-800 text-slate-300 border-b border-slate-700' 
@@ -138,14 +146,19 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
           >
               <Bars3Icon className="w-6 h-6" />
           </button>
-        <h1 className="text-lg font-bold text-slate-800 dark:text-slate-200">
-            {currentPage === 'dashboard' ? t('header.dashboard') : t('header.userInformation')}
-        </h1>
-        <div className="hidden md:flex items-center text-sm">
-            <ChevronLeftIcon className={`w-5 h-5 text-gray-400 dark:text-gray-500 mx-2 transform ${language === 'en' ? 'rotate-180' : ''}`} />
-            <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                {currentPage === 'dashboard' ? t('header.hotelName') : t('header.dashboard')}
-            </span>
+        <div className="flex flex-col items-start">
+            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                {t(currentDetails.title)}
+            </h1>
+            <div className="hidden md:flex items-center text-sm">
+                 <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    {t(currentDetails.parent || 'sidebar.mainPage')}
+                </span>
+                <ChevronLeftIcon className={`w-4 h-4 text-gray-400 dark:text-gray-500 mx-1 transform ${language === 'en' ? 'rotate-180' : ''}`} />
+                <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    {t(currentDetails.breadcrumb)}
+                </span>
+            </div>
         </div>
       </div>
       

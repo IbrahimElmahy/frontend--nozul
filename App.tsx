@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import UserProfilePage from './components/UserProfilePage';
+import UnitsPage from './components/UnitsPage'; // Import the new UnitsPage
 import SettingsCog from './components/SettingsCog';
 import { LanguageContext } from './contexts/LanguageContext';
 
@@ -16,7 +17,7 @@ export interface ThemeSettings {
   topbarColor: 'light' | 'dark';
 }
 
-export type Page = 'dashboard' | 'profile';
+export type Page = 'dashboard' | 'profile' | 'units'; // Add 'units' page type
 
 const defaultSettings: ThemeSettings = {
   colorScheme: 'light',
@@ -36,7 +37,7 @@ interface DashboardPageProps {
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSettings }) => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
+  const [currentPage, setCurrentPage] = useState<Page>('units');
 
   const layoutWidthClass = settings.layoutWidth === 'boxed' ? 'max-w-screen-xl mx-auto shadow-2xl' : 'w-full';
 
@@ -51,12 +52,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                 aria-hidden="true"
               ></div>
             )}
-            <Sidebar onLogout={onLogout} settings={settings} isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} setCurrentPage={setCurrentPage} />
+            <Sidebar onLogout={onLogout} settings={settings} isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} setCurrentPage={setCurrentPage} currentPage={currentPage} />
             <div className="flex-1 flex flex-col min-w-0">
                 <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} setCurrentPage={setCurrentPage} currentPage={currentPage} />
-                <main className={`flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 p-4 sm:p-6`}>
+                <main className={`flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950 p-4 sm:p-6`}>
                     {currentPage === 'dashboard' && <Dashboard />}
                     {currentPage === 'profile' && <UserProfilePage />}
+                    {currentPage === 'units' && <UnitsPage />}
                 </main>
             </div>
             <SettingsCog settings={settings} setSettings={setSettings} />

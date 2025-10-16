@@ -76,15 +76,16 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
         setSettings(prev => ({ ...prev, [key]: value }));
     };
     
-    const panelPositionClass = language === 'ar' ? 'left-auto right-4 sm:right-6' : 'left-4 sm:left-6';
+    const panelPositionClass = language === 'ar' ? 'left-4 sm:left-6' : 'right-4 sm:right-6';
+    const panelOriginClass = language === 'ar' ? 'origin-bottom-left' : 'origin-bottom-right';
 
     return (
         <div className={`fixed bottom-4 sm:bottom-6 z-50 ${panelPositionClass}`}>
             <div
                 ref={panelRef}
-                className={`transform transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 visible scale-100 translate-y-0' : 'opacity-0 invisible scale-95 -translate-y-2'}`}
+                className={`transform transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 visible scale-100 translate-y-0' : 'opacity-0 invisible scale-95 -translate-y-2'} ${panelOriginClass}`}
             >
-                <div className="absolute bottom-full mb-3 w-[calc(100vw-2rem)] max-w-xs sm:w-72 bg-white dark:bg-slate-800 rounded-lg shadow-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-700 flex flex-col max-h-[80vh]">
+                <div className={`absolute bottom-full mb-3 w-[calc(100vw-2rem)] max-w-xs sm:w-72 bg-white dark:bg-slate-800 rounded-lg shadow-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-700 flex flex-col max-h-[80vh] ${language === 'ar' ? 'left-0' : 'right-0'}`}>
                     <div className={`p-4 border-b dark:border-slate-700 flex-shrink-0 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                         <h4 className="font-bold text-slate-800 dark:text-slate-200">{t('settings.title')}</h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400">{t('settings.subtitle')}</p>

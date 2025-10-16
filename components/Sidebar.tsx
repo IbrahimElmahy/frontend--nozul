@@ -131,16 +131,23 @@ interface SidebarProps {
     isMobileMenuOpen: boolean;
     setMobileMenuOpen: (open: boolean) => void;
     setCurrentPage: (page: Page) => void;
+    currentPage: Page;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen, setMobileMenuOpen, setCurrentPage }) => {
+const pageMapping: Record<string, Page> = {
+    dashboard: 'dashboard',
+    rooms: 'units',
+};
+
+
+const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen, setMobileMenuOpen, setCurrentPage, currentPage }) => {
     const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
     const { t, language } = useContext(LanguageContext);
 
     const navigationSections = [
         {
             header: t('sidebar.mainPage'),
-            items: [{ id: 'dashboard', label: t('sidebar.dashboard'), icon: DashboardIcon, active: true, notificationCount: 2 }]
+            items: [{ id: 'dashboard', label: t('sidebar.dashboard'), icon: DashboardIcon, notificationCount: 2 }]
         },
         {
             header: t('sidebar.reservationsManagement'),
@@ -180,11 +187,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
     
     const handleNavItemClick = (e: React.MouseEvent<HTMLAnchorElement>, itemId: string) => {
         e.preventDefault();
-        if (itemId === 'dashboard') {
-            setCurrentPage('dashboard');
+        const targetPage = pageMapping[itemId];
+        if (targetPage) {
+            setCurrentPage(targetPage);
         } else {
-            // For now, all links go to dashboard
-            setCurrentPage('dashboard');
+            // For now, all other links can go to dashboard or do nothing
+            // For example:
+            // if (itemId === 'bookings') { /* navigate to bookings */ }
+            // else { setCurrentPage('dashboard'); }
         }
 
 
@@ -253,6 +263,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
                     <NavItem 
                         key={itemIndex}
                         {...item}
+                        active={currentPage === pageMapping[item.id]}
                         collapsed={isEffectivelyCollapsed}
                         sidebarColor={effectiveSidebarColor}
                         onClick={(e) => handleNavItemClick(e, item.id)}

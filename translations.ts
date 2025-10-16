@@ -6,7 +6,6 @@ const translationsData = {
     profile: 'الملف الشخصي',
     notifications: 'الإشعارات',
     clear_all: 'مسح الكل',
-    // FIX: Corrected typo in 'الإشعارات'
     view_all_notifications: 'عرض جميع الإشعارات',
     new_account_created: 'تم إنشاء حساب جديد',
     '5_minutes_ago': 'منذ 5 دقائق',
@@ -30,21 +29,23 @@ const translationsData = {
       bookingAgencies: 'وكالات الحجز',
       other: 'أخرى',
       reports: 'التقارير',
-      archives: 'الارشيفات',
+      // FIX: Corrected typo from 'الارشيفات' to 'الأرشيفات'
+      archives: 'الأرشيفات',
       notifications: 'الإشعارات',
       settings: 'الإعدادات',
     },
     header: {
         dashboard: 'لوحة التحكم',
         userInformation: 'معلومات المستخدم',
-        hotelName: 'شقق ساس المصيف الفندقيه'
+        hotelName: 'شقق ساس المصيف الفندقيه',
+        units: 'الوحدات',
     },
     login: {
       title: 'تسجيل الدخول',
       subtitle: 'أدخل اسم المستخدم وكلمة المرور للوصول إلى لوحة التحكم.',
       usernameLabel: 'اسم المستخدم',
       // FIX: Changed placeholder to be more descriptive and differ from the label.
-      usernamePlaceholder: 'أدخل اسم المستخدم',
+      usernamePlaceholder: 'الرجاء إدخال اسم المستخدم',
       passwordLabel: 'كلمة المرور',
       passwordPlaceholder: 'أدخل كلمة المرور',
       forgotPassword: 'نسيت كلمة المرور؟',
@@ -62,7 +63,6 @@ const translationsData = {
       accountInfo: "معلومات الحساب",
       name: "الاسم",
       gender: "الجنس",
-      // FIX: Changed value to be more appropriate for a select option placeholder.
       genderSelect: "اختر الجنس",
       male: "ذكر",
       female: "أنثى",
@@ -148,6 +148,29 @@ const translationsData = {
     phone: {
       search: "ابحث عن بلد..."
     },
+    units: {
+      free: 'شاغرة',
+      occupied: 'مشغولة',
+      checkOutToday: 'مغادرة اليوم',
+      checkInToday: 'دخول اليوم',
+      notCheckedIn: 'لم يتم التسكين',
+      outOfService: 'خارج الخدمة',
+      cleaningStatus: 'حالة النظافة',
+      type: 'النوع',
+      searchPlaceholder: 'ابحث باسم العميل أو رقم الوحدة',
+      export: 'تصدير',
+      network: 'شبكة',
+      table: 'جدول',
+      debtor: 'مدين',
+      creditor: 'دائن',
+      addReservation: 'إضافة حجز',
+      notClean: 'غير نظيفة',
+      clean: 'نظيفة',
+      remainingForHim: 'المتبقي له:',
+      night: 'لليلة',
+      checkIn: 'دخول:',
+      checkOut: 'خروج:',
+    }
   },
   en: {
     walid_ullah: 'Waleed Allah',
@@ -186,13 +209,15 @@ const translationsData = {
      header: {
         dashboard: 'Dashboard',
         userInformation: 'User Information',
-        hotelName: 'SAS Al Masyaf Hotel Apartments'
+        hotelName: 'SAS Al Masyaf Hotel Apartments',
+        units: 'Units',
     },
     login: {
       title: 'Login',
       subtitle: 'Enter your username and password to access the dashboard.',
       usernameLabel: 'Username',
-      usernamePlaceholder: 'Enter username',
+      // FIX: Changed placeholder to be more descriptive.
+      usernamePlaceholder: 'Please enter your username',
       passwordLabel: 'Password',
       passwordPlaceholder: 'Enter password',
       forgotPassword: 'Forgot password?',
@@ -295,6 +320,29 @@ const translationsData = {
     phone: {
       search: "Search country..."
     },
+    units: {
+      free: 'Free',
+      occupied: 'Occupied',
+      checkOutToday: 'Check out today',
+      checkInToday: 'Check in today',
+      notCheckedIn: 'Not Checked-in',
+      outOfService: 'Out of service',
+      cleaningStatus: 'Cleaning Status',
+      type: 'Type',
+      searchPlaceholder: 'Search by customer or unit name',
+      export: 'Export',
+      network: 'Network',
+      table: 'Table',
+      debtor: 'Debtor',
+      creditor: 'Creditor',
+      addReservation: 'Add Reservation',
+      notClean: 'Not Clean',
+      clean: 'Clean',
+      remainingForHim: 'Remaining for him:',
+      night: '/ Night',
+      checkIn: 'Check In:',
+      checkOut: 'Check Out:',
+    }
   }
 };
 
