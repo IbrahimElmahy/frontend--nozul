@@ -6,7 +6,7 @@ import BuildingOfficeIcon from './icons-redesign/BuildingOfficeIcon';
 import UserGroupIcon from './icons-redesign/UserGroupIcon';
 import UserCheckIcon from './icons-redesign/UserCheckIcon';
 import UserIcon from './icons-redesign/UserIcon';
-import CalendarPlusIcon from './icons-redesign/CalendarPlusIcon';
+import CalendarIcon from './icons-redesign/CalendarIcon';
 import EllipsisVerticalIcon from './icons-redesign/EllipsisVerticalIcon';
 import CurrencySaudiRiyalIcon from './icons-redesign/CurrencySaudiRiyalIcon';
 
@@ -14,7 +14,7 @@ import CurrencySaudiRiyalIcon from './icons-redesign/CurrencySaudiRiyalIcon';
 type Status = 'free' | 'occupied' | 'not-checked-in';
 type CleaningStatus = 'clean' | 'not-clean';
 
-interface UnitCardProps {
+export interface UnitCardProps {
     status: Status;
     cleaningStatus: CleaningStatus;
     unitNumber: string;
@@ -57,13 +57,13 @@ const statusConfig = {
 const cleaningStatusConfig = {
     clean: {
         labelKey: 'units.clean',
-        textColor: 'text-green-700',
-        bgColor: 'bg-green-200/80',
+        textColor: 'text-green-700 dark:text-green-300',
+        bgColor: 'bg-green-200/80 dark:bg-green-500/20',
     },
     'not-clean': {
         labelKey: 'units.notClean',
-        textColor: 'text-red-700',
-        bgColor: 'bg-red-200/80',
+        textColor: 'text-red-700 dark:text-red-300',
+        bgColor: 'bg-red-200/80 dark:bg-red-500/20',
     }
 }
 
@@ -80,7 +80,7 @@ const UnitCard: React.FC<UnitCardProps> = ({
     price,
     remaining,
 }) => {
-    const { t } = useContext(LanguageContext);
+    const { t, language } = useContext(LanguageContext);
     const config = statusConfig[status];
     const cleanConfig = cleaningStatusConfig[cleaningStatus];
 
@@ -88,7 +88,7 @@ const UnitCard: React.FC<UnitCardProps> = ({
         <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-t-4 ${config.borderColor} flex flex-col`}>
             <div className="p-4 flex-grow">
                 <div className="flex justify-between items-start mb-2">
-                    <div className="text-left">
+                    <div className={language === 'ar' ? 'text-right' : 'text-left'}>
                         {unitType && <p className="font-bold text-blue-500 text-sm">{unitType}</p>}
                         <div className="flex items-end gap-2">
                             <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{unitNumber}</p>
@@ -107,15 +107,13 @@ const UnitCard: React.FC<UnitCardProps> = ({
                     <span>{t(config.labelKey as any)}</span>
                 </div>
                 
-                {status === 'free' && (
-                     <button className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-green-600 bg-green-100/80 rounded-lg hover:bg-green-200/80 transition-colors">
-                        <CalendarPlusIcon className="w-5 h-5" />
+                {status === 'free' ? (
+                     <button className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-green-600 bg-green-100/80 rounded-lg hover:bg-green-200/80 transition-colors dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20">
+                        <CalendarIcon className="w-5 h-5" />
                         <span>{t('units.addReservation')}</span>
                     </button>
-                )}
-
-                {(status === 'occupied' || status === 'not-checked-in') && (
-                    <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                ) : (
+                    <div className={`space-y-2 text-sm text-slate-600 dark:text-slate-300 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                         <div className="flex items-center gap-2">
                             <UserIcon className="w-5 h-5 text-slate-400" />
                             <span className="font-medium">{customerName}</span>
@@ -133,19 +131,21 @@ const UnitCard: React.FC<UnitCardProps> = ({
             </div>
 
             <div className="border-t dark:border-slate-700 p-3 flex justify-between items-center text-sm">
-                {status === 'free' && price && (
-                    <div className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200">
-                        <CurrencySaudiRiyalIcon className="w-5 h-5 text-slate-500" />
-                        <span>{price.toFixed(2)}</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('units.night')}</span>
-                    </div>
-                )}
-                {status === 'occupied' && remaining !== undefined && (
-                     <div className="flex items-center gap-1 text-sm">
-                        <span className="font-medium text-slate-500 dark:text-slate-400">{t('units.remainingForHim')}</span>
-                        <span className="font-bold text-green-600 dark:text-green-400">{remaining.toFixed(2)}</span>
-                    </div>
-                )}
+                <div className="flex-1">
+                    {status === 'free' && price && (
+                        <div className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200">
+                            <CurrencySaudiRiyalIcon className="w-5 h-5 text-slate-500" />
+                            <span>{price.toFixed(2)}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('units.night')}</span>
+                        </div>
+                    )}
+                    {status === 'occupied' && remaining !== undefined && (
+                         <div className="flex items-center gap-1 text-sm">
+                            <span className="font-medium text-slate-500 dark:text-slate-400">{t('units.remainingForHim')}</span>
+                            <span className="font-bold text-green-600 dark:text-green-400">{remaining.toFixed(2)}</span>
+                        </div>
+                    )}
+                </div>
                  <button className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
                     <EllipsisVerticalIcon className="w-5 h-5"/>
                 </button>

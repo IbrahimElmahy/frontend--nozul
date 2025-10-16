@@ -54,7 +54,8 @@ const translationsData = {
       error: 'اسم المستخدم أو كلمة المرور غير صحيحة.',
       footerText: 'جميع الحقوق محفوظة نزلك',
     },
-    profile: {
+    // FIX: Renamed the 'profile' object to 'profilePage' to resolve the duplicate key error.
+    profilePage: {
       planA: "الخطة A",
       plan: "الخطة",
       subscriptionDate: "تاريخ الاشتراك",
@@ -170,6 +171,10 @@ const translationsData = {
       night: 'لليلة',
       checkIn: 'دخول:',
       checkOut: 'خروج:',
+      all: 'الكل',
+      singleRoom: 'غرفة مفردة',
+      doubleRoom: 'غرفة مزدوجة',
+      suite: 'جناح',
     }
   },
   en: {
@@ -226,7 +231,8 @@ const translationsData = {
       error: 'Invalid username or password.',
       footerText: 'All rights reserved Nuzulcom',
     },
-    profile: {
+    // FIX: Renamed the 'profile' object to 'profilePage' to resolve the duplicate key error.
+    profilePage: {
       planA: "Plan A",
       plan: "Plan",
       subscriptionDate: "Subscription Date",
@@ -342,6 +348,10 @@ const translationsData = {
       night: '/ Night',
       checkIn: 'Check In:',
       checkOut: 'Check Out:',
+      all: 'All',
+      singleRoom: 'Single Room',
+      doubleRoom: 'Double Room',
+      suite: 'Suite',
     }
   }
 };
