@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import UserProfilePage from './components/UserProfilePage';
 import SettingsCog from './components/SettingsCog';
+import { LanguageContext } from './contexts/LanguageContext';
 
 export interface ThemeSettings {
   colorScheme: 'light' | 'dark';
@@ -71,6 +72,8 @@ const App: React.FC = () => {
     const savedSettings = localStorage.getItem('themeSettings');
     return savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings;
   });
+  const { language } = useContext(LanguageContext);
+
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -92,6 +95,11 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [settings]);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+  }, [language]);
 
 
   const handleLogin = () => {

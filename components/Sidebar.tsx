@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { ThemeSettings, Page } from '../App';
 import DashboardIcon from './icons-redesign/DashboardIcon';
 import CalendarIcon from './icons-redesign/CalendarIcon';
@@ -14,6 +14,7 @@ import CogIcon from './icons-redesign/CogIcon';
 import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import Logo from './icons/Logo';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface NavItemProps {
     label: string;
@@ -27,6 +28,7 @@ interface NavItemProps {
 }
 
 const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificationCount, hasSubMenu, collapsed, sidebarColor, onClick }) => {
+    const { language } = useContext(LanguageContext);
     
     const colorStyles = {
         light: {
@@ -72,12 +74,12 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificati
             <Icon className="w-6 h-6 flex-shrink-0" />
             {!collapsed && (
                 <>
-                    <span className="mr-4 flex-grow text-right">{label}</span>
+                    <span className={`flex-grow ${language === 'ar' ? 'mr-4 text-right' : 'ml-4 text-left'}`}>{label}</span>
                     {notificationCount && (
-                        <span className={`flex items-center justify-center text-sm font-bold rounded-full w-6 h-6 ml-2 ${active ? styles.notificationActive : styles.notificationBase}`}>{notificationCount}</span>
+                        <span className={`flex items-center justify-center text-sm font-bold rounded-full w-6 h-6 ${language === 'ar' ? 'ml-2' : 'mr-2'} ${active ? styles.notificationActive : styles.notificationBase}`}>{notificationCount}</span>
                     )}
                     {hasSubMenu && (
-                        <ChevronLeftIcon className={`w-6 h-6 mr-auto ${active ? '' : styles.chevron}`} />
+                        <ChevronLeftIcon className={`w-6 h-6 transform ${language === 'ar' ? '' : 'rotate-180'} ${language === 'ar' ? 'mr-auto' : 'ml-auto'} ${active ? '' : styles.chevron}`} />
                     )}
                 </>
             )}
@@ -87,6 +89,7 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificati
 
 
 const NavHeader: React.FC<{ collapsed: boolean; sidebarColor: ThemeSettings['sidebarColor']; children: React.ReactNode }> = ({ collapsed, sidebarColor, children }) => {
+    const { language } = useContext(LanguageContext);
     if (collapsed) return null;
 
     const headerColors = {
@@ -97,64 +100,30 @@ const NavHeader: React.FC<{ collapsed: boolean; sidebarColor: ThemeSettings['sid
     }
 
     return (
-        <h3 className={`px-3 pt-4 pb-2 text-sm font-semibold uppercase tracking-wider text-right ${headerColors[sidebarColor]}`}>
+        <h3 className={`px-3 pt-4 pb-2 text-sm font-semibold uppercase tracking-wider ${language === 'ar' ? 'text-right' : 'text-left'} ${headerColors[sidebarColor]}`}>
             {children}
         </h3>
     );
 };
 
-const UserInfoBlock: React.FC<{ collapsed: boolean }> = ({ collapsed }) => (
-    <div className={`p-4 flex items-center ${collapsed ? 'justify-center' : ''}`}>
-        <img
-            src="https://picsum.photos/id/237/200/200"
-            alt="User Avatar"
-            className="w-10 h-10 rounded-full flex-shrink-0"
-          />
-          {!collapsed && (
-            <div className="mr-3 text-right">
-                <div className="font-semibold text-sm">وليد الله</div>
-                <div className="text-xs opacity-80">مدير</div>
-            </div>
-          )}
-    </div>
-);
-
-
-const navigationSections = [
-  {
-    header: 'الصفحة الرئيسية',
-    items: [{ label: 'لوحة التحكم', icon: DashboardIcon, active: true, notificationCount: 2 }]
-  },
-  {
-    header: 'إدارة الحجوزات',
-    items: [
-      { label: 'الغرف السكنية', icon: CalendarIcon, hasSubMenu: true },
-      { label: 'الحجوزات', icon: BriefcaseIcon },
-      { label: 'الطلبات', icon: CartIcon }
-    ]
-  },
-  {
-    header: 'الإدارة المالية',
-    items: [{ label: 'السندات', icon: CreditCardIcon, hasSubMenu: true }]
-  },
-  {
-    header: 'إدارة النزلاء',
-    items: [
-      { label: 'النزيل', icon: UsersIcon },
-      { label: 'وكالات الحجز', icon: PresentationChartLineIcon }
-    ]
-  },
-  {
-    header: 'أخرى',
-    items: [
-      { label: 'التقارير', icon: ClockIcon },
-      { label: 'الارشيفات', icon: ArchiveBoxIcon },
-      { label: 'الإشعارات', icon: PaperAirplaneIcon },
-      { label: 'الإعدادات', icon: CogIcon }
-    ]
-  }
-];
-
+const UserInfoBlock: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
+    const { t, language } = useContext(LanguageContext);
+    return (
+        <div className={`p-4 flex items-center ${collapsed ? 'justify-center' : ''}`}>
+            <img
+                src="https://picsum.photos/id/237/200/200"
+                alt="User Avatar"
+                className="w-10 h-10 rounded-full flex-shrink-0"
+            />
+            {!collapsed && (
+                <div className={`${language === 'ar' ? 'mr-3 text-right' : 'ml-3 text-left'}`}>
+                    <div className="font-semibold text-sm">{t('walid_ullah')}</div>
+                    <div className="text-xs opacity-80">{t('manager')}</div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 interface SidebarProps {
     onLogout: () => void;
@@ -166,19 +135,58 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen, setMobileMenuOpen, setCurrentPage }) => {
     const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
+    const { t, language } = useContext(LanguageContext);
+
+    const navigationSections = [
+        {
+            header: t('sidebar.mainPage'),
+            items: [{ id: 'dashboard', label: t('sidebar.dashboard'), icon: DashboardIcon, active: true, notificationCount: 2 }]
+        },
+        {
+            header: t('sidebar.reservationsManagement'),
+            items: [
+            { id: 'rooms', label: t('sidebar.residentialRooms'), icon: CalendarIcon },
+            { id: 'bookings', label: t('sidebar.bookings'), icon: BriefcaseIcon },
+            { id: 'orders', label: t('sidebar.orders'), icon: CartIcon }
+            ]
+        },
+        {
+            header: t('sidebar.financialManagement'),
+            items: [{ id: 'receipts', label: t('sidebar.receipts'), icon: CreditCardIcon }]
+        },
+        {
+            header: t('sidebar.guestManagement'),
+            items: [
+            { id: 'guests', label: t('sidebar.guests'), icon: UsersIcon },
+            { id: 'agencies', label: t('sidebar.bookingAgencies'), icon: PresentationChartLineIcon }
+            ]
+        },
+        {
+            header: t('sidebar.other'),
+            items: [
+            { id: 'reports', label: t('sidebar.reports'), icon: ClockIcon },
+            { id: 'archives', label: t('sidebar.archives'), icon: ArchiveBoxIcon },
+            { id: 'notifications', label: t('sidebar.notifications'), icon: PaperAirplaneIcon },
+            { id: 'settings', label: t('sidebar.settings'), icon: CogIcon }
+            ]
+        }
+    ];
+
 
     const handleLogoutClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
         onLogout();
     };
     
-    const handleNavItemClick = (e: React.MouseEvent<HTMLAnchorElement>, itemLabel: string) => {
+    const handleNavItemClick = (e: React.MouseEvent<HTMLAnchorElement>, itemId: string) => {
         e.preventDefault();
-        if (itemLabel === 'لوحة التحكم') {
+        if (itemId === 'dashboard') {
+            setCurrentPage('dashboard');
+        } else {
+            // For now, all links go to dashboard
             setCurrentPage('dashboard');
         }
-        // For now, all links go to dashboard
-        setCurrentPage('dashboard');
+
 
         if (isMobileMenuOpen) {
             setMobileMenuOpen(false);
@@ -222,9 +230,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
     const widthClass = isDesktopCollapsed ? sizeClasses[sidebarSize].collapsed : sizeClasses[sidebarSize].expanded;
     const isEffectivelyCollapsed = isMobileMenuOpen ? false : isDesktopCollapsed;
 
+    const mobileMenuPosition = language === 'ar' 
+        ? `right-0 ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}` 
+        : `left-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`;
+    const borderClass = language === 'ar' ? 'border-l' : 'border-r';
+
   return (
     <aside 
-        className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-transform duration-300 ease-in-out lg:transition-all lg:duration-300 h-screen fixed lg:relative z-50 right-0 w-72 lg:w-auto ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} lg:translate-x-0 ${widthClass}`}
+        className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-transform duration-300 ease-in-out lg:transition-all lg:duration-300 h-screen fixed lg:relative z-50 w-72 lg:w-auto ${mobileMenuPosition} lg:translate-x-0 ${widthClass}`}
         onMouseEnter={() => setIsDesktopCollapsed(false)}
         onMouseLeave={() => setIsDesktopCollapsed(true)}
     >
@@ -242,7 +255,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
                         {...item}
                         collapsed={isEffectivelyCollapsed}
                         sidebarColor={effectiveSidebarColor}
-                        onClick={(e) => handleNavItemClick(e, item.label)}
+                        onClick={(e) => handleNavItemClick(e, item.id)}
                     />
                 ))}
             </div>
@@ -251,7 +264,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
 
       <div className={`p-3 border-t ${borderColor[effectiveSidebarColor]}`}>
         {showUserInfo && <UserInfoBlock collapsed={isEffectivelyCollapsed} />}
-        <NavItem label="تسجيل الخروج" icon={ArrowLeftOnRectangleIcon} collapsed={isEffectivelyCollapsed} onClick={handleLogoutAndMenuClose} sidebarColor={effectiveSidebarColor} />
+        <NavItem label={t('logout')} icon={ArrowLeftOnRectangleIcon} collapsed={isEffectivelyCollapsed} onClick={handleLogoutAndMenuClose} sidebarColor={effectiveSidebarColor} />
       </div>
     </aside>
   );

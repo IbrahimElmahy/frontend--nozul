@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Logo from './icons/Logo';
-import EyeIcon from './icons/EyeIcon';
-import EyeOffIcon from './icons/EyeOffIcon';
+import EyeIcon from './icons-redesign/EyeIcon';
+import EyeOffIcon from './icons-redesign/EyeOffIcon';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface LoginPageProps {
     onLoginSuccess: () => void;
@@ -13,6 +14,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [error, setError] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const { t, language } = useContext(LanguageContext);
 
   useEffect(() => {
     const rememberedUser = localStorage.getItem('rememberedUser');
@@ -37,35 +39,40 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         }
         onLoginSuccess();
     } else {
-        setError('اسم المستخدم أو كلمة المرور غير صحيحة.');
+        setError(t('login.error'));
     }
   };
+  
+  const formAlignmentClass = language === 'ar' ? 'text-right' : 'text-left';
+  const inputAlignmentClass = language === 'ar' ? 'text-right' : 'text-left';
+  const rememberMeAlignmentClass = language === 'ar' ? 'justify-end' : 'justify-start';
+  const logoAlignmentClass = language === 'ar' ? 'items-end' : 'items-start';
 
   return (
     <div className="min-h-screen flex font-sans">
       {/* Login Form Section */}
       <div className="w-full lg:w-2/5 xl:w-1/3 bg-white flex flex-col p-8 lg:p-12">
-        <div className="flex flex-col items-end">
+        <div className={`flex flex-col ${logoAlignmentClass}`}>
             <Logo className="w-32 h-auto"/>
         </div>
 
         <div className="flex-grow flex items-center justify-center">
             <div className="w-full max-w-sm">
-                <div className="text-right mb-8">
-                    <h1 className="text-3xl font-bold text-slate-700 mb-2">تسجيل الدخول</h1>
-                    <p className="text-gray-500">أدخل اسم المستخدم وكلمة المرور للوصول إلى لوحة التحكم.</p>
+                <div className={`${formAlignmentClass} mb-8`}>
+                    <h1 className="text-3xl font-bold text-slate-700 mb-2">{t('login.title')}</h1>
+                    <p className="text-gray-500">{t('login.subtitle')}</p>
                 </div>
 
                 <form noValidate onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label htmlFor="username" className="block text-sm font-medium text-gray-700 text-right mb-1">اسم المستخدم</label>
+                        <label htmlFor="username" className={`block text-sm font-medium text-gray-700 ${formAlignmentClass} mb-1`}>{t('login.usernameLabel')}</label>
                         <input
                             type="text"
                             id="username"
-                            placeholder="أدخل اسم المستخدم"
+                            placeholder={t('login.usernamePlaceholder')}
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900"
+                            className={`w-full px-4 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${inputAlignmentClass}`}
                             required
                             aria-required="true"
                             aria-invalid={!!error}
@@ -74,18 +81,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     </div>
 
                     <div className="mb-6">
-                        <div className="flex justify-between items-center mb-1">
-                            <label htmlFor="password" className="text-sm font-medium text-gray-700">كلمة المرور</label>
-                            <a href="#" className="text-xs text-blue-500 hover:underline">نسيت كلمة المرور؟</a>
+                        <div className={`flex justify-between items-center mb-1 ${language === 'en' ? 'flex-row-reverse' : ''}`}>
+                            <label htmlFor="password" className="text-sm font-medium text-gray-700">{t('login.passwordLabel')}</label>
+                            <a href="#" className="text-xs text-blue-500 hover:underline">{t('login.forgotPassword')}</a>
                         </div>
                         <div className="relative">
                             <input
                                 type={isPasswordVisible ? 'text' : 'password'}
                                 id="password"
-                                placeholder="أدخل كلمة المرور"
+                                placeholder={t('login.passwordPlaceholder')}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 pl-10 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-gray-900"
+                                className={`w-full px-4 py-2 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${inputAlignmentClass} ${language === 'ar' ? 'pl-10' : 'pr-10'}`}
                                 required
                                 aria-required="true"
                                 aria-invalid={!!error}
@@ -94,7 +101,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                             <button
                                 type="button"
                                 onClick={togglePasswordVisibility}
-                                className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 hover:text-gray-600"
+                                className={`absolute inset-y-0 flex items-center text-gray-400 hover:text-gray-600 ${language === 'ar' ? 'left-0 pl-3' : 'right-0 pr-3'}`}
                                 aria-label={isPasswordVisible ? "Hide password" : "Show password"}
                                 aria-controls="password"
                             >
@@ -110,7 +117,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     {error && (
                         <p
                             id="error-message"
-                            className="text-red-500 text-sm text-right mb-4"
+                            className={`text-red-500 text-sm ${formAlignmentClass} mb-4`}
                             role="alert"
                             aria-live="assertive"
                         >
@@ -118,8 +125,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         </p>
                     )}
 
-                    <div className="flex justify-end items-center mb-6">
-                        <label htmlFor="remember-me" className="text-sm text-gray-700 mr-2">تذكرني</label>
+                    <div className={`flex items-center mb-6 ${rememberMeAlignmentClass}`}>
+                        <label htmlFor="remember-me" className={`text-sm text-gray-700 ${language === 'ar' ? 'mr-2' : 'ml-2'}`}>{t('login.rememberMe')}</label>
                         <input
                             id="remember-me"
                             type="checkbox"
@@ -133,14 +140,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         type="submit"
                         className="w-full bg-blue-500 text-white py-2.5 rounded-md font-bold hover:bg-blue-600 transition-colors duration-200"
                     >
-                        تسجيل الدخول
+                        {t('login.loginButton')}
                     </button>
                 </form>
             </div>
         </div>
 
         <p className="text-center text-xs text-gray-400">
-            جميع الحقوق محفوظة نزلك
+            {t('login.footerText')}
         </p>
       </div>
 
