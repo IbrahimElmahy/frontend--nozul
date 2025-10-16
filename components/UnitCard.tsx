@@ -1,137 +1,152 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
-import { Unit } from '../types';
+import React, { useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import EllipsisVerticalIcon from './icons-redesign/EllipsisVerticalIcon';
-import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
-import TrashIcon from './icons-redesign/TrashIcon';
-import CurrencySaudiRiyalIcon from './icons-redesign/CurrencySaudiRiyalIcon';
+import { Unit } from '../types';
+
+// Icons
+import BuildingOfficeIcon from './icons-redesign/BuildingOfficeIcon';
+import UserGroupIcon from './icons-redesign/UserGroupIcon';
 import UserCheckIcon from './icons-redesign/UserCheckIcon';
-import CheckIcon from './icons-redesign/CheckIcon';
-import XMarkIcon from './icons-redesign/XMarkIcon';
-import Switch from './Switch';
+import UserIcon from './icons-redesign/UserIcon';
+import CalendarIcon from './icons-redesign/CalendarIcon';
+import EllipsisVerticalIcon from './icons-redesign/EllipsisVerticalIcon';
+import CurrencySaudiRiyalIcon from './icons-redesign/CurrencySaudiRiyalIcon';
+import WrenchScrewdriverIcon from './icons-redesign/WrenchScrewdriverIcon';
 
 interface UnitCardProps {
     unit: Unit;
-    onEdit: (unit: Unit) => void;
-    onStatusChange: (unitId: string, isAvailable: boolean) => void;
+    onClick: () => void;
 }
 
-const statusStyles: { [key: string]: { bg: string; text: string; ring: string; } } = {
-    free: { bg: 'bg-teal-50 dark:bg-teal-500/10', text: 'text-teal-600 dark:text-teal-300', ring: 'ring-teal-500/20' },
-    occupied: { bg: 'bg-rose-50 dark:bg-rose-500/10', text: 'text-rose-600 dark:text-rose-300', ring: 'ring-rose-500/20' },
-    'not-checked-in': { bg: 'bg-sky-50 dark:bg-sky-500/10', text: 'text-sky-600 dark:text-sky-300', ring: 'ring-sky-500/20' },
-    'out-of-service': { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-600 dark:text-amber-300', ring: 'ring-amber-500/20' },
+const statusConfig = {
+    free: {
+        labelKey: 'units.free',
+        Icon: BuildingOfficeIcon,
+        textColor: 'text-green-600 dark:text-green-400',
+        bgColor: 'bg-green-100 dark:bg-green-500/10',
+        borderColor: 'border-green-500',
+    },
+    occupied: {
+        labelKey: 'units.occupied',
+        Icon: UserGroupIcon,
+        textColor: 'text-red-600 dark:text-red-400',
+        bgColor: 'bg-red-100 dark:bg-red-500/10',
+        borderColor: 'border-red-500',
+    },
+    'not-checked-in': {
+        labelKey: 'units.notCheckedIn',
+        Icon: UserCheckIcon,
+        textColor: 'text-purple-600 dark:text-purple-400',
+        bgColor: 'bg-purple-100 dark:bg-purple-500/10',
+        borderColor: 'border-purple-500',
+    },
+    'out-of-service': {
+        labelKey: 'units.outOfService',
+        Icon: WrenchScrewdriverIcon,
+        textColor: 'text-slate-600 dark:text-slate-400',
+        bgColor: 'bg-slate-200 dark:bg-slate-700',
+        borderColor: 'border-slate-500',
+    },
 };
 
-const UnitCard: React.FC<UnitCardProps> = ({ unit, onEdit, onStatusChange }) => {
+const cleaningStatusConfig = {
+    clean: {
+        labelKey: 'units.clean',
+        textColor: 'text-green-700 dark:text-green-300',
+        bgColor: 'bg-green-200/80 dark:bg-green-500/20',
+    },
+    'not-clean': {
+        labelKey: 'units.notClean',
+        textColor: 'text-red-700 dark:text-red-300',
+        bgColor: 'bg-red-200/80 dark:bg-red-500/20',
+    }
+}
+
+const UnitCard: React.FC<UnitCardProps> = ({ unit, onClick }) => {
     const { t, language } = useContext(LanguageContext);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const currentStatusStyle = statusStyles[unit.status] || statusStyles.free;
-    const isRtl = language === 'ar';
-
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case 'free': return t('units.free');
-            case 'occupied': return t('units.occupied');
-            case 'not-checked-in': return t('units.notCheckedIn');
-            case 'out-of-service': return t('units.outOfService');
-            default: return status;
-        }
-    };
+    const { 
+        status, 
+        cleaningStatus, 
+        unitNumber, 
+        id, 
+        unitType, 
+        customerName, 
+        checkIn, 
+        checkOut, 
+        price, 
+        remaining 
+    } = unit;
+    
+    const config = statusConfig[status];
+    const cleanConfig = cleaningStatusConfig[cleaningStatus];
 
     return (
-        <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 flex flex-col justify-between ring-1 ring-inset ${currentStatusStyle.ring} ${currentStatusStyle.bg}`}>
-            <div>
-                {/* Header */}
-                <div className="flex items-start justify-between mb-3">
-                    <div>
-                        <p className="font-bold text-lg text-slate-800 dark:text-slate-200">{unit.unitNumber}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{unit.unitType}</p>
+        <div 
+            onClick={onClick}
+            className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-t-4 ${config.borderColor} flex flex-col cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200`}
+        >
+            <div className="p-4 flex-grow">
+                <div className="flex justify-between items-start mb-2">
+                    <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                        {unitType && <p className="font-bold text-blue-500 text-sm">{unitType}</p>}
+                        <div className="flex items-end gap-2">
+                            <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{unitNumber}</p>
+                            {id && <p className="text-xl font-bold text-slate-500 dark:text-slate-400">{id}</p>}
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
-                         <Switch
-                            id={`status-switch-${unit.id}`}
-                            checked={unit.isAvailable}
-                            onChange={(checked) => onStatusChange(unit.id, checked)}
-                            disabled={unit.status === 'occupied' || unit.status === 'not-checked-in'}
-                        />
-                        <div className="relative" ref={menuRef}>
-                            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">
-                                <EllipsisVerticalIcon className="w-5 h-5" />
-                            </button>
-                            {isMenuOpen && (
-                                <div className={`absolute top-full mt-1 w-40 bg-white dark:bg-slate-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 ${isRtl ? 'left-0' : 'right-0'}`}>
-                                    <button onClick={() => { onEdit(unit); setIsMenuOpen(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
-                                        <PencilSquareIcon className={`w-4 h-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
-                                        <span>{t('units.editUnit')}</span>
-                                    </button>
-                                    <button className="w-full flex items-center px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10">
-                                        <TrashIcon className={`w-4 h-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
-                                        <span>{t('units.cancel')}</span>
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                         <span className={`px-2 py-1 text-xs font-semibold rounded-md ${cleanConfig.textColor} ${cleanConfig.bgColor}`}>
+                            {t(cleanConfig.labelKey as any)}
+                        </span>
                     </div>
                 </div>
-
-                {/* Status and Customer Info */}
-                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${currentStatusStyle.bg} ${currentStatusStyle.text} mb-4 self-start`}>
-                    {getStatusText(unit.status)}
+                
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold ${config.textColor} ${config.bgColor} mb-4`}>
+                    <config.Icon className="w-5 h-5" />
+                    <span>{t(config.labelKey as any)}</span>
                 </div>
-                {unit.customerName && (
-                    <div className="mb-4 space-y-3">
-                        {/* Customer Name */}
-                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                             <UserCheckIcon className="w-5 h-5 text-slate-400 flex-shrink-0"/>
-                             <span className="font-semibold text-base truncate">{unit.customerName}</span>
+                
+                {status === 'free' ? (
+                     <button className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-green-600 bg-green-100/80 rounded-lg hover:bg-green-200/80 transition-colors dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20 pointer-events-none">
+                        <CalendarIcon className="w-5 h-5" />
+                        <span>{t('units.addReservation')}</span>
+                    </button>
+                ) : status !== 'out-of-service' ? (
+                    <div className={`space-y-2 text-sm text-slate-600 dark:text-slate-300 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                        <div className="flex items-center gap-2">
+                            <UserIcon className="w-5 h-5 text-slate-400" />
+                            <span className="font-medium truncate">{customerName}</span>
                         </div>
-                        {/* Dates in two columns */}
-                        <div className="grid grid-cols-2 gap-x-4 text-xs text-slate-500 dark:text-slate-400">
-                            <div className={isRtl ? 'text-right' : 'text-left'}>
-                                <p className="font-medium">{t('units.checkIn')}</p>
-                                <p className="font-mono">{unit.checkIn}</p>
-                            </div>
-                            <div className={isRtl ? 'text-right' : 'text-left'}>
-                                <p className="font-medium">{t('units.checkOut')}</p>
-                                <p className="font-mono">{unit.checkOut}</p>
-                            </div>
+                         <div className="flex items-center gap-2">
+                            <span className="font-semibold text-slate-500 dark:text-slate-400">{t('units.checkIn')}</span>
+                            <span>{checkIn}</span>
+                        </div>
+                         <div className="flex items-center gap-2">
+                             <span className="font-semibold text-slate-500 dark:text-slate-400">{t('units.checkOut')}</span>
+                            <span>{checkOut}</span>
                         </div>
                     </div>
-                )}
+                ) : null}
             </div>
 
-            {/* Footer */}
-            <div className="border-t dark:border-slate-700 pt-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    {unit.cleaningStatus === 'clean' ? (
-                        <CheckIcon className="w-5 h-5 text-teal-500" />
-                    ) : (
-                        <XMarkIcon className="w-5 h-5 text-amber-500" />
+            <div className="border-t dark:border-slate-700 p-3 flex justify-between items-center text-sm">
+                <div className="flex-1">
+                    {status === 'free' && price && (
+                        <div className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200">
+                            <CurrencySaudiRiyalIcon className="w-5 h-5 text-slate-500" />
+                            <span>{price.toFixed(2)}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('units.night')}</span>
+                        </div>
                     )}
-                    <span className={`text-sm font-medium ${unit.cleaningStatus === 'clean' ? 'text-teal-600 dark:text-teal-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                        {t(`units.${unit.cleaningStatus}`)}
-                    </span>
+                    {status === 'occupied' && remaining !== undefined && (
+                         <div className="flex items-center gap-1 text-sm">
+                            <span className="font-medium text-slate-500 dark:text-slate-400">{t('units.remainingForHim')}</span>
+                            <span className="font-bold text-green-600 dark:text-green-400">{remaining.toFixed(2)}</span>
+                        </div>
+                    )}
                 </div>
-                {unit.price && (
-                    <div className="flex items-center gap-1 text-slate-800 dark:text-slate-200">
-                        <CurrencySaudiRiyalIcon className="w-5 h-5"/>
-                        <span className="font-bold">{unit.price}</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{t('units.night')}</span>
-                    </div>
-                )}
+                 <button className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300" onClick={(e) => e.stopPropagation()}>
+                    <EllipsisVerticalIcon className="w-5 h-5"/>
+                </button>
             </div>
         </div>
     );
