@@ -29,7 +29,6 @@ const translationsData = {
       bookingAgencies: 'وكالات الحجز',
       other: 'أخرى',
       reports: 'التقارير',
-      // FIX: Corrected typo from 'الارشيفات' to 'الأرشيفات'
       archives: 'الأرشيفات',
       notifications: 'الإشعارات',
       settings: 'الإعدادات',
@@ -44,7 +43,6 @@ const translationsData = {
       title: 'تسجيل الدخول',
       subtitle: 'أدخل اسم المستخدم وكلمة المرور للوصول إلى لوحة التحكم.',
       usernameLabel: 'اسم المستخدم',
-      // FIX: Changed placeholder to be more descriptive and differ from the label.
       usernamePlaceholder: 'الرجاء إدخال اسم المستخدم',
       passwordLabel: 'كلمة المرور',
       passwordPlaceholder: 'أدخل كلمة المرور',
@@ -54,7 +52,6 @@ const translationsData = {
       error: 'اسم المستخدم أو كلمة المرور غير صحيحة.',
       footerText: 'جميع الحقوق محفوظة نزلك',
     },
-    // FIX: Renamed the 'profile' object to 'profilePage' to resolve the duplicate key error.
     profilePage: {
       planA: "الخطة A",
       plan: "الخطة",
@@ -150,6 +147,33 @@ const translationsData = {
       search: "ابحث عن بلد..."
     },
     units: {
+      manageUnits: 'إدارة الشقق السكنية',
+      addUnit: 'إضافة شقة',
+      searchUnits: 'ابحث عن شقة...',
+      showing: 'عرض',
+      to: 'إلى',
+      of: 'من',
+      entries: 'إدخالات',
+      deleteUnit: 'حذف الوحدة',
+      confirmDelete: 'هل أنت متأكد أنك تريد حذف هذه الوحدة؟ لا يمكن التراجع عن هذا الإجراء.',
+
+      th_id: '#',
+      th_name: 'الاسم',
+      th_type: 'نوع الغرفة',
+      th_cleaning: 'النظافة',
+      th_availability: 'الإتاحة',
+      th_floor: 'الطابق',
+      th_rooms: 'الغرف',
+      th_beds: 'الأسرة',
+      th_double_beds: 'أسرة مزدوجة',
+      th_bathrooms: 'دورات مياه',
+      th_wardrobes: 'خزائن',
+      th_tvs: 'تلفاز',
+      th_cooling: 'التبريد',
+      th_actions: 'الحدث',
+
+      available_status: 'متاحة',
+      not_available_status: 'غير متاحة',
       free: 'شاغرة',
       occupied: 'مشغولة',
       checkOutToday: 'مغادرة اليوم',
@@ -215,7 +239,8 @@ const translationsData = {
       selectCoolingType: 'اختر نوع التبريد',
       central: 'مركزي',
       split: 'سبليت',
-      window: 'شباك'
+      window: 'شباك',
+      viewDetails: 'عرض التفاصيل',
     }
   },
   en: {
@@ -262,7 +287,6 @@ const translationsData = {
       title: 'Login',
       subtitle: 'Enter your username and password to access the dashboard.',
       usernameLabel: 'Username',
-      // FIX: Changed placeholder to be more descriptive.
       usernamePlaceholder: 'Please enter your username',
       passwordLabel: 'Password',
       passwordPlaceholder: 'Enter password',
@@ -272,7 +296,6 @@ const translationsData = {
       error: 'Invalid username or password.',
       footerText: 'All rights reserved Nuzulcom',
     },
-    // FIX: Renamed the 'profile' object to 'profilePage' to resolve the duplicate key error.
     profilePage: {
       planA: "Plan A",
       plan: "Plan",
@@ -368,6 +391,33 @@ const translationsData = {
       search: "Search country..."
     },
     units: {
+      manageUnits: 'Residential Apartments Management',
+      addUnit: 'Add Unit',
+      searchUnits: 'Search for a unit...',
+      showing: 'Showing',
+      to: 'to',
+      of: 'of',
+      entries: 'entries',
+      deleteUnit: 'Delete Unit',
+      confirmDelete: 'Are you sure you want to delete this unit? This action cannot be undone.',
+
+      th_id: '#',
+      th_name: 'Name',
+      th_type: 'Room Type',
+      th_cleaning: 'Cleaning',
+      th_availability: 'Availability',
+      th_floor: 'Floor',
+      th_rooms: 'Rooms',
+      th_beds: 'Beds',
+      th_double_beds: 'Double Beds',
+      th_bathrooms: 'Bathrooms',
+      th_wardrobes: 'Wardrobes',
+      th_tvs: 'TVs',
+      th_cooling: 'Cooling',
+      th_actions: 'Actions',
+
+      available_status: 'Available',
+      not_available_status: 'Not Available',
       free: 'Free',
       occupied: 'Occupied',
       checkOutToday: 'Check out today',
@@ -433,7 +483,8 @@ const translationsData = {
       selectCoolingType: 'Select cooling type',
       central: 'Central',
       split: 'Split',
-      window: 'Window'
+      window: 'Window',
+      viewDetails: 'View Details',
     }
   }
 };
