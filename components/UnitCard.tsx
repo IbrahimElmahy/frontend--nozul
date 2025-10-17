@@ -87,21 +87,19 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) =
         >
             <div className="p-4 flex-grow">
                 <div className="flex justify-between items-start mb-2">
-                    <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-md ${cleanConfig.textColor} ${cleanConfig.bgColor}`}>
+                        {t(cleanConfig.labelKey as any)}
+                    </span>
+                    <div className={language === 'ar' ? 'text-left' : 'text-right'}>
                         {unitType && <p className="font-bold text-blue-500 text-sm">{unitType}</p>}
                         <div className="flex items-end gap-2">
                             <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{unitNumber}</p>
                             {id && <p className="text-xl font-bold text-slate-500 dark:text-slate-400">{id}</p>}
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                         <span className={`px-2 py-1 text-xs font-semibold rounded-md ${cleanConfig.textColor} ${cleanConfig.bgColor}`}>
-                            {t(cleanConfig.labelKey as any)}
-                        </span>
-                    </div>
                 </div>
                 
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold ${config.textColor} ${config.bgColor} mb-4`}>
+                <div className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold ${config.textColor} ${config.bgColor} mb-4`}>
                     <config.Icon className="w-5 h-5" />
                     <span>{t(config.labelKey as any)}</span>
                 </div>
@@ -113,15 +111,15 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) =
                     </button>
                 ) : status !== 'out-of-service' ? (
                     <div className={`space-y-2 text-sm text-slate-600 dark:text-slate-300 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                        <div className="flex items-center gap-2">
-                            <UserIcon className="w-5 h-5 text-slate-400" />
+                        <div className={`flex items-center gap-2 ${language === 'ar' ? 'justify-end' : ''}`}>
                             <span className="font-medium truncate">{customerName}</span>
+                            <UserIcon className="w-5 h-5 text-slate-400" />
                         </div>
-                         <div className="flex items-center gap-2">
+                         <div className={`flex items-center gap-2 ${language === 'ar' ? 'justify-end' : ''}`}>
                             <span className="font-semibold text-slate-500 dark:text-slate-400">{t('units.checkIn')}</span>
                             <span>{checkIn}</span>
                         </div>
-                         <div className="flex items-center gap-2">
+                         <div className={`flex items-center gap-2 ${language === 'ar' ? 'justify-end' : ''}`}>
                              <span className="font-semibold text-slate-500 dark:text-slate-400">{t('units.checkOut')}</span>
                             <span>{checkOut}</span>
                         </div>
@@ -130,24 +128,24 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) =
             </div>
 
             <div className="border-t dark:border-slate-700 p-3 flex justify-between items-center text-sm">
-                <div className="flex-1">
-                    {status === 'free' && price && (
-                        <div className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200">
-                            <CurrencySaudiRiyalIcon className="w-5 h-5 text-slate-500" />
-                            <span>{price.toFixed(2)}</span>
-                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('units.night')}</span>
-                        </div>
-                    )}
-                    {status === 'occupied' && remaining !== undefined && (
-                         <div className="flex items-center gap-1 text-sm">
-                            <span className="font-medium text-slate-500 dark:text-slate-400">{t('units.remainingForHim')}</span>
-                            <span className="font-bold text-green-600 dark:text-green-400">{remaining.toFixed(2)}</span>
-                        </div>
-                    )}
-                </div>
                  <button className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 z-10" onClick={onMenuClick}>
                     <EllipsisVerticalIcon className="w-5 h-5"/>
                 </button>
+                <div className="flex-1 text-right">
+                    {status === 'free' && price && (
+                        <div className="flex items-center justify-end gap-1 font-bold text-slate-700 dark:text-slate-200">
+                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('units.night')}</span>
+                            <span>{price.toFixed(2)}</span>
+                            <CurrencySaudiRiyalIcon className="w-5 h-5 text-slate-500" />
+                        </div>
+                    )}
+                    {status === 'occupied' && remaining !== undefined && (
+                         <div className="flex items-center justify-end gap-1 text-sm">
+                            <span className="font-bold text-green-600 dark:text-green-400">{remaining.toFixed(2)}</span>
+                            <span className="font-medium text-slate-500 dark:text-slate-400">{t('units.remainingForHim')}</span>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
