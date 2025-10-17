@@ -5,19 +5,18 @@ interface UnitStatusCardProps {
   icon: React.ComponentType<IconProps>;
   label: string;
   value: number;
-  color: string;
   iconBg: string;
 }
 
-const UnitStatusCard: React.FC<UnitStatusCardProps> = ({ icon: Icon, label, value, color, iconBg }) => {
+const UnitStatusCard: React.FC<UnitStatusCardProps> = ({ icon: Icon, label, value, iconBg }) => {
   return (
-    <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${iconBg} ${color}`}>
-        <Icon className="w-7 h-7" />
-      </div>
-      <div className="flex-grow">
-        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{label}</p>
-        <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{value}</p>
+    <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm flex items-center justify-between">
+      <p className="text-4xl font-bold text-slate-800 dark:text-slate-200">{value}</p>
+      <div className="flex flex-col items-end">
+        <div className={`w-12 h-12 mb-1 rounded-lg flex items-center justify-center ${iconBg} text-white`}>
+          <Icon className="w-6 h-6" />
+        </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">{label}</p>
       </div>
     </div>
   );

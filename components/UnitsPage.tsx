@@ -1,8 +1,11 @@
 import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import UnitEditPanel from './UnitEditPanel';
+import AddGroupPanel from './AddGroupPanel';
 import { Unit, UnitStatus, CoolingType } from '../types';
 import UnitCard from './UnitCard';
+import UnitStatusCard from './UnitStatusCard';
+import ConfirmationModal from './ConfirmationModal';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -14,6 +17,12 @@ import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
 import EllipsisVerticalIcon from './icons-redesign/EllipsisVerticalIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
+import BuildingOfficeIcon from './icons-redesign/BuildingOfficeIcon';
+import UserIcon from './icons-redesign/UserIcon';
+import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon';
+import ArrowRightOnRectangleIcon from './icons-redesign/ArrowRightOnRectangleIcon';
+import UsersIcon from './icons-redesign/UsersIcon';
+import WrenchScrewdriverIcon from './icons-redesign/WrenchScrewdriverIcon';
 
 
 const initialUnitsData: Unit[] = [
@@ -32,28 +41,150 @@ const initialUnitsData: Unit[] = [
     { id: '12', unitNumber: '403', unitName: '403 - صيانة', status: 'out-of-service', unitType: 'غرفة مزدوجة', cleaningStatus: 'not-clean', isAvailable: false, floor: 4, rooms: 1, bathrooms: 1, beds: 2, doubleBeds: 0, wardrobes: 1, tvs: 1, coolingType: 'window', notes: 'Window lock broken.', features: { common: { roomCleaning: false, elevator: true, parking: true, internet: false }, special: { kitchen: false, lounge: false, diningTable: false, refrigerator: true, iron: false, restaurantMenu: false, washingMachine: false, qibla: true, microwave: false, newspaper: false, oven: false, phoneDirectory: true } } },
 ];
 
+const newUnitTemplate: Unit = {
+    id: '', // Will be generated on save
+    unitNumber: '',
+    unitName: '',
+    status: 'free',
+    customerName: undefined,
+    checkIn: undefined,
+    checkOut: undefined,
+    price: 0,
+    remaining: undefined,
+    unitType: 'غرفة مفردة', // Default to single room
+    cleaningStatus: 'clean',
+    isAvailable: true,
+    floor: 1,
+    rooms: 1,
+    bathrooms: 1,
+    beds: 1,
+    doubleBeds: 0,
+    wardrobes: 1,
+    tvs: 1,
+    coolingType: 'split',
+    notes: '',
+    features: {
+        common: {
+            roomCleaning: false,
+            elevator: true,
+            parking: true,
+            internet: true,
+        },
+        special: {
+            kitchen: false,
+            lounge: false,
+            diningTable: false,
+            refrigerator: false,
+            iron: false,
+            restaurantMenu: false,
+            washingMachine: false,
+            qibla: true,
+            microwave: false,
+            newspaper: false,
+            oven: false,
+            phoneDirectory: false,
+        },
+    },
+};
+
 
 const UnitsPage: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
     
     const [unitsData, setUnitsData] = useState<Unit[]>(initialUnitsData);
-    const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
-    const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
+    const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+    const [isPanelOpen, setIsPanelOpen] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(12);
     const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
     const actionMenuRef = useRef<HTMLDivElement>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+    const [isAddGroupPanelOpen, setIsAddGroupPanelOpen] = useState(false);
+    const [unitToDeleteId, setUnitToDeleteId] = useState<string | null>(null);
+    
+    const unitCounts = useMemo(() => {
+        return unitsData.reduce((acc, unit) => {
+            if (!acc[unit.status]) {
+                acc[unit.status] = 0;
+            }
+            acc[unit.status]++;
+            return acc;
+        }, {} as Record<UnitStatus, number>);
+    }, [unitsData]);
+    
+    const statusCardsData = [
+        { labelKey: 'units.free', value: unitCounts.free || 0, Icon: BuildingOfficeIcon, iconBg: 'bg-green-500' },
+        { labelKey: 'units.occupied', value: unitCounts.occupied || 0, Icon: UserIcon, iconBg: 'bg-red-500' },
+        { labelKey: 'units.checkOutToday', value: 0, Icon: ArrowLeftOnRectangleIcon, iconBg: 'bg-orange-400' },
+        { labelKey: 'units.checkInToday', value: 0, Icon: ArrowRightOnRectangleIcon, iconBg: 'bg-blue-400' },
+        { labelKey: 'units.notCheckedIn', value: unitCounts['not-checked-in'] || 0, Icon: UsersIcon, iconBg: 'bg-purple-400' },
+        { labelKey: 'units.outOfService', value: unitCounts['out-of-service'] || 0, Icon: WrenchScrewdriverIcon, iconBg: 'bg-slate-400' },
+    ];
+    
+    const handleEditUnit = (unit: Unit) => {
+        setEditingUnit(JSON.parse(JSON.stringify(unit)));
+        setIsAdding(false);
+        setIsPanelOpen(true);
+        setActiveActionMenu(null);
+    };
 
-    useEffect(() => {
-        if (viewMode === 'grid') {
-            setItemsPerPage(12);
+    const handleAddNewUnit = () => {
+        setEditingUnit(JSON.parse(JSON.stringify(newUnitTemplate)));
+        setIsAdding(true);
+        setIsPanelOpen(true);
+    };
+
+    const handleClosePanel = () => {
+        setIsPanelOpen(false);
+        setEditingUnit(null);
+    };
+
+    const handleSaveUnit = (updatedUnit: Unit) => {
+        if (isAdding) {
+            setUnitsData([...unitsData, { ...updatedUnit, id: `new-${Date.now()}` }]);
         } else {
-            setItemsPerPage(10);
+            setUnitsData(unitsData.map(u => u.id === updatedUnit.id ? updatedUnit : u));
         }
-        setCurrentPage(1); // Reset to page 1 when view changes
-    }, [viewMode]);
+        handleClosePanel();
+    };
+    
+    const handleDeleteClick = (unitId: string) => {
+        setUnitToDeleteId(unitId);
+        setActiveActionMenu(null);
+    };
+
+    const handleConfirmDelete = () => {
+        if (!unitToDeleteId) return;
+        setUnitsData(prevUnits => prevUnits.filter(u => u.id !== unitToDeleteId));
+        setUnitToDeleteId(null);
+    };
+
+    const handleCancelDelete = () => {
+        setUnitToDeleteId(null);
+    };
+
+
+    const handleSaveNewGroup = (newUnits: Unit[]) => {
+        setUnitsData(prev => [...prev, ...newUnits]);
+        setIsAddGroupPanelOpen(false);
+    };
+
+    const filteredUnits = useMemo(() => {
+        return unitsData.filter(unit =>
+            unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (unit.unitName && unit.unitName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (unit.customerName && unit.customerName.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+    }, [unitsData, searchTerm]);
+
+    const paginatedUnits = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredUnits.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredUnits, currentPage, itemsPerPage]);
+
+    const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -67,125 +198,91 @@ const UnitsPage: React.FC = () => {
         };
     }, []);
 
-    const handleUnitClick = (unit: Unit) => {
-        setSelectedUnit(unit);
-        setIsEditPanelOpen(true);
-        setActiveActionMenu(null);
-    };
-
-    const handleDeleteClick = (unitId: string) => {
-        setActiveActionMenu(null);
-        if (window.confirm(t('units.confirmDelete'))) {
-            setUnitsData(unitsData.filter(u => u.id !== unitId));
-        }
-    };
-
-    const handleClosePanel = () => {
-        setIsEditPanelOpen(false);
-        setSelectedUnit(null);
-    };
-
-    const handleSaveUnit = (updatedUnit: Unit) => {
-        const newUnits = unitsData.map(unit => {
-            if (unit.id === updatedUnit.id) {
-                let status: UnitStatus = updatedUnit.status;
-                if (!updatedUnit.isAvailable) {
-                    status = 'out-of-service';
-                } else if (unit.status === 'out-of-service' && updatedUnit.isAvailable) {
-                    status = 'free';
-                }
-                return { ...updatedUnit, status };
-            }
-            return unit;
-        });
-        setUnitsData(newUnits);
-        handleClosePanel();
-    };
+    const tableHeaders: { key: keyof Unit | 'actions', labelKey: string }[] = [
+        { key: 'unitNumber', labelKey: 'units.th_id' },
+        { key: 'unitName', labelKey: 'units.th_name' },
+        { key: 'unitType', labelKey: 'units.th_type' },
+        { key: 'cleaningStatus', labelKey: 'units.th_cleaning' },
+        { key: 'isAvailable', labelKey: 'units.th_availability' },
+        { key: 'floor', labelKey: 'units.th_floor' },
+        { key: 'rooms', labelKey: 'units.th_rooms' },
+        { key: 'beds', labelKey: 'units.th_beds' },
+        { key: 'doubleBeds', labelKey: 'units.th_double_beds' },
+        { key: 'bathrooms', labelKey: 'units.th_bathrooms' },
+        { key: 'wardrobes', labelKey: 'units.th_wardrobes' },
+        { key: 'tvs', labelKey: 'units.th_tvs' },
+        { key: 'coolingType', labelKey: 'units.th_cooling' },
+        { key: 'actions', labelKey: 'units.th_actions' },
+    ];
     
-    const filteredUnits = useMemo(() => {
-        return unitsData.filter(unit => 
-            (unit.unitName && unit.unitName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (unit.unitNumber && unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (unit.customerName && unit.customerName.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-    }, [unitsData, searchTerm]);
-
-    const paginatedUnits = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return filteredUnits.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredUnits, currentPage, itemsPerPage]);
-
-    const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
-
-    const handlePageChange = (newPage: number) => {
-        if (newPage > 0 && newPage <= totalPages) {
-            setCurrentPage(newPage);
-        }
-    };
-
-    const getUnitTypeTranslation = (type: string) => {
-        if (type === 'غرفة مفردة') return t('units.singleRoom');
-        if (type === 'غرفة مزدوجة') return t('units.doubleRoom');
-        if (type === 'جناح') return t('units.suite');
-        return type;
-    };
-
-    const getCoolingTypeTranslation = (type: CoolingType) => {
-        if (type === 'central') return t('units.central');
-        if (type === 'split') return t('units.split');
-        if (type === 'window') return t('units.window');
-        return '-';
-    };
-
-
     return (
         <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">{t('units.manageUnits')}</h2>
-                    <div className="flex-grow sm:flex-grow-0 flex items-center gap-2 sm:gap-4">
-                        <div className="flex items-center bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`px-3 py-1.5 rounded-md text-sm font-semibold flex items-center gap-2 transition-colors ${viewMode === 'grid' ? 'bg-white dark:bg-slate-800 text-blue-500 shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-800/50'}`}
-                                aria-label={t('units.network')}
-                                aria-pressed={viewMode === 'grid'}
-                            >
-                                <Squares2x2Icon className="w-5 h-5" />
-                                <span className="hidden sm:inline">{t('units.network')}</span>
-                            </button>
-                            <button
-                                onClick={() => setViewMode('table')}
-                                className={`px-3 py-1.5 rounded-md text-sm font-semibold flex items-center gap-2 transition-colors ${viewMode === 'table' ? 'bg-white dark:bg-slate-800 text-blue-500 shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-800/50'}`}
-                                aria-label={t('units.table')}
-                                aria-pressed={viewMode === 'table'}
-                            >
-                                <TableCellsIcon className="w-5 h-5" />
-                                <span className="hidden sm:inline">{t('units.table')}</span>
-                            </button>
-                        </div>
-                         <div className="relative flex-grow sm:w-64">
-                             <input 
-                                type="text" 
-                                placeholder={t('units.searchUnits')}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className={`w-full py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm ${language === 'ar' ? 'pr-10' : 'pl-10'}`} 
-                             />
-                             <MagnifyingGlassIcon className={`w-5 h-5 absolute top-1/2 -translate-y-1/2 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
-                         </div>
-                        <button className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors">
-                            <PlusCircleIcon className="w-5 h-5" />
-                            <span>{t('units.addUnit')}</span>
-                        </button>
-                    </div>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('units.manageUnits')}</h2>
+                </div>
+                <div className="flex gap-2">
+                    <button onClick={handleAddNewUnit} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                        <PlusCircleIcon className="w-5 h-5" />
+                        <span>{t('units.addUnit')}</span>
+                    </button>
+                    <button onClick={() => setIsAddGroupPanelOpen(true)} className="flex items-center gap-2 bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors">
+                        <BuildingOfficeIcon className="w-5 h-5" />
+                        <span>{t('units.addGroupOfRooms')}</span>
+                    </button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {statusCardsData.map(card => <UnitStatusCard key={card.labelKey} label={t(card.labelKey as any)} value={card.value} icon={card.Icon} iconBg={card.iconBg} />)}
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="relative w-full md:w-auto md:flex-grow">
+                    <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
+                    <input 
+                        type="text" 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder={t('units.searchUnits')}
+                        className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
+                    />
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`}>
+                        <Squares2x2Icon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg transition-colors ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`}>
+                        <TableCellsIcon className="w-5 h-5" />
+                    </button>
                 </div>
             </div>
 
             {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {paginatedUnits.map(unit => (
-                        <UnitCard key={unit.id} unit={unit} onClick={() => handleUnitClick(unit)} />
+                        <div key={unit.id} className="relative">
+                            <UnitCard 
+                                unit={unit} 
+                                onEditClick={() => handleEditUnit(unit)} 
+                                onMenuClick={(event) => {
+                                    event.stopPropagation();
+                                    setActiveActionMenu(activeActionMenu === unit.id ? null : unit.id);
+                                }}
+                            />
+                             {activeActionMenu === unit.id && (
+                                <div ref={actionMenuRef} className={`absolute top-14 z-10 mt-1 w-40 bg-white dark:bg-slate-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 ${language === 'ar' ? 'left-4' : 'right-4'}`}>
+                                    <button onClick={() => handleEditUnit(unit)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+                                        <PencilSquareIcon className="w-4 h-4" />
+                                        {t('units.editUnit')}
+                                    </button>
+                                    <button onClick={() => handleDeleteClick(unit.id)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10">
+                                        <TrashIcon className="w-4 h-4" />
+                                        {t('units.deleteUnit')}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     ))}
                 </div>
             ) : (
@@ -193,105 +290,71 @@ const UnitsPage: React.FC = () => {
                     <table className="w-full text-sm text-left text-slate-500 dark:text-slate-400">
                         <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                             <tr>
-                                {['th_id', 'th_name', 'th_type', 'th_cleaning', 'th_availability', 'th_floor', 'th_rooms', 'th_beds', 'th_double_beds', 'th_bathrooms', 'th_wardrobes', 'th_tvs', 'th_cooling', 'th_actions'].map(key => (
-                                    <th key={key} scope="col" className="px-6 py-3">{t(`units.${key}` as any)}</th>
-                                ))}
+                                {tableHeaders.map(header => <th key={header.key} scope="col" className="px-6 py-3">{t(header.labelKey as any)}</th>)}
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedUnits.map((unit, index) => {
-                                const isMenuOpen = activeActionMenu === unit.id;
-                                const dropdownPositionClass = language === 'ar' ? 'left-0' : 'right-0';
-                                return (
-                                    <tr key={unit.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                        <td className="px-6 py-4">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                                        <th scope="row" className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap dark:text-white">{unit.unitName || unit.unitNumber}</th>
-                                        <td className="px-6 py-4">{getUnitTypeTranslation(unit.unitType)}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${unit.cleaningStatus === 'clean' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                                {t(unit.cleaningStatus === 'clean' ? 'units.clean' : 'units.notClean')}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${unit.isAvailable ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'}`}>
-                                                {t(unit.isAvailable ? 'units.available_status' : 'units.not_available_status')}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">{unit.floor}</td>
-                                        <td className="px-6 py-4">{unit.rooms}</td>
-                                        <td className="px-6 py-4">{unit.beds}</td>
-                                        <td className="px-6 py-4">{unit.doubleBeds}</td>
-                                        <td className="px-6 py-4">{unit.bathrooms}</td>
-                                        <td className="px-6 py-4">{unit.wardrobes}</td>
-                                        <td className="px-6 py-4">{unit.tvs}</td>
-                                        <td className="px-6 py-4">{getCoolingTypeTranslation(unit.coolingType)}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="relative">
-                                                <button 
-                                                    onClick={() => setActiveActionMenu(isMenuOpen ? null : unit.id)} 
-                                                    className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
-                                                    aria-haspopup="true"
-                                                    aria-expanded={isMenuOpen}
-                                                >
-                                                    <EllipsisVerticalIcon className="w-5 h-5"/>
-                                                </button>
-                                                {isMenuOpen && (
-                                                    <div 
-                                                        ref={actionMenuRef} 
-                                                        className={`absolute z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-slate-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${dropdownPositionClass}`}
-                                                        role="menu"
-                                                        aria-orientation="vertical"
-                                                        aria-labelledby={`menu-button-${unit.id}`}
-                                                    >
-                                                        <div className="py-1" role="none">
-                                                            <a href="#" onClick={(e) => { e.preventDefault(); handleUnitClick(unit); }} className="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 group flex items-center gap-3 px-4 py-2 text-sm" role="menuitem">
-                                                                <MagnifyingGlassIcon className="h-5 w-5 text-slate-400 group-hover:text-slate-500" />
-                                                                {t('units.viewDetails')}
-                                                            </a>
-                                                            <a href="#" onClick={(e) => { e.preventDefault(); handleUnitClick(unit); }} className="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 group flex items-center gap-3 px-4 py-2 text-sm" role="menuitem">
-                                                                <PencilSquareIcon className="h-5 w-5 text-slate-400 group-hover:text-slate-500" />
+                            {paginatedUnits.map(unit => (
+                                <tr key={unit.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                                    {tableHeaders.map(header => (
+                                        <td key={`${unit.id}-${header.key}`} className="px-6 py-4">
+                                            {header.key === 'actions' ? (
+                                                <div className="relative" ref={activeActionMenu === unit.id ? actionMenuRef : null}>
+                                                    <button onClick={() => setActiveActionMenu(activeActionMenu === unit.id ? null : unit.id)} className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600">
+                                                        <EllipsisVerticalIcon className="w-5 h-5" />
+                                                    </button>
+                                                    {activeActionMenu === unit.id && (
+                                                        <div className="absolute top-full right-0 mt-1 w-40 bg-white dark:bg-slate-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+                                                            <button onClick={() => handleEditUnit(unit)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+                                                                <PencilSquareIcon className="w-4 h-4" />
                                                                 {t('units.editUnit')}
-                                                            </a>
-                                                            <a href="#" onClick={(e) => { e.preventDefault(); handleDeleteClick(unit.id); }} className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 group flex items-center gap-3 px-4 py-2 text-sm" role="menuitem">
-                                                                <TrashIcon className="h-5 w-5 text-red-400 group-hover:text-red-500" />
+                                                            </button>
+                                                            <button onClick={() => handleDeleteClick(unit.id)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10">
+                                                                <TrashIcon className="w-4 h-4" />
                                                                 {t('units.deleteUnit')}
-                                                            </a>
+                                                            </button>
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </div>
+                                                    )}
+                                                </div>
+                                            ) : typeof unit[header.key as keyof Unit] === 'boolean' ? (
+                                                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${unit[header.key as keyof Unit] ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
+                                                    {unit[header.key as keyof Unit] ? t('units.available_status') : t('units.not_available_status')}
+                                                </span>
+                                            ) : (
+                                                <span>{unit[header.key as keyof Unit]?.toString()}</span>
+                                            )}
                                         </td>
-                                    </tr>
-                                )
-                            })}
+                                    ))}
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
             )}
-
-
-            <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
-                <div className="text-slate-600 dark:text-slate-400">
-                    {t('units.showing')} <span className="font-semibold text-slate-800 dark:text-slate-200">{(currentPage - 1) * itemsPerPage + 1}</span> {t('units.to')} <span className="font-semibold text-slate-800 dark:text-slate-200">{Math.min(currentPage * itemsPerPage, filteredUnits.length)}</span> {t('units.of')} <span className="font-semibold text-slate-800 dark:text-slate-200">{filteredUnits.length}</span> {t('units.entries')}
+            
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="text-sm text-slate-600 dark:text-slate-300">
+                    {t('units.showing')} {Math.min((currentPage - 1) * itemsPerPage + 1, filteredUnits.length)} {t('units.to')} {Math.min(currentPage * itemsPerPage, filteredUnits.length)} {t('units.of')} {filteredUnits.length} {t('units.entries')}
                 </div>
-                 <div className="flex items-center gap-2">
-                    <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <ChevronLeftIcon className={`w-5 h-5 transform ${language === 'en' ? 'rotate-180' : ''}`} />
+                <div className="flex items-center gap-2">
+                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <ChevronLeftIcon className="w-5 h-5" />
                     </button>
-                     <span className="text-slate-700 dark:text-slate-300">
-                         {currentPage} / {totalPages}
-                     </span>
-                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <ChevronRightIcon className={`w-5 h-5 transform ${language === 'ar' ? 'rotate-180' : ''}`} />
+                    <span className="text-sm font-semibold">{currentPage} / {totalPages > 0 ? totalPages : 1}</span>
+                     <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="p-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <ChevronRightIcon className="w-5 h-5" />
                     </button>
                 </div>
             </div>
-            
-            <UnitEditPanel 
-                unit={selectedUnit}
-                isOpen={isEditPanelOpen}
-                onClose={handleClosePanel}
-                onSave={handleSaveUnit}
+
+            <UnitEditPanel unit={editingUnit} isOpen={isPanelOpen} onClose={handleClosePanel} onSave={handleSaveUnit} isAdding={isAdding} />
+            <AddGroupPanel template={newUnitTemplate} isOpen={isAddGroupPanelOpen} onClose={() => setIsAddGroupPanelOpen(false)} onSave={handleSaveNewGroup} />
+            <ConfirmationModal
+                isOpen={!!unitToDeleteId}
+                onClose={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                title={t('units.deleteUnit')}
+                message={t('units.confirmDelete')}
             />
         </div>
     );

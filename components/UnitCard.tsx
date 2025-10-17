@@ -14,7 +14,8 @@ import WrenchScrewdriverIcon from './icons-redesign/WrenchScrewdriverIcon';
 
 interface UnitCardProps {
     unit: Unit;
-    onClick: () => void;
+    onEditClick: () => void;
+    onMenuClick: (event: React.MouseEvent) => void;
 }
 
 const statusConfig = {
@@ -61,7 +62,7 @@ const cleaningStatusConfig = {
     }
 }
 
-const UnitCard: React.FC<UnitCardProps> = ({ unit, onClick }) => {
+const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) => {
     const { t, language } = useContext(LanguageContext);
     const { 
         status, 
@@ -81,7 +82,7 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onClick }) => {
 
     return (
         <div 
-            onClick={onClick}
+            onClick={onEditClick}
             className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-t-4 ${config.borderColor} flex flex-col cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200`}
         >
             <div className="p-4 flex-grow">
@@ -144,7 +145,7 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onClick }) => {
                         </div>
                     )}
                 </div>
-                 <button className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300" onClick={(e) => e.stopPropagation()}>
+                 <button className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 z-10" onClick={onMenuClick}>
                     <EllipsisVerticalIcon className="w-5 h-5"/>
                 </button>
             </div>

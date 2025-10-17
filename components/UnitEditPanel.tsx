@@ -11,6 +11,7 @@ interface UnitEditPanelProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (updatedUnit: Unit) => void;
+    isAdding?: boolean;
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -21,7 +22,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 
-const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, onSave }) => {
+const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, onSave, isAdding = false }) => {
     const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState<Unit | null>(unit);
 
@@ -85,7 +86,7 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
             <div className={`relative w-full max-w-6xl bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
                 <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0">
                     <h2 id="unit-edit-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">
-                        {t('units.editUnit')} - {unit.unitNumber}
+                        {isAdding ? t('units.addUnit') : `${t('units.editUnit')} - ${unit.unitNumber}`}
                     </h2>
                     <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
                         <XMarkIcon className="w-6 h-6" />
@@ -100,9 +101,15 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
                                 <div>
                                     <Section title={t('units.unitInfo')}>
                                         <div className="space-y-4">
-                                            <div>
-                                                <label htmlFor="unitName" className={labelAlignClass}>{t('units.unitName')}</label>
-                                                <input type="text" id="unitName" name="unitName" value={formData.unitName || ''} onChange={handleInputChange} className={inputBaseClass} />
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label htmlFor="unitNumber" className={labelAlignClass}>{t('units.th_id')}</label>
+                                                    <input type="text" id="unitNumber" name="unitNumber" value={formData.unitNumber || ''} onChange={handleInputChange} className={inputBaseClass} />
+                                                </div>
+                                                <div>
+                                                    <label htmlFor="unitName" className={labelAlignClass}>{t('units.unitName')}</label>
+                                                    <input type="text" id="unitName" name="unitName" value={formData.unitName || ''} onChange={handleInputChange} className={inputBaseClass} />
+                                                </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>

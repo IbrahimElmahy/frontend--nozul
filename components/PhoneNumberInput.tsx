@@ -116,7 +116,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({ value, onChange }) 
                                     placeholder={t('phone.search')}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-sm"
+                                    className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-sm text-slate-900 dark:text-slate-200"
                                 />
                             </div>
                             <ul className="max-h-60 overflow-y-auto">
