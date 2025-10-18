@@ -63,7 +63,7 @@ const cleaningStatusConfig = {
 }
 
 const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) => {
-    const { t, language } = useContext(LanguageContext);
+    const { t } = useContext(LanguageContext);
     const { 
         status, 
         cleaningStatus, 
@@ -86,10 +86,10 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) =
             className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-t-4 ${config.borderColor} flex flex-col h-full cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200`}
         >
             <div className="p-4 flex-grow">
-                <div className={`flex items-start mb-2 ${language === 'ar' ? 'justify-end flex-row-reverse' : 'justify-between'}`}>
-                    <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                <div className="flex items-start justify-between mb-2">
+                    <div className="text-start">
                         {unitType && <p className="font-bold text-blue-500 text-sm">{unitType}</p>}
-                        <div className={`flex items-end gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <div className="flex items-end gap-2">
                             <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{unitNumber}</p>
                             {id && <p className="text-xl font-bold text-slate-500 dark:text-slate-400">{id}</p>}
                         </div>
@@ -110,16 +110,16 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) =
                         <span>{t('units.addReservation')}</span>
                     </button>
                 ) : status !== 'out-of-service' ? (
-                    <div className={`space-y-2 text-sm text-slate-600 dark:text-slate-300`}>
-                        <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+                    <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                        <div className="flex items-center justify-start gap-2">
                             <UserIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
                             <span className="font-medium truncate">{customerName}</span>
                         </div>
-                         <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+                         <div className="flex items-center justify-start gap-2">
                             <span className="font-semibold text-slate-500 dark:text-slate-400">{t('units.checkIn')}</span>
                             <span>{checkIn}</span>
                         </div>
-                         <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+                         <div className="flex items-center justify-start gap-2">
                             <span className="font-semibold text-slate-500 dark:text-slate-400">{t('units.checkOut')}</span>
                             <span>{checkOut}</span>
                         </div>
@@ -127,17 +127,17 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) =
                 ) : null}
             </div>
 
-            <div className={`border-t dark:border-slate-700 p-3 flex items-center text-sm ${language === 'ar' ? 'flex-row-reverse' : 'justify-between'}`}>
-                <div className={`flex-1 flex ${language === 'ar' ? 'justify-end' : 'justify-start'}`}>
+            <div className="border-t dark:border-slate-700 p-3 flex items-center justify-between text-sm">
+                <div>
                     {status === 'free' && price && (
-                        <div className={`flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <div className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200">
                             <CurrencySaudiRiyalIcon className="w-5 h-5 text-slate-500" />
                             <span>{price.toFixed(2)}</span>
                             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('units.night')}</span>
                         </div>
                     )}
                     {status === 'occupied' && remaining !== undefined && (
-                         <div className={`flex items-center gap-1 text-sm ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                         <div className="flex items-center gap-1 text-sm">
                             <span className="font-medium text-slate-500 dark:text-slate-400">{t('units.remainingForHim')}</span>
                             <span className="font-bold text-green-600 dark:text-green-400">{remaining.toFixed(2)}</span>
                         </div>
