@@ -23,6 +23,8 @@ import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon'
 import ArrowRightOnRectangleIcon from './icons-redesign/ArrowRightOnRectangleIcon';
 import UsersIcon from './icons-redesign/UsersIcon';
 import WrenchScrewdriverIcon from './icons-redesign/WrenchScrewdriverIcon';
+import FunnelIcon from './icons-redesign/FunnelIcon';
+import ArrowDownTrayIcon from './icons-redesign/ArrowDownTrayIcon';
 
 
 const initialUnitsData: Unit[] = [
@@ -103,6 +105,11 @@ const UnitsPage: React.FC = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
     const [isAddGroupPanelOpen, setIsAddGroupPanelOpen] = useState(false);
     const [unitToDeleteId, setUnitToDeleteId] = useState<string | null>(null);
+
+    // Filter states
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [typeFilter, setTypeFilter] = useState<string>('all');
+    const [cleaningFilter, setCleaningFilter] = useState<string>('all');
     
     const unitCounts = useMemo(() => {
         return unitsData.reduce((acc, unit) => {
@@ -172,19 +179,41 @@ const UnitsPage: React.FC = () => {
     };
 
     const filteredUnits = useMemo(() => {
-        return unitsData.filter(unit =>
-            unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (unit.unitName && unit.unitName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (unit.customerName && unit.customerName.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-    }, [unitsData, searchTerm]);
+        return unitsData
+            .filter(unit => { // Search filter
+                if (!searchTerm) return true;
+                return (
+                    unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (unit.unitName && unit.unitName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    (unit.customerName && unit.customerName.toLowerCase().includes(searchTerm.toLowerCase()))
+                );
+            })
+            .filter(unit => { // Status filter
+                if (statusFilter === 'all') return true;
+                return unit.status === statusFilter;
+            })
+            .filter(unit => { // Type filter
+                if (typeFilter === 'all') return true;
+                return unit.unitType === typeFilter;
+            })
+            .filter(unit => { // Cleaning filter
+                if (cleaningFilter === 'all') return true;
+                return unit.cleaningStatus === cleaningFilter;
+            });
+    }, [unitsData, searchTerm, statusFilter, typeFilter, cleaningFilter]);
+
+    const totalPages = itemsPerPage === Number.MAX_SAFE_INTEGER ? 1 : Math.ceil(filteredUnits.length / itemsPerPage);
 
     const paginatedUnits = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         return filteredUnits.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredUnits, currentPage, itemsPerPage]);
 
-    const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
+
+    // Effect to reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter, typeFilter, cleaningFilter, itemsPerPage]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -197,6 +226,72 @@ const UnitsPage: React.FC = () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    const handleClearFilters = () => {
+        setSearchTerm('');
+        setStatusFilter('all');
+        setTypeFilter('all');
+        setCleaningFilter('all');
+    };
+
+    const handleExportCSV = () => {
+        if (filteredUnits.length === 0) {
+            return;
+        }
+
+        const toCamelCase = (str: string) => str.replace(/-(\w)/g, (_, c) => c.toUpperCase());
+
+        // Headers for the CSV file
+        const headers = [
+            "Unit Number", "Unit Name", "Unit Type", "Cleaning Status", "Availability",
+            "Status", "Customer Name", "Check-In", "Check-Out", "Price", "Remaining", "Floor", "Notes"
+        ];
+
+        const rows = filteredUnits.map(unit => {
+            const statusKey = `units.${toCamelCase(unit.status)}`;
+            const cleaningKey = `units.${unit.cleaningStatus === 'not-clean' ? 'notClean' : 'clean'}`;
+            const translatedStatus = t(statusKey as any, unit.status);
+            const translatedCleaning = t(cleaningKey as any, unit.cleaningStatus);
+            const availability = unit.isAvailable ? t('units.available_status') : t('units.not_available_status');
+
+            const rowData = [
+                unit.unitNumber,
+                unit.unitName || '',
+                unit.unitType,
+                translatedCleaning,
+                availability,
+                translatedStatus,
+                unit.customerName || '',
+                unit.checkIn || '',
+                unit.checkOut || '',
+                unit.price?.toString() || '0',
+                unit.remaining?.toString() || '0',
+                unit.floor.toString(),
+                unit.notes || ''
+            ];
+            
+            return rowData.map(value => {
+                const strValue = String(value);
+                if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
+                    return `"${strValue.replace(/"/g, '""')}"`;
+                }
+                return strValue;
+            }).join(',');
+        });
+
+        const csvContent = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        link.href = URL.createObjectURL(blob);
+        link.download = 'units_export.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const selectClass = 'py-2 px-3 w-full sm:w-auto border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 text-sm';
+
 
     const tableHeaders: { key: keyof Unit | 'actions', labelKey: string }[] = [
         { key: 'unitNumber', labelKey: 'units.th_id' },
@@ -215,6 +310,93 @@ const UnitsPage: React.FC = () => {
         { key: 'actions', labelKey: 'units.th_actions' },
     ];
     
+    const PaginationControls = () => {
+        if (totalPages <= 1) return null;
+
+        const pageNumbers = [];
+        const siblingCount = 1;
+        const totalVisiblePages = 7;
+
+        if (totalPages <= totalVisiblePages) {
+            for (let i = 1; i <= totalPages; i++) {
+                pageNumbers.push(i);
+            }
+        } else {
+            const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
+            const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
+            const shouldShowLeftDots = leftSiblingIndex > 2;
+            const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+
+            pageNumbers.push(1);
+
+            if (shouldShowLeftDots) {
+                pageNumbers.push('...');
+            }
+
+            for (let i = leftSiblingIndex; i <= rightSiblingIndex; i++) {
+                if (i > 1 && i < totalPages) {
+                    pageNumbers.push(i);
+                }
+            }
+
+            if (shouldShowRightDots) {
+                pageNumbers.push('...');
+            }
+            
+            pageNumbers.push(totalPages);
+        }
+        
+        const uniquePageNumbers = Array.from(new Set(pageNumbers));
+
+        return (
+            <nav className="flex items-center gap-1" aria-label="Pagination">
+                <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Previous page"
+                >
+                    <ChevronLeftIcon className="w-5 h-5" />
+                </button>
+
+                {uniquePageNumbers.map((page, index) => {
+                    if (page === '...') {
+                        return (
+                            <span key={`ellipsis-${index}`} className="flex items-center justify-center w-9 h-9 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                                ...
+                            </span>
+                        );
+                    }
+                    const isCurrent = page === currentPage;
+                    return (
+                        <button
+                            key={page}
+                            onClick={() => setCurrentPage(page as number)}
+                            className={`inline-flex items-center justify-center w-9 h-9 rounded-md text-sm font-semibold transition-colors ${
+                                isCurrent
+                                    ? 'bg-blue-500 text-white shadow-sm'
+                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                            }`}
+                            aria-current={isCurrent ? 'page' : undefined}
+                        >
+                            {page}
+                        </button>
+                    );
+                })}
+
+                <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Next page"
+                >
+                    <ChevronRightIcon className="w-5 h-5" />
+                </button>
+            </nav>
+        );
+    };
+
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -222,6 +404,10 @@ const UnitsPage: React.FC = () => {
                     <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('units.manageUnits')}</h2>
                 </div>
                 <div className="flex gap-2">
+                    <button onClick={handleExportCSV} className="flex items-center gap-2 bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors">
+                        <ArrowDownTrayIcon className="w-5 h-5" />
+                        <span>{t('units.export')}</span>
+                    </button>
                     <button onClick={handleAddNewUnit} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                         <PlusCircleIcon className="w-5 h-5" />
                         <span>{t('units.addUnit')}</span>
@@ -237,23 +423,53 @@ const UnitsPage: React.FC = () => {
                 {statusCardsData.map(card => <UnitStatusCard key={card.labelKey} label={t(card.labelKey as any)} value={card.value} icon={card.Icon} iconBg={card.iconBg} />)}
             </div>
 
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="relative w-full md:w-auto md:flex-grow">
-                    <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
-                    <input 
-                        type="text" 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder={t('units.searchUnits')}
-                        className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
-                    />
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="relative w-full sm:w-auto sm:flex-grow">
+                        <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
+                        <input 
+                            type="text" 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder={t('units.searchUnits')}
+                            className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
+                        />
+                    </div>
+                     <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`}>
+                            <Squares2x2Icon className="w-5 h-5" />
+                        </button>
+                        <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg transition-colors ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`}>
+                            <TableCellsIcon className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`}>
-                        <Squares2x2Icon className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg transition-colors ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`}>
-                        <TableCellsIcon className="w-5 h-5" />
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-4 border-t dark:border-slate-700">
+                    <div className="flex-shrink-0 flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                         <FunnelIcon className="w-5 h-5"/>
+                         <span>{t('units.filters.filterBy')}:</span>
+                    </div>
+                    <select aria-label={t('units.filters.status')} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={selectClass}>
+                        <option value="all">{t('units.filters.all')} {t('units.filters.status')}</option>
+                        <option value="free">{t('units.free')}</option>
+                        <option value="occupied">{t('units.occupied')}</option>
+                        <option value="not-checked-in">{t('units.notCheckedIn')}</option>
+                        <option value="out-of-service">{t('units.outOfService')}</option>
+                    </select>
+                    <select aria-label={t('units.filters.type')} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className={selectClass}>
+                        <option value="all">{t('units.filters.all')} {t('units.filters.type')}</option>
+                        <option value="غرفة مفردة">{t('units.singleRoom')}</option>
+                        <option value="غرفة مزدوجة">{t('units.doubleRoom')}</option>
+                        <option value="جناح">{t('units.suite')}</option>
+                    </select>
+                    <select aria-label={t('units.filters.cleaning')} value={cleaningFilter} onChange={(e) => setCleaningFilter(e.target.value)} className={selectClass}>
+                        <option value="all">{t('units.filters.all')} {t('units.filters.cleaning')}</option>
+                        <option value="clean">{t('units.clean')}</option>
+                        <option value="not-clean">{t('units.notClean')}</option>
+                    </select>
+                    <button onClick={handleClearFilters} className="ms-auto text-sm font-semibold text-blue-500 hover:underline">
+                        {t('units.filters.clearFilters')}
                     </button>
                 </div>
             </div>
@@ -333,18 +549,31 @@ const UnitsPage: React.FC = () => {
             )}
             
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="text-sm text-slate-600 dark:text-slate-300">
-                    {t('units.showing')} {Math.min((currentPage - 1) * itemsPerPage + 1, filteredUnits.length)} {t('units.to')} {Math.min(currentPage * itemsPerPage, filteredUnits.length)} {t('units.of')} {filteredUnits.length} {t('units.entries')}
+                {/* Left Side: Items per page and count */}
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                    <span>{t('units.showing')}</span>
+                    <select
+                        id="items-per-page"
+                        value={itemsPerPage === Number.MAX_SAFE_INTEGER ? 'all' : itemsPerPage}
+                        onChange={(e) => {
+                             const val = e.target.value;
+                             setItemsPerPage(val === 'all' ? Number.MAX_SAFE_INTEGER : Number(val));
+                        }}
+                        className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        aria-label={t('units.entries')}
+                    >
+                        <option value={12}>12</option>
+                        <option value={24}>24</option>
+                        <option value={48}>48</option>
+                        <option value="all">{t('units.all')}</option>
+                    </select>
+                    <span>
+                        {`${filteredUnits.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} - ${Math.min(currentPage * itemsPerPage, filteredUnits.length)} ${t('units.of')} ${filteredUnits.length} ${t('units.entries')}`}
+                    </span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <ChevronLeftIcon className="w-5 h-5" />
-                    </button>
-                    <span className="text-sm font-semibold">{currentPage} / {totalPages > 0 ? totalPages : 1}</span>
-                     <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="p-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <ChevronRightIcon className="w-5 h-5" />
-                    </button>
-                </div>
+
+                {/* Right Side: Page navigation */}
+                <PaginationControls />
             </div>
 
             <UnitEditPanel unit={editingUnit} isOpen={isPanelOpen} onClose={handleClosePanel} onSave={handleSaveUnit} isAdding={isAdding} />

@@ -250,6 +250,14 @@ const translationsData = {
       roomTemplate: 'نموذج الغرفة',
       generateRooms: 'إنشاء الغرف',
       errorInvalidRange: 'الرجاء إدخال نطاق صحيح. يجب أن يكون رقم "من" أصغر من أو يساوي رقم "إلى".',
+      filters: {
+        filterBy: 'فلترة حسب',
+        status: 'الحالة',
+        type: 'النوع',
+        cleaning: 'النظافة',
+        all: 'الكل',
+        clearFilters: 'مسح الفلاتر',
+      },
     }
   },
   en: {
@@ -502,6 +510,14 @@ const translationsData = {
       roomTemplate: 'Room Template',
       generateRooms: 'Generate Rooms',
       errorInvalidRange: "Please enter a valid range. 'From' must be less than or equal to 'To'.",
+      filters: {
+        filterBy: 'Filter by',
+        status: 'Status',
+        type: 'Type',
+        cleaning: 'Cleaning',
+        all: 'All',
+        clearFilters: 'Clear Filters',
+      },
     }
   }
 };

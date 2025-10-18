@@ -100,7 +100,7 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
                 aria-hidden="true"
             ></div>
 
-            <div className={`relative w-full max-w-3xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+            <div className={`relative w-full my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
                 <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
                     <h2 id="add-group-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">
                         {t('units.addGroupOfRoomsTitle')}
@@ -112,86 +112,90 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
 
                 <div className="p-6 overflow-y-auto">
                     <form onSubmit={(e) => e.preventDefault()}>
-                        <div>
-                            <Section title={t('units.roomNumbering')}>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label htmlFor="fromNumber" className={labelAlignClass}>{t('units.fromRoomNumber')}</label>
-                                        <input type="number" id="fromNumber" name="fromNumber" value={fromNumber} onChange={(e) => setFromNumber(parseInt(e.target.value, 10) || 0)} className={inputBaseClass} min="1" />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="toNumber" className={labelAlignClass}>{t('units.toRoomNumber')}</label>
-                                        <input type="number" id="toNumber" name="toNumber" value={toNumber} onChange={(e) => setToNumber(parseInt(e.target.value, 10) || 0)} className={inputBaseClass} min="1" />
-                                    </div>
-                                </div>
-                                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-                            </Section>
-
-                            <Section title={t('units.roomTemplate')}>
-                                <div className="space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-8">
+                            <div>
+                                <Section title={t('units.roomNumbering')}>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label htmlFor="unitType" className={labelAlignClass}>{t('units.roomType')}</label>
-                                            <select id="unitType" name="unitType" value={templateUnit.unitType} onChange={handleInputChange} className={inputBaseClass}>
-                                                <option value="غرفة مفردة">{t('units.singleRoom')}</option>
-                                                <option value="غرفة مزدوجة">{t('units.doubleRoom')}</option>
-                                                <option value="جناح">{t('units.suite')}</option>
-                                            </select>
+                                            <label htmlFor="fromNumber" className={labelAlignClass}>{t('units.fromRoomNumber')}</label>
+                                            <input type="number" id="fromNumber" name="fromNumber" value={fromNumber} onChange={(e) => setFromNumber(parseInt(e.target.value, 10) || 0)} className={inputBaseClass} min="1" />
                                         </div>
-                                            <div>
-                                            <label htmlFor="cleaningStatus" className={labelAlignClass}>{t('units.cleaning')}</label>
-                                            <select id="cleaningStatus" name="cleaningStatus" value={templateUnit.cleaningStatus} onChange={(e) => setTemplateUnit({...templateUnit, cleaningStatus: e.target.value as CleaningStatus})} className={inputBaseClass}>
-                                                <option value="clean">{t('units.clean')}</option>
-                                                <option value="not-clean">{t('units.notClean')}</option>
-                                            </select>
+                                        <div>
+                                            <label htmlFor="toNumber" className={labelAlignClass}>{t('units.toRoomNumber')}</label>
+                                            <input type="number" id="toNumber" name="toNumber" value={toNumber} onChange={(e) => setToNumber(parseInt(e.target.value, 10) || 0)} className={inputBaseClass} min="1" />
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                                        <span className="font-semibold text-slate-800 dark:text-slate-200">{t('units.available')}</span>
-                                        <Switch id="isAvailableTemplate" checked={templateUnit.isAvailable} onChange={(c) => setTemplateUnit({...templateUnit, isAvailable: c})} />
-                                    </div>
-                                </div>
-                            </Section>
-                             
-                            <Section title={t('units.commonFeatures')}>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
-                                    {commonFeatures.map(key => (
-                                        <Checkbox key={key} id={`template-common-${key}`} label={t(`units.${key}` as any)} checked={templateUnit.features.common[key as keyof typeof templateUnit.features.common]} onChange={(c) => handleFeatureChange('common', key, c)} />
-                                    ))}
-                                </div>
-                            </Section>
+                                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                                </Section>
 
-                             <Section title={t('units.unitDetails')}>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                                        {(['floor', 'rooms', 'bathrooms', 'beds', 'doubleBeds', 'wardrobes', 'tvs'] as const).map(key => (
-                                        <div key={key}>
-                                            <label htmlFor={`template-${key}`} className={labelAlignClass}>{t(`units.${key}` as any)}</label>
-                                            <input type="number" id={`template-${key}`} name={key} value={templateUnit[key]} onChange={handleNumberChange} className={inputBaseClass} min="0" />
+                                <Section title={t('units.roomTemplate')}>
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label htmlFor="unitType" className={labelAlignClass}>{t('units.roomType')}</label>
+                                                <select id="unitType" name="unitType" value={templateUnit.unitType} onChange={handleInputChange} className={inputBaseClass}>
+                                                    <option value="غرفة مفردة">{t('units.singleRoom')}</option>
+                                                    <option value="غرفة مزدوجة">{t('units.doubleRoom')}</option>
+                                                    <option value="جناح">{t('units.suite')}</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label htmlFor="cleaningStatus" className={labelAlignClass}>{t('units.cleaning')}</label>
+                                                <select id="cleaningStatus" name="cleaningStatus" value={templateUnit.cleaningStatus} onChange={(e) => setTemplateUnit({...templateUnit, cleaningStatus: e.target.value as CleaningStatus})} className={inputBaseClass}>
+                                                    <option value="clean">{t('units.clean')}</option>
+                                                    <option value="not-clean">{t('units.notClean')}</option>
+                                                </select>
+                                            </div>
                                         </div>
+                                        <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                                            <span className="font-semibold text-slate-800 dark:text-slate-200">{t('units.available')}</span>
+                                            <Switch id="isAvailableTemplate" checked={templateUnit.isAvailable} onChange={(c) => setTemplateUnit({...templateUnit, isAvailable: c})} />
+                                        </div>
+                                    </div>
+                                </Section>
+                            
+                                <Section title={t('units.unitDetails')}>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                        {(['floor', 'rooms', 'bathrooms', 'beds', 'doubleBeds', 'wardrobes', 'tvs'] as const).map(key => (
+                                            <div key={key}>
+                                                <label htmlFor={`template-${key}`} className={labelAlignClass}>{t(`units.${key}` as any)}</label>
+                                                <input type="number" id={`template-${key}`} name={key} value={templateUnit[key]} onChange={handleNumberChange} className={inputBaseClass} min="0" />
+                                            </div>
                                         ))}
                                         <div>
-                                        <label htmlFor="template-coolingType" className={labelAlignClass}>{t('units.coolingType')}</label>
-                                        <select id="template-coolingType" name="coolingType" value={templateUnit.coolingType} onChange={(e) => setTemplateUnit({...templateUnit, coolingType: e.target.value as CoolingType})} className={inputBaseClass}>
-                                            <option value="">{t('units.selectCoolingType')}</option>
-                                            <option value="central">{t('units.central')}</option>
-                                            <option value="split">{t('units.split')}</option>
-                                            <option value="window">{t('units.window')}</option>
-                                        </select>
+                                            <label htmlFor="template-coolingType" className={labelAlignClass}>{t('units.coolingType')}</label>
+                                            <select id="template-coolingType" name="coolingType" value={templateUnit.coolingType} onChange={(e) => setTemplateUnit({...templateUnit, coolingType: e.target.value as CoolingType})} className={inputBaseClass}>
+                                                <option value="">{t('units.selectCoolingType')}</option>
+                                                <option value="central">{t('units.central')}</option>
+                                                <option value="split">{t('units.split')}</option>
+                                                <option value="window">{t('units.window')}</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                            </Section>
-                            
-                            <Section title={t('units.specialFeatures')}>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
+                                </Section>
+                            </div>
+
+                            <div>
+                                <Section title={t('units.commonFeatures')}>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                                        {commonFeatures.map(key => (
+                                            <Checkbox key={key} id={`template-common-${key}`} label={t(`units.${key}` as any)} checked={templateUnit.features.common[key as keyof typeof templateUnit.features.common]} onChange={(c) => handleFeatureChange('common', key, c)} />
+                                        ))}
+                                    </div>
+                                </Section>
+                                
+                                <Section title={t('units.specialFeatures')}>
+                                    <div className="grid grid-cols-3 gap-x-4 gap-y-3">
                                         {specialFeatures.map(key => (
-                                        <Checkbox key={key} id={`template-special-${key}`} label={t(`units.${key}` as any)} checked={templateUnit.features.special[key as keyof typeof templateUnit.features.special]} onChange={(c) => handleFeatureChange('special', key, c)} />
-                                    ))}
-                                </div>
-                            </Section>
-                            
-                            <Section title={t('units.notes')}>
+                                            <Checkbox key={key} id={`template-special-${key}`} label={t(`units.${key}` as any)} checked={templateUnit.features.special[key as keyof typeof templateUnit.features.special]} onChange={(c) => handleFeatureChange('special', key, c)} />
+                                        ))}
+                                    </div>
+                                </Section>
+                                
+                                <Section title={t('units.notes')}>
                                     <textarea id="template-notes" name="notes" rows={4} placeholder={t('units.notesPlaceholder')} value={templateUnit.notes} onChange={handleInputChange} className={inputBaseClass}></textarea>
-                            </Section>
+                                </Section>
+                            </div>
                         </div>
                     </form>
                 </div>
