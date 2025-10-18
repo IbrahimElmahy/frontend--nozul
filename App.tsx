@@ -69,7 +69,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
 
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isAuthenticated') === 'true';
+  });
   const [settings, setSettings] = useState<ThemeSettings>(() => {
     const savedSettings = localStorage.getItem('themeSettings');
     return savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings;
@@ -105,10 +107,12 @@ const App: React.FC = () => {
 
 
   const handleLogin = () => {
+    localStorage.setItem('isAuthenticated', 'true');
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
     setIsAuthenticated(false);
   };
 
