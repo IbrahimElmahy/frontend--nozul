@@ -1,9 +1,10 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import ProfileStatCard from './ProfileStatCard';
 import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
 import DatePicker from './DatePicker';
 import PhoneNumberInput from './PhoneNumberInput'; // Import the new component
 import { LanguageContext } from '../contexts/LanguageContext';
+import { User } from '../types';
 
 // Icons for stat cards
 import HeartIcon from './icons-redesign/HeartIcon';
@@ -12,18 +13,35 @@ import ArrowLeftCircleIcon from './icons-redesign/ArrowLeftCircleIcon';
 import DesktopComputerIcon from './icons-redesign/DesktopComputerIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 
+interface UserProfilePageProps {
+    user: User | null;
+}
 
-const UserProfilePage: React.FC = () => {
+const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
     const { t, language } = useContext(LanguageContext);
     const [profileData, setProfileData] = useState({
-        name: 'وليد',
+        name: '',
         gender: 'ذكر',
         dob: '2000-02-29',
         notes: '',
-        username: 'Demoan',
-        phoneNumber: '+966567434321',
-        email: 'a@yahoo.com',
+        username: '',
+        phoneNumber: '',
+        email: '',
     });
+    
+    useEffect(() => {
+        if (user) {
+            setProfileData({
+                name: user.name || '',
+                gender: 'ذكر', // This info is not in the user object
+                dob: '2000-02-29', // This info is not in the user object
+                notes: '',
+                username: user.username || '',
+                phoneNumber: user.phone_number || '',
+                email: user.email || '',
+            });
+        }
+    }, [user]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -159,7 +177,7 @@ const UserProfilePage: React.FC = () => {
                             {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="role" className={labelAlignClass}>{t('profilePage.userRole')}</label>
                             {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
-                            <input type="text" id="role" name="role" value={t('profilePage.hotel')} className={`w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-gray-500 dark:text-slate-400 ${textAlignClass}`} readOnly />
+                            <input type="text" id="role" name="role" value={user?.role_name || t('profilePage.hotel')} className={`w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-gray-500 dark:text-slate-400 ${textAlignClass}`} readOnly />
                         </div>
                     </div>
                     

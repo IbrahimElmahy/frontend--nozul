@@ -11,6 +11,7 @@ import Bars3Icon from './icons-redesign/Bars3Icon';
 import GlobeAltIcon from './icons-redesign/GlobeAltIcon';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { TranslationKey } from '../translations';
+import { User } from '../types';
 
 
 // Icons for notifications
@@ -41,6 +42,7 @@ interface HeaderProps {
   onMenuButtonClick: () => void;
   setCurrentPage: (page: Page) => void;
   currentPage: Page;
+  user: User | null;
 }
 
 const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationKey, parent?: TranslationKey}> = {
@@ -49,7 +51,7 @@ const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationK
     units: { title: 'header.units', breadcrumb: 'sidebar.residentialRooms', parent: 'header.dashboard' }
 }
 
-const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage }) => {
+const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage, user }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
@@ -264,8 +266,8 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                 className="w-10 h-10 rounded-full"
             />
             <div className="hidden sm:block">
-                <div className={`font-semibold text-sm text-slate-700 dark:text-slate-300 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{t('walid_ullah')}</div>
-                <div className={`text-xs text-gray-500 dark:text-gray-400 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{t('manager')}</div>
+                <div className={`font-semibold text-sm text-slate-700 dark:text-slate-300 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.name || t('walid_ullah')}</div>
+                <div className={`text-xs text-gray-500 dark:text-gray-400 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.role_name || t('manager')}</div>
             </div>
             <ChevronDownIcon className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
             </button>

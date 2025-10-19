@@ -7,6 +7,7 @@ import UserProfilePage from './components/UserProfilePage';
 import UnitsPage from './components/UnitsPage'; // Import the new UnitsPage
 import SettingsCog from './components/SettingsCog';
 import { LanguageContext } from './contexts/LanguageContext';
+import { User } from './types';
 
 export interface ThemeSettings {
   colorScheme: 'light' | 'dark';
@@ -20,12 +21,12 @@ export interface ThemeSettings {
 export type Page = 'dashboard' | 'profile' | 'units'; // Add 'units' page type
 
 const defaultSettings: ThemeSettings = {
-  colorScheme: 'light',
-  layoutWidth: 'full',
-  sidebarColor: 'brand',
-  sidebarSize: 'default',
-  showUserInfo: false,
-  topbarColor: 'light',
+  colorScheme: 'dark',
+  layoutWidth: 'boxed',
+  sidebarColor: 'gradient',
+  sidebarSize: 'condensed',
+  showUserInfo: true,
+  topbarColor: 'dark',
 };
 
 
@@ -33,9 +34,10 @@ interface DashboardPageProps {
   onLogout: () => void;
   settings: ThemeSettings;
   setSettings: (settings: ThemeSettings | ((prev: ThemeSettings) => ThemeSettings)) => void;
+  user: User | null;
 }
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSettings }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSettings, user }) => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<Page>('units');
 
@@ -52,12 +54,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                 aria-hidden="true"
               ></div>
             )}
-            <Sidebar onLogout={onLogout} settings={settings} isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} setCurrentPage={setCurrentPage} currentPage={currentPage} />
+            <Sidebar onLogout={onLogout} settings={settings} isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} setCurrentPage={setCurrentPage} currentPage={currentPage} user={user} />
             <div className="flex-1 flex flex-col min-w-0">
-                <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} setCurrentPage={setCurrentPage} currentPage={currentPage} />
+                <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} setCurrentPage={setCurrentPage} currentPage={currentPage} user={user} />
                 <main className={`flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950 p-4 sm:p-6`}>
                     {currentPage === 'dashboard' && <Dashboard />}
-                    {currentPage === 'profile' && <UserProfilePage />}
+                    {currentPage === 'profile' && <UserProfilePage user={user} />}
                     {currentPage === 'units' && <UnitsPage />}
                 </main>
             </div>
@@ -70,8 +72,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('isAuthenticated') === 'true';
+    return !!localStorage.getItem('accessToken');
   });
+  const [user, setUser] = useState<User | null>(null);
   const [settings, setSettings] = useState<ThemeSettings>(() => {
     const savedSettings = localStorage.getItem('themeSettings');
     return savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings;
@@ -82,8 +85,13 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated) {
       document.title = "Hotel Dashboard";
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
     } else {
       document.title = "Hotel Dashboard - Login";
+      setUser(null);
     }
   }, [isAuthenticated]);
   
@@ -107,18 +115,20 @@ const App: React.FC = () => {
 
 
   const handleLogin = () => {
-    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('isAuthenticated', 'true'); // Keep this for legacy check if needed, but accessToken is primary
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
     setIsAuthenticated(false);
   };
 
   return (
     <>
-      {isAuthenticated ? <DashboardPage onLogout={handleLogout} settings={settings} setSettings={setSettings} /> : <LoginPage onLoginSuccess={handleLogin} />}
+      {isAuthenticated ? <DashboardPage onLogout={handleLogout} settings={settings} setSettings={setSettings} user={user} /> : <LoginPage onLoginSuccess={handleLogin} />}
     </>
   );
 };

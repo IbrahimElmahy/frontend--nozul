@@ -63,3 +63,14 @@ export interface Unit {
         };
     };
 }
+
+export interface User {
+    access_token: string;
+    refresh: string;
+    name: string;
+    username: string;
+    email: string;
+    phone_number: string;
+    role_name: string;
+    role: string;
+}

@@ -15,6 +15,7 @@ import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon'
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import Logo from './icons/Logo';
 import { LanguageContext } from '../contexts/LanguageContext';
+import { User } from '../types';
 
 interface NavItemProps {
     label: string;
@@ -106,7 +107,7 @@ const NavHeader: React.FC<{ collapsed: boolean; sidebarColor: ThemeSettings['sid
     );
 };
 
-const UserInfoBlock: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
+const UserInfoBlock: React.FC<{ collapsed: boolean; user: User | null }> = ({ collapsed, user }) => {
     const { t, language } = useContext(LanguageContext);
     return (
         <div className={`p-4 flex items-center ${collapsed ? 'justify-center' : ''}`}>
@@ -117,8 +118,8 @@ const UserInfoBlock: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
             />
             {!collapsed && (
                 <div className={`${language === 'ar' ? 'mr-3 text-right' : 'ml-3 text-left'}`}>
-                    <div className="font-semibold text-sm">{t('walid_ullah')}</div>
-                    <div className="text-xs opacity-80">{t('manager')}</div>
+                    <div className="font-semibold text-sm">{user?.name || t('walid_ullah')}</div>
+                    <div className="text-xs opacity-80">{user?.role_name || t('manager')}</div>
                 </div>
             )}
         </div>
@@ -132,6 +133,7 @@ interface SidebarProps {
     setMobileMenuOpen: (open: boolean) => void;
     setCurrentPage: (page: Page) => void;
     currentPage: Page;
+    user: User | null;
 }
 
 const pageMapping: Record<string, Page> = {
@@ -140,7 +142,7 @@ const pageMapping: Record<string, Page> = {
 };
 
 
-const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen, setMobileMenuOpen, setCurrentPage, currentPage }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen, setMobileMenuOpen, setCurrentPage, currentPage, user }) => {
     const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
     const { t, language } = useContext(LanguageContext);
 
@@ -274,7 +276,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
       </nav>
 
       <div className={`p-3 border-t ${borderColor[effectiveSidebarColor]}`}>
-        {showUserInfo && <UserInfoBlock collapsed={isEffectivelyCollapsed} />}
+        {showUserInfo && <UserInfoBlock collapsed={isEffectivelyCollapsed} user={user} />}
         <NavItem label={t('logout')} icon={ArrowLeftOnRectangleIcon} collapsed={isEffectivelyCollapsed} onClick={handleLogoutAndMenuClose} sidebarColor={effectiveSidebarColor} />
       </div>
     </aside>
