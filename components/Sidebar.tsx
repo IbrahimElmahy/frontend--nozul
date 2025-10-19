@@ -249,7 +249,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
 
   return (
     <aside 
-        className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-transform duration-300 ease-in-out lg:transition-all lg:duration-300 h-screen fixed lg:relative z-50 w-72 lg:w-auto ${mobileMenuPosition} lg:translate-x-0 ${widthClass}`}
+        className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-transform duration-300 ease-in-out lg:transition-all lg:duration-300 h-screen fixed lg:relative z-50 w-72 ${mobileMenuPosition} lg:translate-x-0 ${widthClass}`}
         onMouseEnter={() => setIsDesktopCollapsed(false)}
         onMouseLeave={() => setIsDesktopCollapsed(true)}
     >
