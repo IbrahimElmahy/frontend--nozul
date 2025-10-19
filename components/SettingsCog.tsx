@@ -115,14 +115,6 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                             </div>
                         </SettingsSection>
 
-                        <SettingsSection title={t('settings.sidebarSize')}>
-                            <div className="flex gap-2">
-                                <SettingsRadioOption name="sidebarSize" value="default" label={t('settings.default')} checked={settings.sidebarSize === 'default'} onChange={handleSettingChange('sidebarSize')} />
-                                <SettingsRadioOption name="sidebarSize" value="compact" label={t('settings.compact')} checked={settings.sidebarSize === 'compact'} onChange={handleSettingChange('sidebarSize')} />
-                                <SettingsRadioOption name="sidebarSize" value="condensed" label={t('settings.condensed')} checked={settings.sidebarSize === 'condensed'} onChange={handleSettingChange('sidebarSize')} />
-                            </div>
-                        </SettingsSection>
-                        
                         <SettingsSection title={t('settings.topbar')}>
                             <div className="flex gap-2">
                                 <SettingsRadioOption name="topbarColor" value="light" label={t('settings.light')} checked={settings.topbarColor === 'light'} onChange={handleSettingChange('topbarColor')} />

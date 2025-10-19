@@ -77,7 +77,9 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [settings, setSettings] = useState<ThemeSettings>(() => {
     const savedSettings = localStorage.getItem('themeSettings');
-    return savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings;
+    const loadedSettings = savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings;
+    loadedSettings.sidebarSize = 'condensed'; // Force condensed size
+    return loadedSettings;
   });
   const { language } = useContext(LanguageContext);
 
