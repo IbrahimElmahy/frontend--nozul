@@ -107,14 +107,45 @@ const NavHeader: React.FC<{ collapsed: boolean; sidebarColor: ThemeSettings['sid
     );
 };
 
-const UserInfoBlock: React.FC<{ collapsed: boolean; user: User | null }> = ({ collapsed, user }) => {
+interface UserInfoBlockProps {
+    collapsed: boolean;
+    user: User | null;
+    setCurrentPage: (page: Page) => void;
+    sidebarColor: ThemeSettings['sidebarColor'];
+}
+
+const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurrentPage, sidebarColor }) => {
     const { t, language } = useContext(LanguageContext);
+    
+    const colorStyles = {
+        light: { base: 'text-slate-600 hover:bg-slate-100' },
+        dark: { base: 'text-slate-300 hover:bg-slate-700' },
+        brand: { base: 'text-blue-100 hover:bg-[#3a82ab]' },
+        gradient: { base: 'text-purple-100 hover:bg-white/10' }
+    };
+
+    const styles = colorStyles[sidebarColor] || colorStyles.brand;
+    const baseClasses = 'flex items-center w-full p-3 my-1 rounded-lg text-base font-medium transition-colors duration-200 cursor-pointer';
+
+    const handleProfileClick = (e: React.MouseEvent | React.KeyboardEvent) => {
+        e.preventDefault();
+        setCurrentPage('profile');
+    };
+
     return (
-        <div className={`p-4 flex items-center ${collapsed ? 'justify-center' : ''}`}>
+        <a 
+            href="#"
+            className={`${baseClasses} ${styles.base} ${collapsed ? 'justify-center' : ''}`}
+            onClick={handleProfileClick}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleProfileClick(e); }}
+            role="button"
+            tabIndex={0}
+            aria-label="View user profile"
+        >
             <img
                 src="https://picsum.photos/id/237/200/200"
                 alt="User Avatar"
-                className="w-10 h-10 rounded-full flex-shrink-0"
+                className="w-10 h-10 rounded-md flex-shrink-0"
             />
             {!collapsed && (
                 <div className={`${language === 'ar' ? 'mr-3 text-right' : 'ml-3 text-left'}`}>
@@ -122,7 +153,7 @@ const UserInfoBlock: React.FC<{ collapsed: boolean; user: User | null }> = ({ co
                     <div className="text-xs opacity-80">{user?.role_name || t('manager')}</div>
                 </div>
             )}
-        </div>
+        </a>
     );
 };
 
@@ -139,6 +170,7 @@ interface SidebarProps {
 const pageMapping: Record<string, Page> = {
     dashboard: 'dashboard',
     rooms: 'units',
+    bookings: 'bookings',
 };
 
 
@@ -276,8 +308,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
       </nav>
 
       <div className={`p-3 border-t ${borderColor[effectiveSidebarColor]}`}>
-        {showUserInfo && <UserInfoBlock collapsed={isEffectivelyCollapsed} user={user} />}
-        <NavItem label={t('logout')} icon={ArrowLeftOnRectangleIcon} collapsed={isEffectivelyCollapsed} onClick={handleLogoutAndMenuClose} sidebarColor={effectiveSidebarColor} />
+        {showUserInfo && <UserInfoBlock collapsed={isEffectivelyCollapsed} user={user} setCurrentPage={setCurrentPage} sidebarColor={effectiveSidebarColor}/>}
+        {/* FIX: Use namespaced translation key 'userMenu.logout' to resolve TypeScript error and improve maintainability. */}
+        <NavItem label={t('userMenu.logout')} icon={ArrowLeftOnRectangleIcon} collapsed={isEffectivelyCollapsed} onClick={handleLogoutAndMenuClose} sidebarColor={effectiveSidebarColor} />
       </div>
     </aside>
   );

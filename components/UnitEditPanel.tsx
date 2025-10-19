@@ -120,7 +120,8 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
                                                     </select>
                                                 </div>
                                                     <div>
-                                                    <label htmlFor="cleaningStatus" className={labelAlignClass}>{t('units.cleaning')}</label>
+                                                    {/* FIX: Changed translation key 'units.cleaning' to the correct key 'units.th_cleaning' to resolve the type error. */}
+                                                    <label htmlFor="cleaningStatus" className={labelAlignClass}>{t('units.th_cleaning')}</label>
                                                     <select id="cleaningStatus" name="cleaningStatus" value={formData.cleaningStatus} onChange={(e) => setFormData({...formData, cleaningStatus: e.target.value as CleaningStatus})} className={inputBaseClass}>
                                                         <option value="clean">{t('units.clean')}</option>
                                                         <option value="not-clean">{t('units.notClean')}</option>

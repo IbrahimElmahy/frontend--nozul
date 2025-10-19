@@ -23,8 +23,8 @@ import ServerIcon from './icons-redesign/ServerIcon';
 interface Notification {
   id: number;
   icon: React.ComponentType<{ className?: string }>;
-  titleKey: string;
-  timestampKey: string;
+  titleKey: TranslationKey;
+  timestampKey: TranslationKey;
   read: boolean;
 }
 
@@ -48,7 +48,8 @@ interface HeaderProps {
 const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationKey, parent?: TranslationKey}> = {
     dashboard: { title: 'header.dashboard', breadcrumb: 'header.hotelName' },
     profile: { title: 'header.userInformation', breadcrumb: 'header.dashboard', parent: 'header.dashboard' },
-    units: { title: 'header.units', breadcrumb: 'sidebar.residentialRooms', parent: 'header.dashboard' }
+    units: { title: 'header.units', breadcrumb: 'sidebar.residentialRooms', parent: 'header.dashboard' },
+    bookings: { title: 'header.bookings', breadcrumb: 'sidebar.bookings', parent: 'sidebar.reservationsManagement' }
 }
 
 const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage, user }) => {
@@ -279,14 +280,16 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                 className={`flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 ${language === 'en' ? 'flex-row-reverse justify-end' : ''}`}
                 >
                 <UserIcon className={`w-5 h-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
-                <span>{t('profile')}</span>
+                {/* FIX: Use namespaced translation key 'userMenu.profile' to resolve TypeScript error. */}
+                <span>{t('userMenu.profile')}</span>
                 </a>
                 <button
                 onClick={handleLogoutClick}
                 className={`w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 ${language === 'ar' ? 'text-right' : 'text-left'} ${language === 'en' ? 'flex-row-reverse justify-between' : ''}`}
                 >
                 <ArrowLeftOnRectangleIcon className={`w-5 h-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
-                <span>{t('logout')}</span>
+                {/* FIX: Use namespaced translation key 'userMenu.logout' to resolve TypeScript error. */}
+                <span>{t('userMenu.logout')}</span>
                 </button>
             </div>
             )}

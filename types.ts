@@ -1,3 +1,6 @@
+
+
+// FIX: Remove circular import and define ChartData.
 export interface ChartData {
   name: string;
   value: number;
@@ -73,4 +76,45 @@ export interface User {
     phone_number: string;
     role_name: string;
     role: string;
+}
+
+export type BookingStatus = 'check-in' | 'check-out';
+export type RentType = 'daily' | 'hourly' | 'monthly';
+
+export interface Booking {
+  id: number;
+  bookingNumber: string;
+  guestName: string;
+  unitName: string;
+  checkInDate: string;
+  checkOutDate: string;
+  time: string;
+  status: BookingStatus;
+  rentType: RentType;
+  duration: number;
+  rent: number;
+  value: number;
+  discount: number; // Changed from string for calculations
+  subtotal: number;
+  // FIX: Add optional tax property to support mock data.
+  tax?: number;
+  total: number;
+  payments: number;
+  balance: number;
+  createdAt: string;
+  updatedAt: string;
+
+  // New detailed fields from the form redesign
+  bookingSource?: string;
+  bookingReason?: string;
+  guestType?: string;
+  companions?: number;
+  discountType?: 'percentage' | 'fixed' | '';
+  totalOrders?: number;
+  notes?: string;
+  price?: number;
+  receiptVoucher?: string;
+  returnVouchers?: string;
+  invoices?: string;
+  order?: string;
 }
