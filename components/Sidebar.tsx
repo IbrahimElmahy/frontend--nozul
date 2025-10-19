@@ -229,7 +229,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
     const sizeClasses = {
         default: { collapsed: 'lg:w-24', expanded: 'lg:w-72' },
         compact: { collapsed: 'lg:w-20', expanded: 'lg:w-64' },
-        condensed: { collapsed: 'lg:w-20', expanded: 'lg:w-56' }
+        condensed: { collapsed: 'lg:w-16', expanded: 'lg:w-56' }
     };
     
     const borderColor = {
