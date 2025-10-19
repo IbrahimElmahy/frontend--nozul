@@ -83,7 +83,7 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
                 aria-hidden="true"
             ></div>
 
-            <div className={`relative w-full max-w-5xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 max-h-[85vh] ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+            <div className={`relative w-full max-w-6xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 max-h-[90vh] ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
                 <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
                     <h2 id="unit-edit-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">
                         {isAdding ? t('units.addUnit') : `${t('units.editUnit')} - ${unit.unitNumber}`}

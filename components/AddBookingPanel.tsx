@@ -91,7 +91,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ template, isOpen, onC
     };
 
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
-    const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 ${language === 'ar' ? 'text-right' : 'text-left'}`;
+    const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
     
     const bookingSources = [t('bookings.booking_source_airbnb'), t('bookings.booking_source_booking'), t('bookings.booking_source_almosafer'), t('bookings.booking_source_agoda'), t('bookings.booking_source_websites'), t('bookings.booking_source_reception')];
     const rentTypeOptions = [{ value: 'hourly', label: t('bookings.rent_hourly') }, { value: 'daily', label: t('bookings.rent_daily') }, { value: 'monthly', label: t('bookings.rent_monthly') }];
@@ -108,7 +108,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ template, isOpen, onC
         >
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
 
-            <div className={`relative w-full max-w-7xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 max-h-[90vh] ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+            <div className={`relative w-full max-w-screen-2xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
                 <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
                     <h2 id="add-booking-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('bookings.addBookingTitle')}</h2>
                     <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
@@ -116,17 +116,17 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ template, isOpen, onC
                     </button>
                 </header>
 
-                <div className="flex-grow p-6 overflow-y-auto">
+                <div className="flex-grow p-6">
                     <form onSubmit={(e) => e.preventDefault()}>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6">
-                            {/* Column 1 */}
-                            <div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8">
+                            {/* Column 1: Booking, Calendar */}
+                            <div className="space-y-4">
                                 <SectionHeader title={t('bookings.bookingInfo')} />
                                 <div>
                                     <label className={labelBaseClass}>{t('bookings.bookingNumber')}</label>
                                     <p className="text-slate-500 dark:text-slate-400 text-sm h-10 flex items-center">----------</p>
                                 </div>
-                                <div className="mt-4">
+                                <div>
                                     <label htmlFor="bookingSource" className={labelBaseClass}>{t('bookings.bookingSource')}</label>
                                     <SearchableSelect id="bookingSource" options={bookingSources} value={formData.bookingSource || ''} onChange={(val) => setFormData(p => ({...p, bookingSource: val}))} placeholder={t('bookings.selectBookingSource')} />
                                 </div>
@@ -136,7 +136,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ template, isOpen, onC
                                     <label htmlFor="rentType" className={labelBaseClass}>{t('bookings.rent')}</label>
                                     <SearchableSelect id="rentType" options={rentTypeOptions.map(o=>o.label)} value={rentTypeOptions.find(o => o.value === formData.rentType)?.label || ''} onChange={(label) => { const opt = rentTypeOptions.find(o=>o.label===label); if(opt) setFormData(p=>({...p, rentType: opt.value as RentType})); }} placeholder={t('bookings.selectRentType')} />
                                 </div>
-                                <div className="mt-4">
+                                <div>
                                     <label className={labelBaseClass}>{t('bookings.rentCalendar')}</label>
                                     <div className="grid grid-cols-3 gap-2">
                                         <div>
@@ -153,65 +153,73 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ template, isOpen, onC
                                         </div>
                                     </div>
                                 </div>
-                                <div className="mt-4">
+                                <div>
                                     <label htmlFor="duration" className={labelBaseClass}>{t('bookings.duration')}</label>
                                     <input type="number" name="duration" value={formData.duration} onChange={handleNumberChange} className={`${inputBaseClass} bg-slate-100 dark:bg-slate-700`} readOnly />
                                 </div>
                             </div>
                             
-                            {/* Column 2 */}
-                            <div>
+                            {/* Column 2: Apartment, Guest Info */}
+                            <div className="space-y-4">
                                 <SectionHeader title={t('bookings.apartmentInfo')} />
                                 <div>
                                     <label htmlFor="unitName" className={labelBaseClass}>{t('bookings.apartments')}</label>
                                     <div className="flex items-center gap-2">
-                                        <SearchableSelect id="unitName" options={['101', '102', '103']} value={formData.unitName} onChange={(val) => setFormData(p=>({...p, unitName: val}))} placeholder="Select Apartment" />
+                                        <div className="flex-grow">
+                                            <SearchableSelect id="unitName" options={['101', '102', '103']} value={formData.unitName} onChange={(val) => setFormData(p=>({...p, unitName: val}))} placeholder="Select Apartment" />
+                                        </div>
                                         <ActionButton icon={PlusIcon} color="bg-blue-500" />
                                         <ActionButton icon={PencilIcon} color="bg-yellow-400" />
                                         <ActionButton icon={PlusIcon} color="bg-green-500" />
                                     </div>
                                 </div>
-                                <div className="mt-4">
+                                <div>
                                     <label className={labelBaseClass}>{t('bookings.price')}</label>
                                     <p className="text-slate-500 dark:text-slate-400 text-sm h-10 flex items-center">----------</p>
                                 </div>
-
+                                
                                 <SectionHeader title={t('bookings.guestInfo')} />
                                 <div>
                                     <label htmlFor="bookingReason" className={labelBaseClass}>{t('bookings.bookingReasons')}</label>
                                     <SearchableSelect id="bookingReason" options={bookingReasonOptions} value={formData.bookingReason || ''} onChange={(val) => setFormData(p=>({...p, bookingReason: val}))} placeholder={t('bookings.selectBookingReason')} />
                                 </div>
-                                <div className="mt-4">
+                                <div>
                                     <label htmlFor="guestType" className={labelBaseClass}>{t('bookings.guestType')}</label>
                                     <SearchableSelect id="guestType" options={guestTypeOptions} value={formData.guestType || ''} onChange={(val) => setFormData(p=>({...p, guestType: val}))} placeholder={t('bookings.selectGuestType')} />
                                 </div>
-                                <div className="mt-4">
+                                <div>
                                     <label htmlFor="guestName" className={labelBaseClass}>{t('bookings.guest')}</label>
                                     <div className="flex items-center gap-2">
-                                        <SearchableSelect id="guestName" options={['حملة محمد', 'محمد سالم']} value={formData.guestName} onChange={(val) => setFormData(p=>({...p, guestName: val}))} placeholder="Select Guest" />
+                                        <div className="flex-grow">
+                                            <SearchableSelect id="guestName" options={['حملة محمد', 'محمد سالم']} value={formData.guestName} onChange={(val) => setFormData(p=>({...p, guestName: val}))} placeholder="Select Guest" />
+                                        </div>
                                         <ActionButton icon={PlusIcon} color="bg-blue-500" />
                                         <ActionButton icon={PencilIcon} color="bg-yellow-400" />
                                         <ActionButton icon={PlusIcon} color="bg-green-500" />
                                     </div>
                                 </div>
-                                <div className="mt-4">
+                                <div>
                                     <label htmlFor="companions" className={labelBaseClass}>{t('bookings.companions')}</label>
                                     <div className="flex items-center gap-2">
-                                        <SearchableSelect id="companions" options={['1', '2', '3']} value={(formData.companions || 0).toString()} onChange={(val) => setFormData(p=>({...p, companions: parseInt(val, 10)}))} placeholder="0" />
+                                        <div className="flex-grow">
+                                            <SearchableSelect id="companions" options={['1', '2', '3']} value={(formData.companions || 0).toString()} onChange={(val) => setFormData(p=>({...p, companions: parseInt(val, 10)}))} placeholder="0" />
+                                        </div>
                                         <ActionButton icon={MinusIcon} color="bg-red-500" />
                                         <ActionButton icon={PlusIcon} color="bg-blue-500" />
                                     </div>
                                 </div>
                             </div>
-                            
-                            {/* Column 3 */}
-                            <div>
+
+                            {/* Column 3: Financial, Notes */}
+                            <div className="space-y-4">
                                 <SectionHeader title={t('bookings.financialInfo')} />
                                 <div className="space-y-4">
                                     <div>
                                         <label htmlFor="receiptVoucher" className={labelBaseClass}>{t('bookings.receiptVoucher')}</label>
                                         <div className="flex items-center gap-2">
-                                            <SearchableSelect id="receiptVoucher" options={[]} value={formData.receiptVoucher || ''} onChange={(val) => setFormData(p=>({...p, receiptVoucher: val}))} placeholder="" />
+                                            <div className="flex-grow">
+                                                <SearchableSelect id="receiptVoucher" options={[]} value={formData.receiptVoucher || ''} onChange={(val) => setFormData(p=>({...p, receiptVoucher: val}))} placeholder="" />
+                                            </div>
                                             <ActionButton icon={PlusIcon} color="bg-green-500" />
                                             <ActionButton icon={PencilIcon} color="bg-blue-500" />
                                             <ActionButton icon={EyeIcon} color="bg-blue-500" />
@@ -220,7 +228,9 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ template, isOpen, onC
                                      <div>
                                         <label htmlFor="returnVouchers" className={labelBaseClass}>{t('bookings.returnVouchers')}</label>
                                         <div className="flex items-center gap-2">
-                                            <SearchableSelect id="returnVouchers" options={[]} value={formData.returnVouchers || ''} onChange={(val) => setFormData(p=>({...p, returnVouchers: val}))} placeholder="" />
+                                            <div className="flex-grow">
+                                                <SearchableSelect id="returnVouchers" options={[]} value={formData.returnVouchers || ''} onChange={(val) => setFormData(p=>({...p, returnVouchers: val}))} placeholder="" />
+                                            </div>
                                             <ActionButton icon={PlusIcon} color="bg-green-500" />
                                             <ActionButton icon={PencilIcon} color="bg-blue-500" />
                                             <ActionButton icon={EyeIcon} color="bg-blue-500" />
@@ -229,7 +239,9 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ template, isOpen, onC
                                      <div>
                                         <label htmlFor="invoices" className={labelBaseClass}>{t('bookings.invoices')}</label>
                                         <div className="flex items-center gap-2">
-                                            <SearchableSelect id="invoices" options={[]} value={formData.invoices || ''} onChange={(val) => setFormData(p=>({...p, invoices: val}))} placeholder="" />
+                                            <div className="flex-grow">
+                                                <SearchableSelect id="invoices" options={[]} value={formData.invoices || ''} onChange={(val) => setFormData(p=>({...p, invoices: val}))} placeholder="" />
+                                            </div>
                                             <ActionButton icon={PlusIcon} color="bg-green-500" />
                                             <ActionButton icon={PencilIcon} color="bg-blue-500" />
                                             <ActionButton icon={EyeIcon} color="bg-blue-500" />
@@ -238,7 +250,9 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ template, isOpen, onC
                                      <div>
                                         <label htmlFor="order" className={labelBaseClass}>{t('bookings.order')}</label>
                                         <div className="flex items-center gap-2">
-                                            <SearchableSelect id="order" options={[]} value={formData.order || ''} onChange={(val) => setFormData(p=>({...p, order: val}))} placeholder="" />
+                                            <div className="flex-grow">
+                                                <SearchableSelect id="order" options={[]} value={formData.order || ''} onChange={(val) => setFormData(p=>({...p, order: val}))} placeholder="" />
+                                            </div>
                                             <ActionButton icon={PlusIcon} color="bg-green-500" />
                                             <ActionButton icon={PencilIcon} color="bg-blue-500" />
                                             <ActionButton icon={EyeIcon} color="bg-blue-500" />
@@ -281,6 +295,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ template, isOpen, onC
                                 <SectionHeader title={t('bookings.notes')} />
                                 <textarea name="notes" rows={4} placeholder={t('bookings.notesPlaceholder')} value={formData.notes || ''} onChange={handleInputChange} className={inputBaseClass}></textarea>
                             </div>
+
                         </div>
                     </form>
                 </div>

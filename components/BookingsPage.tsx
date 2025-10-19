@@ -16,6 +16,9 @@ import ArrowRightOnRectangleIcon from './icons-redesign/ArrowRightOnRectangleIco
 import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon';
 import CalendarDaysIcon from './icons-redesign/CalendarDaysIcon';
 import BriefcaseIcon from './icons-redesign/BriefcaseIcon';
+import ArrowUpIcon from './icons-redesign/ArrowUpIcon';
+import ArrowDownIcon from './icons-redesign/ArrowDownIcon';
+import ChevronUpDownIcon from './icons-redesign/ChevronUpDownIcon';
 
 // FIX: Removed .map() call and ensured mock data aligns with the Booking type.
 const mockBookings: Booking[] = [
@@ -86,6 +89,7 @@ const BookingsPage: React.FC = () => {
     const [itemsPerPage, setItemsPerPage] = useState(50);
     const [activeActionMenu, setActiveActionMenu] = useState<number | null>(null);
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof Booking | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
     const actionMenuRef = useRef<HTMLDivElement>(null);
 
     const filteredBookings = useMemo(() => {
@@ -94,13 +98,37 @@ const BookingsPage: React.FC = () => {
             booking.bookingNumber.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [bookings, searchTerm]);
+
+    const sortedBookings = useMemo(() => {
+        let sortableItems = [...filteredBookings];
+        if (sortConfig.key) {
+            sortableItems.sort((a, b) => {
+                const key = sortConfig.key as keyof Booking;
+                const aValue = a[key];
+                const bValue = b[key];
+
+                if (aValue === null || aValue === undefined) return 1;
+                if (bValue === null || bValue === undefined) return -1;
+                
+                let comparison = 0;
+                if (typeof aValue === 'number' && typeof bValue === 'number') {
+                    comparison = aValue - bValue;
+                } else {
+                    comparison = String(aValue).localeCompare(String(bValue));
+                }
+                
+                return sortConfig.direction === 'ascending' ? comparison : -comparison;
+            });
+        }
+        return sortableItems;
+    }, [filteredBookings, sortConfig]);
     
-    const totalPages = itemsPerPage === Number.MAX_SAFE_INTEGER ? 1 : Math.ceil(filteredBookings.length / itemsPerPage);
+    const totalPages = itemsPerPage === Number.MAX_SAFE_INTEGER ? 1 : Math.ceil(sortedBookings.length / itemsPerPage);
 
     const paginatedBookings = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
-        return filteredBookings.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredBookings, currentPage, itemsPerPage]);
+        return sortedBookings.slice(startIndex, startIndex + itemsPerPage);
+    }, [sortedBookings, currentPage, itemsPerPage]);
 
     const handleSaveNewBooking = (newBookingData: Omit<Booking, 'id'>) => {
         const newBooking: Booking = {
@@ -110,13 +138,21 @@ const BookingsPage: React.FC = () => {
         setBookings(prev => [newBooking, ...prev]);
         setIsAddPanelOpen(false);
     };
+    
+    const requestSort = (key: keyof Booking) => {
+        let direction: 'ascending' | 'descending' = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
 
     const statusConfig: Record<BookingStatus, { labelKey: string, className: string }> = {
         'check-in': { labelKey: 'bookings.status_check_in', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
         'check-out': { labelKey: 'bookings.status_check_out', className: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300' }
     };
 
-    const tableHeaders = [
+    const tableHeaders: { key: keyof Booking | 'actions', labelKey: string }[] = [
         { key: 'id', labelKey: 'bookings.th_id' },
         { key: 'bookingNumber', labelKey: 'bookings.th_bookingNumber' },
         { key: 'guestName', labelKey: 'bookings.th_guestName' },
@@ -199,7 +235,31 @@ const BookingsPage: React.FC = () => {
                     <table className="w-full text-sm text-left text-slate-500 dark:text-slate-400 whitespace-nowrap">
                         <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                             <tr>
-                                {tableHeaders.map(header => <th key={header.key} scope="col" className="px-6 py-3">{t(header.labelKey as any)}</th>)}
+                                {tableHeaders.map(header => {
+                                    const isSortable = header.key !== 'actions';
+                                    return (
+                                        <th key={header.key} scope="col" className="px-6 py-3">
+                                            {isSortable ? (
+                                                <button 
+                                                    className="flex items-center gap-1.5 group" 
+                                                    onClick={() => requestSort(header.key as keyof Booking)}
+                                                    aria-label={`Sort by ${t(header.labelKey as any)}`}
+                                                >
+                                                    <span>{t(header.labelKey as any)}</span>
+                                                    <span className="flex-shrink-0">
+                                                        {sortConfig.key === header.key ? (
+                                                            sortConfig.direction === 'ascending' ? <ArrowUpIcon className="w-3.5 h-3.5" /> : <ArrowDownIcon className="w-3.5 h-3.5" />
+                                                        ) : (
+                                                            <ChevronUpDownIcon className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        )}
+                                                    </span>
+                                                </button>
+                                            ) : (
+                                                <span>{t(header.labelKey as any)}</span>
+                                            )}
+                                        </th>
+                                    );
+                                })}
                             </tr>
                         </thead>
                         <tbody>
@@ -232,7 +292,7 @@ const BookingsPage: React.FC = () => {
                 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('units.showing')} ${filteredBookings.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, filteredBookings.length)} ${t('units.of')} ${filteredBookings.length} ${t('units.entries')}`}
+                        {`${t('units.showing')} ${sortedBookings.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, sortedBookings.length)} ${t('units.of')} ${sortedBookings.length} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
                          <nav className="flex items-center gap-1" aria-label="Pagination">
