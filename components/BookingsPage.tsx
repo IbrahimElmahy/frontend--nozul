@@ -3,6 +3,8 @@ import { LanguageContext } from '../contexts/LanguageContext';
 import { Booking, BookingStatus, RentType } from '../types';
 import UnitStatusCard from './UnitStatusCard';
 import AddBookingPanel from './AddBookingPanel';
+import BookingDetailsModal from './BookingDetailsModal';
+import ConfirmationModal from './ConfirmationModal';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -19,6 +21,9 @@ import BriefcaseIcon from './icons-redesign/BriefcaseIcon';
 import ArrowUpIcon from './icons-redesign/ArrowUpIcon';
 import ArrowDownIcon from './icons-redesign/ArrowDownIcon';
 import ChevronUpDownIcon from './icons-redesign/ChevronUpDownIcon';
+import EyeIcon from './icons-redesign/EyeIcon';
+import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
+import TrashIcon from './icons-redesign/TrashIcon';
 
 // FIX: Removed .map() call and ensured mock data aligns with the Booking type.
 const mockBookings: Booking[] = [
@@ -89,7 +94,10 @@ const BookingsPage: React.FC = () => {
     const [itemsPerPage, setItemsPerPage] = useState(50);
     const [activeActionMenu, setActiveActionMenu] = useState<number | null>(null);
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
+    const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+    const [bookingToDeleteId, setBookingToDeleteId] = useState<number | null>(null);
     const [sortConfig, setSortConfig] = useState<{ key: keyof Booking | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
+    const [viewingBooking, setViewingBooking] = useState<Booking | null>(null);
     const actionMenuRef = useRef<HTMLDivElement>(null);
 
     const filteredBookings = useMemo(() => {
@@ -130,13 +138,49 @@ const BookingsPage: React.FC = () => {
         return sortedBookings.slice(startIndex, startIndex + itemsPerPage);
     }, [sortedBookings, currentPage, itemsPerPage]);
 
-    const handleSaveNewBooking = (newBookingData: Omit<Booking, 'id'>) => {
-        const newBooking: Booking = {
-            ...newBookingData,
-            id: Math.max(...bookings.map(b => b.id), 0) + 1,
-        };
-        setBookings(prev => [newBooking, ...prev]);
+    const handleClosePanel = () => {
         setIsAddPanelOpen(false);
+        setEditingBooking(null);
+    };
+
+    const handleSaveBooking = (bookingData: Booking) => {
+        if (editingBooking) {
+            const updatedBooking = { ...bookingData, updatedAt: new Date().toISOString() };
+            setBookings(bookings.map(b => b.id === updatedBooking.id ? updatedBooking : b));
+        } else {
+            const newBooking: Booking = {
+                ...(bookingData as Omit<Booking, 'id'>),
+                id: Math.max(...bookings.map(b => b.id), 0) + 1,
+                bookingNumber: `N-${Date.now().toString().slice(-6)}`,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            setBookings(prev => [newBooking, ...prev]);
+        }
+        handleClosePanel();
+    };
+    
+    const handleAddNewClick = () => {
+        setEditingBooking(null);
+        setIsAddPanelOpen(true);
+    };
+
+    const handleEditClick = (booking: Booking) => {
+        setEditingBooking(booking);
+        setIsAddPanelOpen(true);
+        setActiveActionMenu(null);
+    };
+
+    const handleDeleteClick = (bookingId: number) => {
+        setBookingToDeleteId(bookingId);
+        setActiveActionMenu(null);
+    };
+
+    const handleConfirmDelete = () => {
+        if (bookingToDeleteId) {
+            setBookings(bookings.filter(b => b.id !== bookingToDeleteId));
+            setBookingToDeleteId(null);
+        }
     };
     
     const requestSort = (key: keyof Booking) => {
@@ -153,26 +197,14 @@ const BookingsPage: React.FC = () => {
     };
 
     const tableHeaders: { key: keyof Booking | 'actions', labelKey: string }[] = [
-        { key: 'id', labelKey: 'bookings.th_id' },
         { key: 'bookingNumber', labelKey: 'bookings.th_bookingNumber' },
         { key: 'guestName', labelKey: 'bookings.th_guestName' },
         { key: 'unitName', labelKey: 'bookings.th_unitName' },
         { key: 'checkInDate', labelKey: 'bookings.th_checkInDate' },
         { key: 'checkOutDate', labelKey: 'bookings.th_checkOutDate' },
-        { key: 'time', labelKey: 'bookings.th_time' },
         { key: 'status', labelKey: 'bookings.th_status' },
-        { key: 'rentType', labelKey: 'bookings.th_rentType' },
-        { key: 'duration', labelKey: 'bookings.th_duration' },
-        { key: 'rent', labelKey: 'bookings.th_rent' },
-        { key: 'value', labelKey: 'bookings.th_value' },
-        { key: 'discount', labelKey: 'bookings.th_discount' },
-        { key: 'subtotal', labelKey: 'bookings.th_subtotal' },
-        { key: 'tax', labelKey: 'bookings.th_tax' },
         { key: 'total', labelKey: 'bookings.th_total' },
-        { key: 'payments', labelKey: 'bookings.th_payments' },
         { key: 'balance', labelKey: 'bookings.th_balance' },
-        { key: 'createdAt', labelKey: 'bookings.th_createdAt' },
-        { key: 'updatedAt', labelKey: 'bookings.th_updatedAt' },
         { key: 'actions', labelKey: 'bookings.th_actions' },
     ];
 
@@ -191,7 +223,7 @@ const BookingsPage: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('bookings.manageBookings')}</h2>
                 <button 
-                    onClick={() => setIsAddPanelOpen(true)}
+                    onClick={handleAddNewClick}
                     className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
                 >
                     <PlusCircleIcon className="w-5 h-5" />
@@ -268,14 +300,42 @@ const BookingsPage: React.FC = () => {
                                     {tableHeaders.map(header => (
                                         <td key={`${booking.id}-${header.key}`} className="px-6 py-4">
                                             {header.key === 'actions' ? (
-                                                <div className="relative">
-                                                    <button className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600">
-                                                        <EllipsisVerticalIcon className="w-5 h-5" />
+                                                <div className="flex items-center gap-2">
+                                                    <button 
+                                                        onClick={() => setViewingBooking(booking)}
+                                                        className="p-1 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"
+                                                        aria-label={`View details for booking ${booking.bookingNumber}`}
+                                                    >
+                                                        <EyeIcon className="w-5 h-5" />
                                                     </button>
+                                                    <div className="relative">
+                                                        <button 
+                                                            onClick={() => setActiveActionMenu(activeActionMenu === booking.id ? null : booking.id)}
+                                                            className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
+                                                        >
+                                                            <EllipsisVerticalIcon className="w-5 h-5" />
+                                                        </button>
+                                                        {activeActionMenu === booking.id && (
+                                                            <div ref={actionMenuRef} className={`absolute top-full z-10 mt-1 w-40 bg-white dark:bg-slate-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 ${language === 'ar' ? 'left-0' : 'right-0'}`}>
+                                                                <button onClick={() => handleEditClick(booking)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+                                                                    <PencilSquareIcon className="w-4 h-4" />
+                                                                    {t('bookings.edit')}
+                                                                </button>
+                                                                <button onClick={() => handleDeleteClick(booking.id)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10">
+                                                                    <TrashIcon className="w-4 h-4" />
+                                                                    {t('bookings.delete')}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ) : header.key === 'status' ? (
                                                 <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusConfig[booking.status].className}`}>
                                                     {t(statusConfig[booking.status].labelKey as any)}
+                                                </span>
+                                            ) : header.key === 'checkInDate' || header.key === 'checkOutDate' ? (
+                                                <span className="text-slate-800 dark:text-slate-200 font-medium">
+                                                    {new Date(booking[header.key] as string).toLocaleDateString()}
                                                 </span>
                                             ) : (
                                                 <span className="text-slate-800 dark:text-slate-200 font-medium">
@@ -317,10 +377,23 @@ const BookingsPage: React.FC = () => {
             </div>
             
             <AddBookingPanel
-                template={newBookingTemplate}
+                initialData={editingBooking || newBookingTemplate}
+                isEditing={!!editingBooking}
                 isOpen={isAddPanelOpen}
-                onClose={() => setIsAddPanelOpen(false)}
-                onSave={handleSaveNewBooking}
+                onClose={handleClosePanel}
+                onSave={handleSaveBooking}
+            />
+
+            <BookingDetailsModal
+                booking={viewingBooking}
+                onClose={() => setViewingBooking(null)}
+            />
+            <ConfirmationModal
+                isOpen={!!bookingToDeleteId}
+                onClose={() => setBookingToDeleteId(null)}
+                onConfirm={handleConfirmDelete}
+                title={t('bookings.deleteBookingTitle')}
+                message={t('bookings.confirmDeleteMessage')}
             />
         </div>
     );
