@@ -6,6 +6,7 @@ import AddBookingPanel from './AddBookingPanel';
 import BookingDetailsModal from './BookingDetailsModal';
 import ConfirmationModal from './ConfirmationModal';
 import BookingCard from './BookingCard';
+import AddGroupBookingPanel from './AddGroupBookingPanel';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -26,6 +27,7 @@ import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
+import UsersIcon from './icons-redesign/UsersIcon';
 
 // FIX: Removed .map() call and ensured mock data aligns with the Booking type.
 const mockBookings: Booking[] = [
@@ -96,6 +98,7 @@ const BookingsPage: React.FC = () => {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [activeActionMenu, setActiveActionMenu] = useState<number | null>(null);
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
+    const [isAddGroupPanelOpen, setIsAddGroupPanelOpen] = useState(false);
     const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
     const [bookingToDeleteId, setBookingToDeleteId] = useState<number | null>(null);
     const [sortConfig, setSortConfig] = useState<{ key: keyof Booking | null; direction: 'ascending' | 'descending' }>({ key: 'id', direction: 'descending' });
@@ -177,6 +180,20 @@ const BookingsPage: React.FC = () => {
         handleClosePanel();
     };
     
+    const handleSaveGroupBooking = (newBookings: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>[]) => {
+        const maxId = Math.max(0, ...bookings.map(b => b.id));
+        const bookingsToAdd: Booking[] = newBookings.map((booking, index) => ({
+            ...booking,
+            id: maxId + 1 + index,
+            bookingNumber: `GRP-${maxId + 1 + index}`, // Differentiate group bookings
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        } as Booking));
+        setBookings(prev => [...bookingsToAdd, ...prev]);
+        setIsAddGroupPanelOpen(false);
+    };
+
+
     const handleAddNewClick = () => {
         setEditingBooking(null);
         setIsAddPanelOpen(true);
@@ -279,13 +296,22 @@ const BookingsPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('bookings.manageBookings')}</h2>
-                <button 
-                    onClick={handleAddNewClick}
-                    className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                    <PlusCircleIcon className="w-5 h-5" />
-                    <span>{t('bookings.addBooking')}</span>
-                </button>
+                 <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => setIsAddGroupPanelOpen(true)}
+                        className="flex items-center gap-2 bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600 transition-colors"
+                    >
+                        <UsersIcon className="w-5 h-5" />
+                        <span>{t('bookings.addGroupBooking')}</span>
+                    </button>
+                    <button 
+                        onClick={handleAddNewClick}
+                        className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                        <PlusCircleIcon className="w-5 h-5" />
+                        <span>{t('bookings.addBooking')}</span>
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -438,6 +464,12 @@ const BookingsPage: React.FC = () => {
                 isOpen={isAddPanelOpen}
                 onClose={handleClosePanel}
                 onSave={handleSaveBooking}
+            />
+
+            <AddGroupBookingPanel
+                isOpen={isAddGroupPanelOpen}
+                onClose={() => setIsAddGroupPanelOpen(false)}
+                onSave={handleSaveGroupBooking}
             />
 
             <BookingDetailsModal
