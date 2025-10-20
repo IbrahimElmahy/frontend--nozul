@@ -171,6 +171,7 @@ const pageMapping: Record<string, Page> = {
     dashboard: 'dashboard',
     rooms: 'units',
     bookings: 'bookings',
+    guests: 'guests',
 };
 
 

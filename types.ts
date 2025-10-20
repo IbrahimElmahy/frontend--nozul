@@ -1,4 +1,4 @@
-
+import React from 'react';
 
 // FIX: Remove circular import and define ChartData.
 export interface ChartData {
@@ -117,4 +117,38 @@ export interface Booking {
   returnVouchers?: string;
   invoices?: string;
   order?: string;
+}
+
+export type GuestType = 'visitor' | 'citizen' | 'resident';
+export type IdType = 'passport' | 'national_id' | 'residence_card';
+export type GuestStatus = 'active' | 'inactive';
+
+export interface Guest {
+  id: number;
+  name: string;
+  mobileNumber: string;
+  nationality: string;
+  guestType: GuestType;
+  idType: IdType;
+  idNumber: string;
+  issueDate: string | null;
+  expiryDate: string | null;
+  status: GuestStatus;
+  createdAt: string;
+  updatedAt: string;
+
+  // New detailed fields
+  gender?: 'male' | 'female';
+  dob?: string | null;
+  workNumber?: string;
+  email?: string;
+  workLocation?: string;
+  country?: string;
+  city?: string;
+  district?: string;
+  street?: string;
+  postalCode?: string;
+  issueLocation?: string;
+  serialNumber?: string;
+  notes?: string;
 }

@@ -5,7 +5,8 @@ import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import UserProfilePage from './components/UserProfilePage';
 import UnitsPage from './components/UnitsPage';
-import BookingsPage from './components/BookingsPage'; // Import the new BookingsPage
+import BookingsPage from './components/BookingsPage';
+import GuestsPage from './components/GuestsPage'; // Import the new GuestsPage
 import SettingsCog from './components/SettingsCog';
 import { LanguageContext } from './contexts/LanguageContext';
 import { User } from './types';
@@ -19,7 +20,7 @@ export interface ThemeSettings {
   topbarColor: 'light' | 'dark';
 }
 
-export type Page = 'dashboard' | 'profile' | 'units' | 'bookings'; // Add 'bookings' page type
+export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests'; // Add 'guests' page type
 
 const defaultSettings: ThemeSettings = {
   colorScheme: 'dark',
@@ -40,7 +41,7 @@ interface DashboardPageProps {
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSettings, user }) => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<Page>('bookings');
+  const [currentPage, setCurrentPage] = useState<Page>('guests');
 
   const layoutWidthClass = settings.layoutWidth === 'boxed' ? 'max-w-screen-xl mx-auto shadow-2xl' : 'w-full';
 
@@ -63,6 +64,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                     {currentPage === 'profile' && <UserProfilePage user={user} />}
                     {currentPage === 'units' && <UnitsPage />}
                     {currentPage === 'bookings' && <BookingsPage />}
+                    {currentPage === 'guests' && <GuestsPage />}
                 </main>
             </div>
             <SettingsCog settings={settings} setSettings={setSettings} />
