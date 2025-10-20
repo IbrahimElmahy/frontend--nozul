@@ -173,6 +173,7 @@ const pageMapping: Record<string, Page> = {
     bookings: 'bookings',
     guests: 'guests',
     agencies: 'agencies',
+    orders: 'orders',
 };
 
 

@@ -8,6 +8,7 @@ import UnitsPage from './components/UnitsPage';
 import BookingsPage from './components/BookingsPage';
 import GuestsPage from './components/GuestsPage';
 import BookingAgenciesPage from './components/BookingAgenciesPage';
+import OrdersPage from './components/OrdersPage';
 import SettingsCog from './components/SettingsCog';
 import { LanguageContext } from './contexts/LanguageContext';
 import { User } from './types';
@@ -21,7 +22,7 @@ export interface ThemeSettings {
   topbarColor: 'light' | 'dark';
 }
 
-export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies';
+export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders';
 
 const defaultSettings: ThemeSettings = {
   colorScheme: 'dark',
@@ -42,7 +43,7 @@ interface DashboardPageProps {
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSettings, user }) => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<Page>('agencies');
+  const [currentPage, setCurrentPage] = useState<Page>('orders');
 
   const layoutWidthClass = settings.layoutWidth === 'boxed' ? 'max-w-screen-xl mx-auto shadow-2xl' : 'w-full';
 
@@ -67,6 +68,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                     {currentPage === 'bookings' && <BookingsPage />}
                     {currentPage === 'guests' && <GuestsPage />}
                     {currentPage === 'agencies' && <BookingAgenciesPage />}
+                    {currentPage === 'orders' && <OrdersPage />}
                 </main>
             </div>
             <SettingsCog settings={settings} setSettings={setSettings} />

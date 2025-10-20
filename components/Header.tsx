@@ -52,6 +52,7 @@ const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationK
     bookings: { title: 'bookings.manageBookings', breadcrumb: 'sidebar.bookings', parent: 'sidebar.reservationsManagement' },
     guests: { title: 'guests.manageGuests', breadcrumb: 'sidebar.guests', parent: 'sidebar.guestManagement' },
     agencies: { title: 'agencies.manageAgencies', breadcrumb: 'sidebar.bookingAgencies', parent: 'sidebar.guestManagement' },
+    orders: { title: 'orders.manageOrders', breadcrumb: 'sidebar.orders', parent: 'sidebar.reservationsManagement' },
 }
 
 const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage, user }) => {

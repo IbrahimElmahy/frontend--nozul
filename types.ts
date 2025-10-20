@@ -172,3 +172,27 @@ export interface BookingAgency {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface OrderItem {
+  id: string;
+  service: string;
+  category: string;
+  quantity: number;
+  price: number;
+}
+
+export interface Order {
+  id: number;
+  orderNumber: string;
+  bookingNumber: string;
+  apartmentName: string;
+  value: number;
+  discount: number; // Represents percentage
+  subtotal: number;
+  tax: number;
+  total: number;
+  createdAt: string;
+  updatedAt: string;
+  items?: OrderItem[];
+  notes?: string;
+}
