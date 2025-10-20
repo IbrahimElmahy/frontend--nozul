@@ -1,7 +1,3 @@
-// @google/genai:fixed
-// This file was incorrectly containing a React component. 
-// It has been replaced with the correct translation structure to fix build errors.
-
 export const translations = {
   ar: {
     "walid_ullah": "وليد উল্লাহ",
@@ -305,6 +301,7 @@ export const translations = {
         editBookingTitle: "تعديل الحجز",
         deleteBookingTitle: "حذف الحجز",
         confirmDeleteMessage: "هل أنت متأكد أنك تريد حذف هذا الحجز؟ لا يمكن التراجع عن هذا الإجراء.",
+        view: "معاينة",
         edit: "تعديل",
         delete: "حذف",
         bookingInfo: "معلومات الحجز",
@@ -678,6 +675,7 @@ export const translations = {
         editBookingTitle: "Edit Booking",
         deleteBookingTitle: "Delete Booking",
         confirmDeleteMessage: "Are you sure you want to delete this booking? This action cannot be undone.",
+        view: "View",
         edit: "Edit",
         delete: "Delete",
         bookingInfo: "Booking Information",

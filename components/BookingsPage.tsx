@@ -1,17 +1,17 @@
-import React, { useState, useMemo, useContext, useRef } from 'react';
+import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Booking, BookingStatus, RentType } from '../types';
 import UnitStatusCard from './UnitStatusCard';
 import AddBookingPanel from './AddBookingPanel';
 import BookingDetailsModal from './BookingDetailsModal';
 import ConfirmationModal from './ConfirmationModal';
+import BookingCard from './BookingCard';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
 import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
-import EllipsisVerticalIcon from './icons-redesign/EllipsisVerticalIcon';
 import QuestionMarkCircleIcon from './icons-redesign/QuestionMarkCircleIcon';
 import ClipboardDocumentListIcon from './icons-redesign/ClipboardDocumentListIcon';
 import ArrowRightOnRectangleIcon from './icons-redesign/ArrowRightOnRectangleIcon';
@@ -24,6 +24,8 @@ import ChevronUpDownIcon from './icons-redesign/ChevronUpDownIcon';
 import EyeIcon from './icons-redesign/EyeIcon';
 import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
+import TableCellsIcon from './icons-redesign/TableCellsIcon';
+import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 
 // FIX: Removed .map() call and ensured mock data aligns with the Booking type.
 const mockBookings: Booking[] = [
@@ -91,14 +93,29 @@ const BookingsPage: React.FC = () => {
     const [bookings, setBookings] = useState<Booking[]>(mockBookings);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(50);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
     const [activeActionMenu, setActiveActionMenu] = useState<number | null>(null);
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
     const [bookingToDeleteId, setBookingToDeleteId] = useState<number | null>(null);
-    const [sortConfig, setSortConfig] = useState<{ key: keyof Booking | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
+    const [sortConfig, setSortConfig] = useState<{ key: keyof Booking | null; direction: 'ascending' | 'descending' }>({ key: 'id', direction: 'descending' });
     const [viewingBooking, setViewingBooking] = useState<Booking | null>(null);
+    const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const actionMenuRef = useRef<HTMLDivElement>(null);
+
+    const formatDate = (dateString: string) => dateString.split(' ')[0];
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (actionMenuRef.current && !actionMenuRef.current.contains(event.target as Node)) {
+                setActiveActionMenu(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const filteredBookings = useMemo(() => {
         return bookings.filter(booking => 
@@ -143,15 +160,15 @@ const BookingsPage: React.FC = () => {
         setEditingBooking(null);
     };
 
-    const handleSaveBooking = (bookingData: Booking) => {
+    const handleSaveBooking = (bookingData: Booking | Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>) => {
         if (editingBooking) {
-            const updatedBooking = { ...bookingData, updatedAt: new Date().toISOString() };
+            const updatedBooking = { ...bookingData, id: editingBooking.id, updatedAt: new Date().toISOString() } as Booking;
             setBookings(bookings.map(b => b.id === updatedBooking.id ? updatedBooking : b));
         } else {
             const newBooking: Booking = {
                 ...(bookingData as Omit<Booking, 'id'>),
                 id: Math.max(...bookings.map(b => b.id), 0) + 1,
-                bookingNumber: `N-${Date.now().toString().slice(-6)}`,
+                bookingNumber: `0000000${Math.max(...bookings.map(b => b.id), 0) + 1}`,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
@@ -196,15 +213,15 @@ const BookingsPage: React.FC = () => {
         'check-out': { labelKey: 'bookings.status_check_out', className: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300' }
     };
 
-    const tableHeaders: { key: keyof Booking | 'actions', labelKey: string }[] = [
+    const tableHeaders: { key: keyof Booking | 'actions', labelKey: string, numeric?: boolean }[] = [
         { key: 'bookingNumber', labelKey: 'bookings.th_bookingNumber' },
         { key: 'guestName', labelKey: 'bookings.th_guestName' },
         { key: 'unitName', labelKey: 'bookings.th_unitName' },
         { key: 'checkInDate', labelKey: 'bookings.th_checkInDate' },
         { key: 'checkOutDate', labelKey: 'bookings.th_checkOutDate' },
         { key: 'status', labelKey: 'bookings.th_status' },
-        { key: 'total', labelKey: 'bookings.th_total' },
-        { key: 'balance', labelKey: 'bookings.th_balance' },
+        { key: 'total', labelKey: 'bookings.th_total', numeric: true },
+        { key: 'balance', labelKey: 'bookings.th_balance', numeric: true },
         { key: 'actions', labelKey: 'bookings.th_actions' },
     ];
 
@@ -216,6 +233,46 @@ const BookingsPage: React.FC = () => {
         { labelKey: 'bookings.upcoming', value: 0, Icon: CalendarDaysIcon, iconBg: 'bg-indigo-500' },
         { labelKey: 'bookings.allBookings', value: 335, Icon: BriefcaseIcon, iconBg: 'bg-slate-500' },
     ];
+
+    const showingEntriesControls = (
+        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+            <span>{t('units.showing')}</span>
+            <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+            </select>
+            <span>{t('units.entries')}</span>
+        </div>
+    );
+
+    const searchAndViewsControls = (
+        <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="relative flex-grow sm:flex-grow-0 sm:w-96">
+                <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
+                <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder={t('bookings.searchPlaceholder')}
+                    className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
+                />
+            </div>
+            <div className="flex items-center gap-2">
+                <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg transition-colors ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`} aria-label="Table View">
+                    <TableCellsIcon className="w-5 h-5" />
+                </button>
+                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`} aria-label="Grid View">
+                    <Squares2x2Icon className="w-5 h-5" />
+                </button>
+            </div>
+        </div>
+    );
 
 
     return (
@@ -236,42 +293,43 @@ const BookingsPage: React.FC = () => {
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                        <span>{t('units.showing')}</span>
-                        <select
-                            value={itemsPerPage}
-                            onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                            className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                        >
-                            <option value={10}>10</option>
-                            <option value={25}>25</option>
-                            <option value={50}>50</option>
-                            <option value={100}>100</option>
-                        </select>
-                        <span>{t('units.entries')}</span>
-                    </div>
-                    <div className="relative w-full sm:w-auto sm:max-w-xs">
-                        <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder={t('bookings.searchPlaceholder')}
-                            className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
-                        />
-                    </div>
+                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                    {language === 'ar' ? (
+                        <>
+                            {searchAndViewsControls}
+                            {showingEntriesControls}
+                        </>
+                    ) : (
+                        <>
+                            {showingEntriesControls}
+                            {searchAndViewsControls}
+                        </>
+                    )}
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
-                            <tr>
-                                {tableHeaders.map(header => {
-                                    const isSortable = header.key !== 'actions';
-                                    return (
-                                        <th key={header.key} scope="col" className="px-6 py-3">
-                                            {isSortable ? (
+                {viewMode === 'grid' ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {paginatedBookings.map(booking => (
+                            <BookingCard
+                                key={booking.id}
+                                booking={booking}
+                                onViewClick={() => {
+                                    setViewingBooking(booking);
+                                    setActiveActionMenu(null);
+                                }}
+                                onEditClick={() => handleEditClick(booking)}
+                                onDeleteClick={() => handleDeleteClick(booking.id)}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-start text-slate-500 dark:text-slate-400">
+                            <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
+                                <tr>
+                                    {tableHeaders.map(header => (
+                                        <th key={header.key} scope="col" className={`px-6 py-3 ${header.numeric || header.key === 'actions' ? 'text-end' : 'text-start'}`}>
+                                            {header.key !== 'actions' ? (
                                                 <button 
                                                     className="flex items-center gap-1.5 group" 
                                                     onClick={() => requestSort(header.key as keyof Booking)}
@@ -290,65 +348,63 @@ const BookingsPage: React.FC = () => {
                                                 <span>{t(header.labelKey as any)}</span>
                                             )}
                                         </th>
-                                    );
-                                })}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedBookings.map(booking => (
-                                <tr key={booking.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                    {tableHeaders.map(header => (
-                                        <td key={`${booking.id}-${header.key}`} className="px-6 py-4">
-                                            {header.key === 'actions' ? (
-                                                <div className="flex items-center gap-2">
-                                                    <button 
-                                                        onClick={() => setViewingBooking(booking)}
-                                                        className="p-1 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"
-                                                        aria-label={`View details for booking ${booking.bookingNumber}`}
-                                                    >
-                                                        <EyeIcon className="w-5 h-5" />
-                                                    </button>
-                                                    <div className="relative">
-                                                        <button 
-                                                            onClick={() => setActiveActionMenu(activeActionMenu === booking.id ? null : booking.id)}
-                                                            className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
-                                                        >
-                                                            <EllipsisVerticalIcon className="w-5 h-5" />
-                                                        </button>
-                                                        {activeActionMenu === booking.id && (
-                                                            <div ref={actionMenuRef} className={`absolute top-full z-10 mt-1 w-40 bg-white dark:bg-slate-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 ${language === 'ar' ? 'left-0' : 'right-0'}`}>
-                                                                <button onClick={() => handleEditClick(booking)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
-                                                                    <PencilSquareIcon className="w-4 h-4" />
-                                                                    {t('bookings.edit')}
-                                                                </button>
-                                                                <button onClick={() => handleDeleteClick(booking.id)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10">
-                                                                    <TrashIcon className="w-4 h-4" />
-                                                                    {t('bookings.delete')}
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ) : header.key === 'status' ? (
-                                                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusConfig[booking.status].className}`}>
-                                                    {t(statusConfig[booking.status].labelKey as any)}
-                                                </span>
-                                            ) : header.key === 'checkInDate' || header.key === 'checkOutDate' ? (
-                                                <span className="text-slate-800 dark:text-slate-200 font-medium">
-                                                    {new Date(booking[header.key] as string).toLocaleDateString()}
-                                                </span>
-                                            ) : (
-                                                <span className="text-slate-800 dark:text-slate-200 font-medium">
-                                                    {(booking[header.key as keyof Booking] || '').toString()}
-                                                </span>
-                                            )}
-                                        </td>
                                     ))}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {paginatedBookings.map(booking => (
+                                    <tr key={booking.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                                        {tableHeaders.map(header => (
+                                            <td key={`${booking.id}-${header.key}`} className={`px-6 py-4 ${header.numeric || header.key === 'actions' ? 'text-end' : 'text-start'}`}>
+                                                {header.key === 'actions' ? (
+                                                    <div className="flex items-center gap-1 justify-end">
+                                                        <button 
+                                                            onClick={() => setViewingBooking(booking)}
+                                                            className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"
+                                                            aria-label={`View details for booking ${booking.bookingNumber}`}
+                                                        >
+                                                            <EyeIcon className="w-5 h-5" />
+                                                        </button>
+                                                         <button 
+                                                            onClick={() => handleEditClick(booking)}
+                                                            className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"
+                                                            aria-label={`Edit booking ${booking.bookingNumber}`}
+                                                        >
+                                                            <PencilSquareIcon className="w-5 h-5" />
+                                                        </button>
+                                                         <button 
+                                                            onClick={() => handleDeleteClick(booking.id)}
+                                                            className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"
+                                                            aria-label={`Delete booking ${booking.bookingNumber}`}
+                                                        >
+                                                            <TrashIcon className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                ) : header.key === 'status' ? (
+                                                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusConfig[booking.status].className}`}>
+                                                        {t(statusConfig[booking.status].labelKey as any)}
+                                                    </span>
+                                                ) : header.key === 'checkInDate' || header.key === 'checkOutDate' ? (
+                                                    <span className="text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">
+                                                        {formatDate(booking[header.key] as string)}
+                                                    </span>
+                                                ) : header.key === 'balance' ? (
+                                                    <span className={`font-medium whitespace-nowrap font-mono ${booking.balance < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                                        {booking.balance.toFixed(2)}
+                                                    </span>
+                                                ) : (
+                                                    <span className={`text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap ${header.numeric ? 'font-mono' : ''}`}>
+                                                        {(booking[header.key as keyof Booking] || '').toString()}
+                                                    </span>
+                                                )}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
                 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
@@ -363,7 +419,7 @@ const BookingsPage: React.FC = () => {
                             >
                                 <ChevronLeftIcon className="w-5 h-5" />
                             </button>
-                             <span className="text-sm font-semibold">{currentPage}</span>
+                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages || totalPages === 0}
