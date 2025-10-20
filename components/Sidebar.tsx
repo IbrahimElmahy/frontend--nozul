@@ -172,6 +172,7 @@ const pageMapping: Record<string, Page> = {
     rooms: 'units',
     bookings: 'bookings',
     guests: 'guests',
+    agencies: 'agencies',
 };
 
 

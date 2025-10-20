@@ -53,38 +53,43 @@ const GuestDetailsModal: React.FC<GuestDetailsModalProps> = ({ guest, onClose })
                 </header>
 
                 <div className="flex-grow p-6 overflow-y-auto">
-                    <Section title={t('guests.personalInfo')}>
-                        <DetailItem label={t('guests.th_name')} value={guest.name} />
-                        <DetailItem label={t('guests.gender')} value={guest.gender ? t(`guests.${guest.gender}` as any) : '---'} />
-                        <DetailItem label={t('guests.th_nationality')} value={guest.nationality} />
-                        <DetailItem label={t('guests.dob')} value={formatDate(guest.dob)} />
-                    </Section>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
+                        <div>
+                            <Section title={t('guests.personalInfo')}>
+                                <DetailItem label={t('guests.th_name')} value={guest.name} />
+                                <DetailItem label={t('guests.gender')} value={guest.gender ? t(`guests.${guest.gender}` as any) : '---'} />
+                                <DetailItem label={t('guests.th_nationality')} value={guest.nationality} />
+                                <DetailItem label={t('guests.dob')} value={formatDate(guest.dob)} />
+                            </Section>
 
-                    <Section title={t('guests.contactInfo')}>
-                        <DetailItem label={t('guests.th_mobileNumber')} value={guest.mobileNumber} />
-                        <DetailItem label={t('guests.workNumber')} value={guest.workNumber} />
-                        <DetailItem label={t('guests.email')} value={guest.email} />
-                        <DetailItem label={t('guests.workLocation')} value={guest.workLocation} />
-                    </Section>
-
-                     <Section title={t('guests.addressInfo')}>
-                        <DetailItem label={t('guests.country')} value={guest.country} />
-                        <DetailItem label={t('guests.city')} value={guest.city} />
-                        <DetailItem label={t('guests.district')} value={guest.district} />
-                        <DetailItem label={t('guests.street')} value={guest.street} />
-                        <DetailItem label={t('guests.postalCode')} value={guest.postalCode} />
-                    </Section>
-                    
-                    <Section title={t('guests.guestSystemInfo')}>
-                         <DetailItem label={t('guests.th_guestType')} value={t(`guests.guestType_${guest.guestType}` as any)} />
-                         <DetailItem label={t('guests.th_idType')} value={t(`guests.idType_${guest.idType}` as any)} />
-                         <DetailItem label={t('guests.th_idNumber')} value={guest.idNumber} />
-                         <DetailItem label={t('guests.serialNumber')} value={guest.serialNumber} />
-                         <DetailItem label={t('guests.th_issueDate')} value={formatDate(guest.issueDate)} />
-                         <DetailItem label={t('guests.issueLocation')} value={guest.issueLocation} />
-                         <DetailItem label={t('guests.th_expiryDate')} value={formatDate(guest.expiryDate)} />
-                         <DetailItem label={t('guests.th_status')} value={t(`guests.status_${guest.status}` as any)} />
-                    </Section>
+                            <Section title={t('guests.contactInfo')}>
+                                <DetailItem label={t('guests.th_mobileNumber')} value={guest.mobileNumber} />
+                                <DetailItem label={t('guests.workNumber')} value={guest.workNumber} />
+                                <DetailItem label={t('guests.email')} value={guest.email} />
+                                <DetailItem label={t('guests.workLocation')} value={guest.workLocation} />
+                            </Section>
+                        </div>
+                        <div>
+                            <Section title={t('guests.addressInfo')}>
+                                <DetailItem label={t('guests.country')} value={guest.country} />
+                                <DetailItem label={t('guests.city')} value={guest.city} />
+                                <DetailItem label={t('guests.district')} value={guest.district} />
+                                <DetailItem label={t('guests.street')} value={guest.street} />
+                                <DetailItem label={t('guests.postalCode')} value={guest.postalCode} />
+                            </Section>
+                            
+                            <Section title={t('guests.guestSystemInfo')}>
+                                <DetailItem label={t('guests.th_guestType')} value={t(`guests.guestType_${guest.guestType}` as any)} />
+                                <DetailItem label={t('guests.th_idType')} value={t(`guests.idType_${guest.idType}` as any)} />
+                                <DetailItem label={t('guests.th_idNumber')} value={guest.idNumber} />
+                                <DetailItem label={t('guests.serialNumber')} value={guest.serialNumber} />
+                                <DetailItem label={t('guests.th_issueDate')} value={formatDate(guest.issueDate)} />
+                                <DetailItem label={t('guests.issueLocation')} value={guest.issueLocation} />
+                                <DetailItem label={t('guests.th_expiryDate')} value={formatDate(guest.expiryDate)} />
+                                <DetailItem label={t('guests.th_status')} value={t(`guests.status_${guest.status}` as any)} />
+                            </Section>
+                        </div>
+                    </div>
 
                     <div className="py-4 border-b dark:border-slate-700 last:border-b-0">
                       <h3 className="text-base font-semibold text-blue-600 dark:text-blue-400 mb-3">{t('guests.notes')}</h3>

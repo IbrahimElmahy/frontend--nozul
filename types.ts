@@ -152,3 +152,23 @@ export interface Guest {
   serialNumber?: string;
   notes?: string;
 }
+
+// New Agency Types
+export type AgencyType = 'company' | 'individual';
+export type AgencyIdType = 'tax_id' | 'unified_establishment_number' | 'other';
+export type AgencyStatus = 'active' | 'inactive';
+
+export interface BookingAgency {
+  id: number;
+  name: string;
+  mobileNumber: string;
+  country: string;
+  agencyType: AgencyType;
+  idType: AgencyIdType;
+  idNumber: string;
+  issueDate: string | null;
+  expiryDate: string | null;
+  status: AgencyStatus;
+  createdAt: string;
+  updatedAt: string;
+}

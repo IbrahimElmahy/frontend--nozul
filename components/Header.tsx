@@ -48,9 +48,10 @@ interface HeaderProps {
 const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationKey, parent?: TranslationKey}> = {
     dashboard: { title: 'header.dashboard', breadcrumb: 'header.hotelName' },
     profile: { title: 'header.userInformation', breadcrumb: 'header.dashboard', parent: 'header.dashboard' },
-    units: { title: 'header.units', breadcrumb: 'sidebar.residentialRooms', parent: 'header.dashboard' },
-    bookings: { title: 'header.bookings', breadcrumb: 'sidebar.bookings', parent: 'sidebar.reservationsManagement' },
-    guests: { title: 'header.guests', breadcrumb: 'sidebar.guests', parent: 'sidebar.guestManagement' },
+    units: { title: 'units.manageUnits', breadcrumb: 'sidebar.residentialRooms', parent: 'header.dashboard' },
+    bookings: { title: 'bookings.manageBookings', breadcrumb: 'sidebar.bookings', parent: 'sidebar.reservationsManagement' },
+    guests: { title: 'guests.manageGuests', breadcrumb: 'sidebar.guests', parent: 'sidebar.guestManagement' },
+    agencies: { title: 'agencies.manageAgencies', breadcrumb: 'sidebar.bookingAgencies', parent: 'sidebar.guestManagement' },
 }
 
 const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage, user }) => {
