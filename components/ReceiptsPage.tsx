@@ -43,7 +43,7 @@ const ReceiptsPage: React.FC = () => {
     const [receipts, setReceipts] = useState<Receipt[]>(mockReceipts);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [activeFilter, setActiveFilter] = useState('all');
+    const [activeFilter, setActiveFilter] = useState('vouchers');
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
 
@@ -88,10 +88,10 @@ const ReceiptsPage: React.FC = () => {
     ];
 
     const filterButtons = [
-        { key: 'all', label: 'receipts.allVouchers' },
-        { key: 'receipt', label: 'receipts.receipt' },
-        { key: 'payment', label: 'receipts.payment' },
-        { key: 'order', label: 'receipts.toOrder' },
+        { key: 'vouchers', label: 'receipts.vouchers' },
+        { key: 'receiptVouchers', label: 'receipts.receiptVouchers' },
+        { key: 'paymentVouchers', label: 'receipts.paymentVouchers' },
+        { key: 'invoices', label: 'receipts.invoices' },
     ];
     
     return (
