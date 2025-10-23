@@ -36,6 +36,9 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
     const [tax, setTax] = useState(0);
     const [total, setTotal] = useState(0);
 
+    const serviceOptions = useMemo(() => ["قهوه اليوم", "قهوه فرلسى", "لسكافيه", "ماء", "كابتشينو", "سباحة", "قهوه"], []);
+    const categoryOptions = useMemo(() => ["المتجر", "بوفية الفندق", "خدمة الغرف"], []);
+
     useEffect(() => {
         if (isOpen) {
             setApartmentName(initialData.apartmentName || '');
@@ -133,13 +136,16 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
                             </button>
                         </div>
                         
-                        <div className="overflow-x-auto border dark:border-slate-700 rounded-lg">
-                            <table className="w-full text-sm text-center">
+                        <div className="border dark:border-slate-700 rounded-lg">
+                            <table className="w-full text-sm text-center table-fixed">
                                 <thead className="text-xs text-slate-700 uppercase bg-slate-200 dark:bg-slate-700 dark:text-slate-300">
                                     <tr>
-                                        {['serviceHeader', 'categoryHeader', 'quantityHeader', 'priceHeader', 'totalHeader', 'actionHeader'].map(key => (
-                                            <th key={key} scope="col" className="px-4 py-3">{t(`orders.${key}` as any)}</th>
-                                        ))}
+                                        <th scope="col" className="px-4 py-3 w-[25%]">{t('orders.serviceHeader')}</th>
+                                        <th scope="col" className="px-4 py-3 w-[25%]">{t('orders.categoryHeader')}</th>
+                                        <th scope="col" className="px-4 py-3 w-[15%]">{t('orders.quantityHeader')}</th>
+                                        <th scope="col" className="px-4 py-3 w-[15%]">{t('orders.priceHeader')}</th>
+                                        <th scope="col" className="px-4 py-3 w-[10%]">{t('orders.totalHeader')}</th>
+                                        <th scope="col" className="px-4 py-3 w-[10%]">{t('orders.actionHeader')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -147,12 +153,28 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
                                         <tr><td colSpan={6} className="py-8 text-slate-500">{t('orders.noData')}</td></tr>
                                     ) : items.map(item => (
                                         <tr key={item.id} className="border-b dark:border-slate-700">
-                                            <td className="p-2"><input type="text" value={item.service} onChange={e => handleItemChange(item.id, 'service', e.target.value)} className={inputBaseClass} /></td>
-                                            <td className="p-2"><input type="text" value={item.category} onChange={e => handleItemChange(item.id, 'category', e.target.value)} className={inputBaseClass} /></td>
+                                            <td className="p-2">
+                                                <SearchableSelect 
+                                                    id={`service-${item.id}`} 
+                                                    options={serviceOptions} 
+                                                    value={item.service} 
+                                                    onChange={value => handleItemChange(item.id, 'service', value)}
+                                                    placeholder={t('orders.selectService')}
+                                                />
+                                            </td>
+                                            <td className="p-2">
+                                                <SearchableSelect 
+                                                    id={`category-${item.id}`}
+                                                    options={categoryOptions}
+                                                    value={item.category}
+                                                    onChange={value => handleItemChange(item.id, 'category', value)}
+                                                    placeholder={t('orders.selectCategory')}
+                                                />
+                                            </td>
                                             <td className="p-2"><input type="number" min="1" value={item.quantity} onChange={e => handleItemChange(item.id, 'quantity', parseInt(e.target.value, 10) || 1)} className={`${inputBaseClass} w-20 text-center`} /></td>
                                             <td className="p-2"><input type="number" min="0" step="0.01" value={item.price} onChange={e => handleItemChange(item.id, 'price', parseFloat(e.target.value) || 0)} className={`${inputBaseClass} w-24 text-center`} /></td>
                                             <td className="p-2 font-semibold text-slate-800 dark:text-slate-200">{(item.quantity * item.price).toFixed(2)}</td>
-                                            <td className="p-2"><button type="button" onClick={() => handleRemoveItem(item.id)} className="text-red-500 hover:text-red-700"><TrashIcon className="w-5 h-5"/></button></td>
+                                            <td className="p-2 flex justify-center items-center h-full"><button type="button" onClick={() => handleRemoveItem(item.id)} className="text-red-500 hover:text-red-700"><TrashIcon className="w-5 h-5"/></button></td>
                                         </tr>
                                     ))}
                                 </tbody>

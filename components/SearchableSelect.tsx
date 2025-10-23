@@ -12,7 +12,7 @@ interface SearchableSelectProps {
 }
 
 const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onChange, placeholder, id }) => {
-    const { language } = useContext(LanguageContext);
+    const { language, t } = useContext(LanguageContext);
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -66,7 +66,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onC
                              <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
                             <input
                                 type="text"
-                                placeholder="Search..."
+                                placeholder={t('phone.search')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className={`w-full py-2 border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 text-sm ${language === 'ar' ? 'pr-9' : 'pl-9'}`}

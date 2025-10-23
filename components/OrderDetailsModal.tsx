@@ -103,7 +103,8 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
                         </div>
                     )}
                     
-                     <Section title={t('units.timestamps')}>
+                     {/* FIX: Changed translation key from 'units.timestamps' to 'bookings.details.timestamps' to match a valid TranslationKey. */}
+                     <Section title={t('bookings.details.timestamps')}>
                         <DetailItem label={t('orders.th_createdAt')} value={new Date(order.createdAt).toLocaleString()} />
                         <DetailItem label={t('orders.th_updatedAt')} value={new Date(order.updatedAt).toLocaleString()} />
                     </Section>

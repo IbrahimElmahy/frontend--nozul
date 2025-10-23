@@ -96,7 +96,8 @@ const GuestDetailsModal: React.FC<GuestDetailsModalProps> = ({ guest, onClose })
                       <p className="text-sm text-slate-700 dark:text-slate-300">{guest.notes || '---'}</p>
                     </div>
 
-                     <Section title={t('units.timestamps')}>
+                     {/* FIX: Changed translation key from 'units.timestamps' to 'bookings.details.timestamps' to match a valid TranslationKey. */}
+                     <Section title={t('bookings.details.timestamps')}>
                         <DetailItem label={t('guests.th_createdAt')} value={new Date(guest.createdAt).toLocaleString()} />
                         <DetailItem label={t('guests.th_updatedAt')} value={new Date(guest.updatedAt).toLocaleString()} />
                     </Section>

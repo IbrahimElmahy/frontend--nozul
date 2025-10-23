@@ -71,7 +71,8 @@ const AgencyDetailsModal: React.FC<AgencyDetailsModalProps> = ({ agency, onClose
                         <DetailItem label={t('agencies.th_expiryDate')} value={formatDate(agency.expiryDate)} />
                     </Section>
                     
-                     <Section title={t('units.timestamps')}>
+                     {/* FIX: Changed translation key from 'units.timestamps' to 'bookings.details.timestamps' to match a valid TranslationKey. */}
+                     <Section title={t('bookings.details.timestamps')}>
                         <DetailItem label={t('agencies.th_createdAt')} value={new Date(agency.createdAt).toLocaleString()} />
                         <DetailItem label={t('agencies.th_updatedAt')} value={new Date(agency.updatedAt).toLocaleString()} />
                     </Section>

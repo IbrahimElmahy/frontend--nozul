@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import UnitEditPanel from './UnitEditPanel';
 import AddGroupPanel from './AddGroupPanel';
@@ -14,7 +14,6 @@ import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
-import EllipsisVerticalIcon from './icons-redesign/EllipsisVerticalIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import BuildingOfficeIcon from './icons-redesign/BuildingOfficeIcon';
@@ -25,6 +24,7 @@ import UsersIcon from './icons-redesign/UsersIcon';
 import WrenchScrewdriverIcon from './icons-redesign/WrenchScrewdriverIcon';
 import FunnelIcon from './icons-redesign/FunnelIcon';
 import ArrowDownTrayIcon from './icons-redesign/ArrowDownTrayIcon';
+import EyeIcon from './icons-redesign/EyeIcon';
 
 
 const initialUnitsData: Unit[] = [
@@ -100,8 +100,6 @@ const UnitsPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(12);
-    const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
-    const actionMenuRef = useRef<HTMLDivElement>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
     const [isAddGroupPanelOpen, setIsAddGroupPanelOpen] = useState(false);
     const [unitToDeleteId, setUnitToDeleteId] = useState<string | null>(null);
@@ -134,7 +132,6 @@ const UnitsPage: React.FC = () => {
         setEditingUnit(JSON.parse(JSON.stringify(unit)));
         setIsAdding(false);
         setIsPanelOpen(true);
-        setActiveActionMenu(null);
     };
 
     const handleAddNewUnit = () => {
@@ -159,7 +156,6 @@ const UnitsPage: React.FC = () => {
     
     const handleDeleteClick = (unitId: string) => {
         setUnitToDeleteId(unitId);
-        setActiveActionMenu(null);
     };
 
     const handleConfirmDelete = () => {
@@ -214,18 +210,6 @@ const UnitsPage: React.FC = () => {
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm, statusFilter, typeFilter, cleaningFilter, itemsPerPage]);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (actionMenuRef.current && !actionMenuRef.current.contains(event.target as Node)) {
-                setActiveActionMenu(null);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
 
     const handleClearFilters = () => {
         setSearchTerm('');
@@ -403,7 +387,7 @@ const UnitsPage: React.FC = () => {
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('units.manageUnits')}</h2>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <button onClick={handleExportCSV} className="flex items-center gap-2 bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-600 transition-colors">
                         <ArrowDownTrayIcon className="w-5 h-5" />
                         <span>{t('units.export')}</span>
@@ -477,28 +461,13 @@ const UnitsPage: React.FC = () => {
             {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {paginatedUnits.map(unit => (
-                        <div key={unit.id} className="relative">
-                            <UnitCard 
-                                unit={unit} 
-                                onEditClick={() => handleEditUnit(unit)} 
-                                onMenuClick={(event) => {
-                                    event.stopPropagation();
-                                    setActiveActionMenu(activeActionMenu === unit.id ? null : unit.id);
-                                }}
-                            />
-                             {activeActionMenu === unit.id && (
-                                <div ref={actionMenuRef} className={`absolute top-14 z-10 mt-1 w-40 bg-white dark:bg-slate-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 ${language === 'ar' ? 'left-4' : 'right-4'}`}>
-                                    <button onClick={() => handleEditUnit(unit)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
-                                        <PencilSquareIcon className="w-4 h-4" />
-                                        {t('units.editUnit')}
-                                    </button>
-                                    <button onClick={() => handleDeleteClick(unit.id)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10">
-                                        <TrashIcon className="w-4 h-4" />
-                                        {t('units.deleteUnit')}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                        <UnitCard 
+                            key={unit.id}
+                            unit={unit} 
+                            onViewClick={() => handleEditUnit(unit)}
+                            onEditClick={() => handleEditUnit(unit)} 
+                            onDeleteClick={() => handleDeleteClick(unit.id)}
+                        />
                     ))}
                 </div>
             ) : (
@@ -515,22 +484,16 @@ const UnitsPage: React.FC = () => {
                                     {tableHeaders.map(header => (
                                         <td key={`${unit.id}-${header.key}`} className="px-6 py-4">
                                             {header.key === 'actions' ? (
-                                                <div className="relative" ref={activeActionMenu === unit.id ? actionMenuRef : null}>
-                                                    <button onClick={() => setActiveActionMenu(activeActionMenu === unit.id ? null : unit.id)} className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600">
-                                                        <EllipsisVerticalIcon className="w-5 h-5" />
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => handleEditUnit(unit)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={`View ${unit.unitNumber}`}>
+                                                        <EyeIcon className="w-5 h-5" />
                                                     </button>
-                                                    {activeActionMenu === unit.id && (
-                                                        <div className="absolute top-full right-0 mt-1 w-40 bg-white dark:bg-slate-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
-                                                            <button onClick={() => handleEditUnit(unit)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
-                                                                <PencilSquareIcon className="w-4 h-4" />
-                                                                {t('units.editUnit')}
-                                                            </button>
-                                                            <button onClick={() => handleDeleteClick(unit.id)} className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10">
-                                                                <TrashIcon className="w-4 h-4" />
-                                                                {t('units.deleteUnit')}
-                                                            </button>
-                                                        </div>
-                                                    )}
+                                                    <button onClick={() => handleEditUnit(unit)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10" aria-label={`Edit ${unit.unitNumber}`}>
+                                                        <PencilSquareIcon className="w-5 h-5" />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteClick(unit.id)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" aria-label={`Delete ${unit.unitNumber}`}>
+                                                        <TrashIcon className="w-5 h-5" />
+                                                    </button>
                                                 </div>
                                             ) : typeof unit[header.key as keyof Unit] === 'boolean' ? (
                                                 <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${unit[header.key as keyof Unit] ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>

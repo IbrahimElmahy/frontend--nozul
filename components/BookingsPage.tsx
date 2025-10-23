@@ -96,7 +96,6 @@ const BookingsPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [activeActionMenu, setActiveActionMenu] = useState<number | null>(null);
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [isAddGroupPanelOpen, setIsAddGroupPanelOpen] = useState(false);
     const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
@@ -104,21 +103,9 @@ const BookingsPage: React.FC = () => {
     const [sortConfig, setSortConfig] = useState<{ key: keyof Booking | null; direction: 'ascending' | 'descending' }>({ key: 'id', direction: 'descending' });
     const [viewingBooking, setViewingBooking] = useState<Booking | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-    const actionMenuRef = useRef<HTMLDivElement>(null);
 
     const formatDate = (dateString: string) => dateString.split(' ')[0];
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (actionMenuRef.current && !actionMenuRef.current.contains(event.target as Node)) {
-                setActiveActionMenu(null);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
 
     const filteredBookings = useMemo(() => {
         return bookings.filter(booking => 
@@ -202,12 +189,10 @@ const BookingsPage: React.FC = () => {
     const handleEditClick = (booking: Booking) => {
         setEditingBooking(booking);
         setIsAddPanelOpen(true);
-        setActiveActionMenu(null);
     };
 
     const handleDeleteClick = (bookingId: number) => {
         setBookingToDeleteId(bookingId);
-        setActiveActionMenu(null);
     };
 
     const handleConfirmDelete = () => {
@@ -296,7 +281,7 @@ const BookingsPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('bookings.manageBookings')}</h2>
-                 <div className="flex items-center gap-2">
+                 <div className="flex flex-wrap items-center gap-2">
                     <button 
                         onClick={() => setIsAddGroupPanelOpen(true)}
                         className="flex items-center gap-2 bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600 transition-colors"
@@ -341,7 +326,6 @@ const BookingsPage: React.FC = () => {
                                 booking={booking}
                                 onViewClick={() => {
                                     setViewingBooking(booking);
-                                    setActiveActionMenu(null);
                                 }}
                                 onEditClick={() => handleEditClick(booking)}
                                 onDeleteClick={() => handleDeleteClick(booking.id)}

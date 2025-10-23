@@ -196,3 +196,18 @@ export interface Order {
   items?: OrderItem[];
   notes?: string;
 }
+
+export interface Receipt {
+  id: number;
+  receiptNumber: string;
+  currency: string;
+  value: number;
+  date: string;
+  time: string;
+  paymentMethod: string;
+  paymentType: string | null;
+  transactionNumber: string | null;
+  bookingNumber: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

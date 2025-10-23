@@ -22,8 +22,42 @@ import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 
 
 const mockOrders: Order[] = [
-    { id: 1, orderNumber: '0000000016', bookingNumber: '0000000180', apartmentName: '2', value: 2, discount: 0, subtotal: 2, tax: 0, total: 2, createdAt: '2025-06-26 19:10:56', updatedAt: '2025-06-26 19:10:56', items: [], notes: '' },
-    { id: 2, orderNumber: '0000000015', bookingNumber: '0000000182', apartmentName: 'ذوى الهمم', value: 12, discount: 0, subtotal: 12, tax: 0, total: 12, createdAt: '2025-06-26 19:00:06', updatedAt: '2025-06-26 19:00:07', items: [], notes: '' },
+    { 
+        id: 1, 
+        orderNumber: '0000000016', 
+        bookingNumber: '0000000180', 
+        apartmentName: '2', 
+        value: 58, 
+        discount: 0, 
+        subtotal: 58, 
+        tax: 8.7, 
+        total: 66.7, 
+        createdAt: '2025-06-26 19:10:56', 
+        updatedAt: '2025-06-26 19:10:56', 
+        items: [
+            { id: 'item-1', service: 'قهوه اليوم', category: 'بوفية الفندق', quantity: 2, price: 15 },
+            { id: 'item-2', service: 'ماء', category: 'المتجر', quantity: 4, price: 2 },
+            { id: 'item-3', service: 'كابتشينو', category: 'خدمة الغرف', quantity: 1, price: 20 },
+        ], 
+        notes: 'Please deliver to the room quickly.' 
+    },
+    { 
+        id: 2, 
+        orderNumber: '0000000015', 
+        bookingNumber: '0000000182', 
+        apartmentName: 'ذوى الهمم', 
+        value: 25, 
+        discount: 0, 
+        subtotal: 25, 
+        tax: 3.75, 
+        total: 28.75, 
+        createdAt: '2025-06-26 19:00:06', 
+        updatedAt: '2025-06-26 19:00:07', 
+        items: [
+            { id: 'item-4', service: 'سباحة', category: 'خدمة الغرف', quantity: 1, price: 25 },
+        ], 
+        notes: '' 
+    },
     { id: 3, orderNumber: '0000000014', bookingNumber: '0000000173', apartmentName: 'A213', value: 30, discount: 0, subtotal: 30, tax: 0, total: 30, createdAt: '2025-06-01 11:10:46', updatedAt: '2025-06-01 11:10:46', items: [], notes: '' },
     { id: 4, orderNumber: '0000000013', bookingNumber: '0000000165', apartmentName: 'testroom_123', value: 24, discount: 0, subtotal: 24, tax: 0, total: 24, createdAt: '2025-05-19 12:13:11', updatedAt: '2025-05-19 12:13:11', items: [], notes: '' },
     { id: 5, orderNumber: '0000000012', bookingNumber: '0000000160', apartmentName: 'testing room', value: 2, discount: 0, subtotal: 2, tax: 0, total: 2, createdAt: '2025-05-14 23:02:38', updatedAt: '2025-05-14 23:02:38', items: [], notes: '' },
@@ -208,7 +242,7 @@ const OrdersPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('orders.manageOrders')}</h2>
-                 <div className="flex items-center gap-2">
+                 <div className="flex flex-wrap items-center gap-2">
                     <button 
                         onClick={handleAddNewClick}
                         className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"

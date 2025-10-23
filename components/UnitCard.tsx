@@ -8,14 +8,17 @@ import UserGroupIcon from './icons-redesign/UserGroupIcon';
 import UserCheckIcon from './icons-redesign/UserCheckIcon';
 import UserIcon from './icons-redesign/UserIcon';
 import CalendarIcon from './icons-redesign/CalendarIcon';
-import EllipsisVerticalIcon from './icons-redesign/EllipsisVerticalIcon';
 import CurrencySaudiRiyalIcon from './icons-redesign/CurrencySaudiRiyalIcon';
 import WrenchScrewdriverIcon from './icons-redesign/WrenchScrewdriverIcon';
+import EyeIcon from './icons-redesign/EyeIcon';
+import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
+import TrashIcon from './icons-redesign/TrashIcon';
 
 interface UnitCardProps {
     unit: Unit;
+    onViewClick: () => void;
     onEditClick: () => void;
-    onMenuClick: (event: React.MouseEvent) => void;
+    onDeleteClick: () => void;
 }
 
 const statusConfig = {
@@ -62,7 +65,7 @@ const cleaningStatusConfig = {
     }
 }
 
-const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) => {
+const UnitCard: React.FC<UnitCardProps> = ({ unit, onViewClick, onEditClick, onDeleteClick }) => {
     const { t } = useContext(LanguageContext);
     const { 
         status, 
@@ -80,9 +83,14 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) =
     const config = statusConfig[status];
     const cleanConfig = cleaningStatusConfig[cleaningStatus];
 
+    const handleActionClick = (e: React.MouseEvent, action: () => void) => {
+        e.stopPropagation();
+        action();
+    }
+
     return (
         <div 
-            onClick={onEditClick}
+            onClick={onViewClick}
             className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-t-4 ${config.borderColor} flex flex-col h-full cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200`}
         >
             <div className="p-4 flex-grow">
@@ -143,9 +151,17 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onEditClick, onMenuClick }) =
                         </div>
                     )}
                 </div>
-                <button className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 z-10" onClick={onMenuClick}>
-                    <EllipsisVerticalIcon className="w-5 h-5"/>
-                </button>
+                <div className="flex items-center gap-1 z-10">
+                    <button onClick={(e) => handleActionClick(e, onViewClick)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10">
+                        <EyeIcon className="w-5 h-5"/>
+                    </button>
+                    <button onClick={(e) => handleActionClick(e, onEditClick)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10">
+                        <PencilSquareIcon className="w-5 h-5"/>
+                    </button>
+                    <button onClick={(e) => handleActionClick(e, onDeleteClick)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10">
+                        <TrashIcon className="w-5 h-5"/>
+                    </button>
+                </div>
             </div>
         </div>
     );
