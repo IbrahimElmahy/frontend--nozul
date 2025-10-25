@@ -99,7 +99,6 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onViewClick, onEditClick, onD
                         {unitType && <p className="font-bold text-blue-500 text-sm">{unitType}</p>}
                         <div className="flex items-end gap-2">
                             <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{unitNumber}</p>
-                            {id && <p className="text-xl font-bold text-slate-500 dark:text-slate-400">{id}</p>}
                         </div>
                     </div>
                     <span className={`px-2 py-1 text-xs font-semibold rounded-md ${cleanConfig.textColor} ${cleanConfig.bgColor}`}>

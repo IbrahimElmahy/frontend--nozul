@@ -64,7 +64,11 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
 
     const handleSaveClick = () => {
         if (formData) {
-            onSave(formData);
+            const dataToSave = {
+                ...formData,
+                unitNumber: formData.unitName || formData.unitNumber,
+            };
+            onSave(dataToSave);
         }
     };
     
@@ -103,15 +107,9 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
                                 <div>
                                     <Section title={t('units.unitInfo')}>
                                         <div className="space-y-4">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label htmlFor="unitNumber" className={labelAlignClass}>{t('units.th_id')}</label>
-                                                    <input type="text" id="unitNumber" name="unitNumber" value={formData.unitNumber || ''} onChange={handleInputChange} className={inputBaseClass} />
-                                                </div>
-                                                <div>
-                                                    <label htmlFor="unitName" className={labelAlignClass}>{t('units.unitName')}</label>
-                                                    <input type="text" id="unitName" name="unitName" value={formData.unitName || ''} onChange={handleInputChange} className={inputBaseClass} />
-                                                </div>
+                                            <div>
+                                                <label htmlFor="unitName" className={labelAlignClass}>{t('units.unitName')}</label>
+                                                <input type="text" id="unitName" name="unitName" value={formData.unitName || ''} onChange={handleInputChange} className={inputBaseClass} />
                                             </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div>
