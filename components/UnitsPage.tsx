@@ -55,7 +55,7 @@ const newUnitTemplate: Unit = {
     features: {
         common: { roomCleaning: false, elevator: true, parking: true, internet: true },
         // FIX: Add missing 'washingMachine' property to satisfy the Unit type.
-        special: { kitchen: false, lounge: false, diningTable: false, refrigerator: false, iron: false, restaurantMenu: false, washingMachine: false, qibla: true, microwave: false, newspaper: false, oven: false, phoneDirectory: true },
+        special: { kitchen: false, lounge: false, diningTable: false, refrigerator: false, iron: false, restaurantMenu: false, washingMachine: false, microwave: false, newspaper: false, oven: false, phoneDirectory: true },
     },
 };
 

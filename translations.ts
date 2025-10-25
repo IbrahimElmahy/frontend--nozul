@@ -228,7 +228,6 @@ export const translations = {
         restaurantMenu: "قائمة المطعم",
         // FIX: Add missing 'washingMachine' translation.
         washingMachine: "غسالة ملابس",
-        qibla: "قبلة",
         microwave: "ميكروويف",
         newspaper: "جريدة",
         oven: "فرن",
@@ -798,7 +797,6 @@ export const translations = {
         restaurantMenu: "Restaurant Menu",
         // FIX: Add missing 'washingMachine' translation.
         washingMachine: "Washing Machine",
-        qibla: "Qibla",
         microwave: "Microwave",
         newspaper: "Newspaper",
         oven: "Oven",

@@ -58,7 +58,6 @@ export interface Unit {
             iron: boolean;
             restaurantMenu: boolean;
             washingMachine: boolean;
-            qibla: boolean;
             microwave: boolean;
             newspaper: boolean;
             oven: boolean;
