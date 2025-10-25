@@ -5,6 +5,7 @@ import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import Switch from './Switch';
 import Checkbox from './Checkbox';
+import { allFeatures } from './data/featureMappings';
 
 interface UnitEditPanelProps {
     unit: Unit | null;
@@ -12,6 +13,8 @@ interface UnitEditPanelProps {
     onClose: () => void;
     onSave: (updatedUnit: Unit) => void;
     isAdding?: boolean;
+    unitTypeOptions: { id: string; name: string }[];
+    coolingTypeOptions: [string, string][];
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -22,12 +25,12 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 
-const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, onSave, isAdding = false }) => {
+const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, onSave, isAdding = false, unitTypeOptions, coolingTypeOptions }) => {
     const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState<Unit | null>(unit);
 
-    const commonFeatures = useMemo(() => (unit ? Object.keys(unit.features.common) : []), [unit]);
-    const specialFeatures = useMemo(() => (unit ? Object.keys(unit.features.special) : []), [unit]);
+    const commonFeatures = useMemo(() => allFeatures.filter(f => f.category === 'common'), []);
+    const specialFeatures = useMemo(() => allFeatures.filter(f => f.category === 'special'), []);
 
     useEffect(() => {
         setFormData(unit ? JSON.parse(JSON.stringify(unit)) : null);
@@ -114,13 +117,10 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
                                                 <div>
                                                     <label htmlFor="unitType" className={labelAlignClass}>{t('units.roomType')}</label>
                                                     <select id="unitType" name="unitType" value={formData.unitType} onChange={handleInputChange} className={inputBaseClass}>
-                                                        <option value="غرفة مفردة">{t('units.singleRoom')}</option>
-                                                        <option value="غرفة مزدوجة">{t('units.doubleRoom')}</option>
-                                                        <option value="جناح">{t('units.suite')}</option>
+                                                        {unitTypeOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
                                                     </select>
                                                 </div>
                                                     <div>
-                                                    {/* FIX: Changed translation key 'units.cleaning' to the correct key 'units.th_cleaning' to resolve the type error. */}
                                                     <label htmlFor="cleaningStatus" className={labelAlignClass}>{t('units.th_cleaning')}</label>
                                                     <select id="cleaningStatus" name="cleaningStatus" value={formData.cleaningStatus} onChange={(e) => setFormData({...formData, cleaningStatus: e.target.value as CleaningStatus})} className={inputBaseClass}>
                                                         <option value="clean">{t('units.clean')}</option>
@@ -147,9 +147,7 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
                                                     <label htmlFor="coolingType" className={labelAlignClass}>{t('units.coolingType')}</label>
                                                     <select id="coolingType" name="coolingType" value={formData.coolingType} onChange={(e) => setFormData({...formData, coolingType: e.target.value as CoolingType})} className={inputBaseClass}>
                                                         <option value="">{t('units.selectCoolingType')}</option>
-                                                        <option value="central">{t('units.central')}</option>
-                                                        <option value="split">{t('units.split')}</option>
-                                                        <option value="window">{t('units.window')}</option>
+                                                        {coolingTypeOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                                                     </select>
                                                 </div>
                                         </div>
@@ -159,16 +157,16 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
                                 <div>
                                     <Section title={t('units.commonFeatures')}>
                                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                                            {commonFeatures.map(key => (
-                                                <Checkbox key={key} id={`common-${key}`} label={t(`units.${key}` as any)} checked={formData.features.common[key as keyof typeof formData.features.common]} onChange={(c) => handleFeatureChange('common', key, c)} />
+                                            {commonFeatures.map(feature => (
+                                                <Checkbox key={feature.id} id={`common-${feature.name}`} label={t(`units.${feature.name}` as any)} checked={formData.features.common[feature.name as keyof typeof formData.features.common]} onChange={(c) => handleFeatureChange('common', feature.name, c)} />
                                             ))}
                                         </div>
                                     </Section>
 
                                     <Section title={t('units.specialFeatures')}>
                                         <div className="grid grid-cols-3 gap-x-4 gap-y-3">
-                                                {specialFeatures.map(key => (
-                                                <Checkbox key={key} id={`special-${key}`} label={t(`units.${key}` as any)} checked={formData.features.special[key as keyof typeof formData.features.special]} onChange={(c) => handleFeatureChange('special', key, c)} />
+                                            {specialFeatures.map(feature => (
+                                                <Checkbox key={feature.id} id={`special-${feature.name}`} label={t(`units.${feature.name}` as any)} checked={formData.features.special[feature.name as keyof typeof formData.features.special]} onChange={(c) => handleFeatureChange('special', feature.name, c)} />
                                             ))}
                                         </div>
                                     </Section>
