@@ -562,6 +562,10 @@ export const translations = {
         funds: "الصناديق",
         banks: "البنوك",
       },
+      editReceiptTitle: "تعديل سند الاستلام",
+      deleteReceiptTitle: "حذف سند الاستلام",
+      confirmDeleteMessage: "هل أنت متأكد أنك تريد حذف هذا السند؟ لا يمكن التراجع عن هذا الإجراء.",
+      detailsTitle: "تفاصيل سند الاستلام",
     },
   },
   en: {
@@ -1127,6 +1131,10 @@ export const translations = {
         funds: "Funds",
         banks: "Banks",
       },
+      editReceiptTitle: "Edit Receipt Voucher",
+      deleteReceiptTitle: "Delete Receipt Voucher",
+      confirmDeleteMessage: "Are you sure you want to delete this receipt? This action cannot be undone.",
+      detailsTitle: "Receipt Details",
     },
   },
 };

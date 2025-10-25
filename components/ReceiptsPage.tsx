@@ -8,9 +8,11 @@ import XCircleIcon from './icons-redesign/XCircleIcon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
-import PrinterIcon from './icons-redesign/PrinterIcon';
-import DocumentDuplicateIcon from './icons-redesign/DocumentDuplicateIcon';
+import EyeIcon from './icons-redesign/EyeIcon';
+import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import AddReceiptPanel from './AddReceiptPanel';
+import ConfirmationModal from './ConfirmationModal';
+import ReceiptDetailsModal from './ReceiptDetailsModal';
 
 const mockReceipts: Receipt[] = [
   { id: 1, receiptNumber: '0000000018', currency: 'SAR', value: 152.0, date: '2025-10-07', time: '16:57:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: null, createdAt: '2025-10-07 13:58:41', updatedAt: '2025-10-07 13:58:41' },
@@ -46,6 +48,8 @@ const ReceiptsPage: React.FC = () => {
     const [activeFilter, setActiveFilter] = useState('vouchers');
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
+    const [receiptToDeleteId, setReceiptToDeleteId] = useState<number | null>(null);
+    const [viewingReceipt, setViewingReceipt] = useState<Receipt | null>(null);
 
     const filteredReceipts = useMemo(() => {
         // Placeholder for filtering logic
@@ -62,6 +66,22 @@ const ReceiptsPage: React.FC = () => {
         setEditingReceipt(null);
         setIsAddPanelOpen(true);
     };
+
+    const handleEditClick = (receipt: Receipt) => {
+        setEditingReceipt(receipt);
+        setIsAddPanelOpen(true);
+    };
+
+    const handleDeleteClick = (id: number) => {
+        setReceiptToDeleteId(id);
+    };
+
+    const handleConfirmDelete = () => {
+        if (receiptToDeleteId) {
+            setReceipts(receipts.filter(r => r.id !== receiptToDeleteId));
+            setReceiptToDeleteId(null);
+        }
+    };
     
     const handleClosePanel = () => {
         setIsAddPanelOpen(false);
@@ -69,14 +89,23 @@ const ReceiptsPage: React.FC = () => {
     };
 
     const handleSaveReceipt = (receiptData: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt'>) => {
-        const newReceipt: Receipt = {
-            ...receiptData,
-            id: Math.max(0, ...receipts.map(r => r.id)) + 1,
-            receiptNumber: `00000000${Math.max(0, ...receipts.map(r => parseInt(r.receiptNumber, 10))) + 1}`,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        setReceipts(prev => [newReceipt, ...prev]);
+        if (editingReceipt) {
+            const updatedReceipt: Receipt = {
+                ...editingReceipt,
+                ...receiptData,
+                updatedAt: new Date().toISOString(),
+            };
+            setReceipts(receipts.map(r => r.id === updatedReceipt.id ? updatedReceipt : r));
+        } else {
+            const newReceipt: Receipt = {
+                ...receiptData,
+                id: Math.max(0, ...receipts.map(r => r.id)) + 1,
+                receiptNumber: `00000000${Math.max(0, ...receipts.map(r => parseInt(r.receiptNumber, 10))) + 1}`,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            setReceipts(prev => [newReceipt, ...prev]);
+        }
         handleClosePanel();
     };
 
@@ -168,9 +197,9 @@ const ReceiptsPage: React.FC = () => {
                                     <td className="px-6 py-4">{receipt.updatedAt}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-1">
-                                            <button className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><PrinterIcon className="w-5 h-5"/></button>
-                                            <button className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><DocumentDuplicateIcon className="w-5 h-5"/></button>
-                                            <button className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => setViewingReceipt(receipt)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => handleEditClick(receipt)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10" aria-label={t('bookings.edit')}><PencilSquareIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => handleDeleteClick(receipt.id)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" aria-label={t('bookings.delete')}><TrashIcon className="w-5 h-5"/></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -201,6 +230,20 @@ const ReceiptsPage: React.FC = () => {
                 initialData={editingReceipt || newReceiptTemplate}
                 isEditing={!!editingReceipt}
             />
+
+            <ReceiptDetailsModal 
+                receipt={viewingReceipt}
+                onClose={() => setViewingReceipt(null)}
+            />
+
+            <ConfirmationModal
+                isOpen={!!receiptToDeleteId}
+                onClose={() => setReceiptToDeleteId(null)}
+                onConfirm={handleConfirmDelete}
+                title={t('receipts.deleteReceiptTitle')}
+                message={t('receipts.confirmDeleteMessage')}
+            />
+
         </div>
     );
 };
