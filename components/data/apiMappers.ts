@@ -14,7 +14,9 @@ export const mapApiUnitToUnit = (apiUnit: any): Unit => {
         common: { roomCleaning: false, elevator: false, parking: false, internet: false },
         special: { 
             kitchen: false, lounge: false, diningTable: false, refrigerator: false, 
-            iron: false, restaurantMenu: false, washingMachine: false, qibla: false, 
+            iron: false, restaurantMenu: false, 
+            // FIX: Add missing 'washingMachine' property to satisfy the Unit type.
+            washingMachine: false, qibla: false, 
             microwave: false, newspaper: false, oven: false, phoneDirectory: false 
         }
     };
