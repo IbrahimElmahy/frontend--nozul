@@ -61,7 +61,6 @@ export interface Unit {
             microwave: boolean;
             newspaper: boolean;
             oven: boolean;
-            phoneDirectory: boolean;
         };
     };
 }

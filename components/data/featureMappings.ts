@@ -22,7 +22,6 @@ interface UnitFeatures {
         microwave: boolean;
         newspaper: boolean;
         oven: boolean;
-        phoneDirectory: boolean;
     };
 }
 
@@ -46,5 +45,4 @@ export const allFeatures: FeatureMapping[] = [
     { id: '5e2a1b0c-7d8c-4e6a-8b9a-0c1d2e3f4a5b', name: 'microwave', category: 'special' },
     { id: '6f1b0a9d-6c7b-4d5a-9a8b-1b2c3d4e5f6a', name: 'newspaper', category: 'special' },
     { id: '7a0c9b8d-5b6a-4c3d-8b7a-2c3d4e5f6a7b', name: 'oven', category: 'special' },
-    { id: '8b9a8c7d-4a5b-4b2c-9a6b-3d4e5f6a7b8c', name: 'phoneDirectory', category: 'special' },
 ];
