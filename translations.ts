@@ -586,6 +586,35 @@ export const translations = {
       confirmDeleteInvoiceMessage: "هل أنت متأكد أنك تريد حذف هذه الفاتورة؟ لا يمكن التراجع عن هذا الإجراء.",
       print: "طباعة",
     },
+    reportsPage: {
+        title: "التقارير",
+        searchPlaceholder: "بحث...",
+        allReports: "كل التقارير",
+        favorites: "المفضلة",
+        sidebarTitle: "التقارير",
+        categories: {
+            financial: "المالية",
+            operational: "التشغيل",
+        },
+        reports: {
+            cash_flow: {
+                title: "تقرير حركة الصندوق",
+                description: "يعمل هذا التقرير على تبسيط عمليات صندوق المحاسبة، مما يتيح تصفية البيانات على أساس الوقت للتأكد من دقتها."
+            },
+            account_statement: {
+                title: "تقرير كشف الحساب",
+                description: "يقوم هذا التقرير بتقييم حركات الحسابات المحاسبية في شجرة الحسابات، ويقدم إمكانات تصفية البيانات على أساس الوقت مع امكانية تصديرها."
+            },
+            balady: {
+                title: "تقرير بلدي",
+                description: "يقوم التقرير بتقييم حركات الحجز والتصفية على أساس الوقت وتصدير البيانات إلى منصة بلدي."
+            },
+            daily_bookings: {
+                title: "تقرير حركة الحجوزات اليومية",
+                description: "يقوم التقرير بتقييم حركات الحجز اليومية والتصفية على أساس الوقت وتصدير البيانات."
+            }
+        }
+    },
   },
   en: {
     "walid_ullah": "Walid Ullah",
@@ -1173,6 +1202,35 @@ export const translations = {
         confirmDeleteInvoiceMessage: "Are you sure you want to delete this invoice? This action cannot be undone.",
         print: "Print",
     },
+    reportsPage: {
+        title: "Reports",
+        searchPlaceholder: "Search...",
+        allReports: "All Reports",
+        favorites: "Favorites",
+        sidebarTitle: "Reports",
+        categories: {
+            financial: "Financial",
+            operational: "Operational",
+        },
+        reports: {
+            cash_flow: {
+                title: "Cash Flow Report",
+                description: "This report simplifies accounting fund operations, allowing time-based data filtering for accuracy."
+            },
+            account_statement: {
+                title: "Account Statement Report",
+                description: "This report evaluates the movements of accounting accounts in the chart of accounts, offering time-based data filtering with export capabilities."
+            },
+            balady: {
+                title: "Balady Report",
+                description: "The report evaluates booking movements, allows time-based filtering, and exports data to the Balady platform."
+            },
+            daily_bookings: {
+                title: "Daily Bookings Movement Report",
+                description: "The report evaluates daily booking movements, allows time-based filtering, and exports data."
+            }
+        }
+    },
   },
 };
 
@@ -1197,4 +1255,10 @@ export type TranslationKey = keyof typeof translations.ar | keyof typeof transla
   `orders.${keyof typeof translations.ar.orders}` |
   `receipts.${keyof typeof translations.ar.receipts}` |
   `receipts.addReceiptPanel.${keyof typeof translations.ar.receipts.addReceiptPanel}` |
-  `receipts.addPaymentVoucherPanel.${keyof typeof translations.ar.receipts.addPaymentVoucherPanel}`;
+  `receipts.addPaymentVoucherPanel.${keyof typeof translations.ar.receipts.addPaymentVoucherPanel}` |
+  `reportsPage.${keyof typeof translations.ar.reportsPage}` |
+  `reportsPage.categories.${keyof typeof translations.ar.reportsPage.categories}` |
+  `reportsPage.reports.cash_flow.${keyof typeof translations.ar.reportsPage.reports.cash_flow}` |
+  `reportsPage.reports.account_statement.${keyof typeof translations.ar.reportsPage.reports.account_statement}` |
+  `reportsPage.reports.balady.${keyof typeof translations.ar.reportsPage.reports.balady}` |
+  `reportsPage.reports.daily_bookings.${keyof typeof translations.ar.reportsPage.reports.daily_bookings}`;

@@ -6,6 +6,7 @@ import BriefcaseIcon from './icons-redesign/BriefcaseIcon';
 import CartIcon from './icons-redesign/CartIcon';
 import CreditCardIcon from './icons-redesign/CreditCardIcon';
 import UsersIcon from './icons-redesign/UsersIcon';
+import UserGroupIcon from './icons-redesign/UserGroupIcon';
 import PresentationChartLineIcon from './icons-redesign/PresentationChartLineIcon';
 import ClockIcon from './icons-redesign/ClockIcon';
 import ArchiveBoxIcon from './icons-redesign/ArchiveBoxIcon';
@@ -175,6 +176,7 @@ const pageMapping: Record<string, Page> = {
     agencies: 'agencies',
     orders: 'orders',
     receipts: 'receipts',
+    reports: 'reports',
 };
 
 
@@ -202,7 +204,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         {
             header: t('sidebar.guestManagement'),
             items: [
-            { id: 'guests', label: t('sidebar.guests'), icon: UsersIcon },
+            { id: 'guests', label: t('sidebar.guests'), icon: UserGroupIcon },
             { id: 'agencies', label: t('sidebar.bookingAgencies'), icon: PresentationChartLineIcon }
             ]
         },

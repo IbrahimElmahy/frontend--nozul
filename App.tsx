@@ -11,6 +11,7 @@ import BookingAgenciesPage from './components/BookingAgenciesPage';
 import OrdersPage from './components/OrdersPage';
 import ReceiptsPage from './components/ReceiptsPage';
 import SettingsCog from './components/SettingsCog';
+import ReportsPage from './components/ReportsPage';
 import { LanguageContext } from './contexts/LanguageContext';
 import { User } from './types';
 
@@ -23,15 +24,15 @@ export interface ThemeSettings {
   topbarColor: 'light' | 'dark';
 }
 
-export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts';
+export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports';
 
 const defaultSettings: ThemeSettings = {
-  colorScheme: 'dark',
-  layoutWidth: 'boxed',
-  sidebarColor: 'gradient',
+  colorScheme: 'light',
+  layoutWidth: 'full',
+  sidebarColor: 'brand',
   sidebarSize: 'condensed',
-  showUserInfo: true,
-  topbarColor: 'dark',
+  showUserInfo: false,
+  topbarColor: 'light',
 };
 
 
@@ -72,6 +73,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                     {currentPage === 'orders' && <OrdersPage />}
                     {/* FIX: Pass user prop to ReceiptsPage to resolve type error */}
                     {currentPage === 'receipts' && <ReceiptsPage user={user} />}
+                    {currentPage === 'reports' && <ReportsPage />}
                 </main>
             </div>
             <SettingsCog settings={settings} setSettings={setSettings} />
