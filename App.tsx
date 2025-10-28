@@ -12,6 +12,7 @@ import OrdersPage from './components/OrdersPage';
 import ReceiptsPage from './components/ReceiptsPage';
 import SettingsCog from './components/SettingsCog';
 import ReportsPage from './components/ReportsPage';
+import ArchivesPage from './components/ArchivesPage';
 import { LanguageContext } from './contexts/LanguageContext';
 import { User } from './types';
 
@@ -24,7 +25,7 @@ export interface ThemeSettings {
   topbarColor: 'light' | 'dark';
 }
 
-export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports';
+export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports' | 'archives';
 
 const defaultSettings: ThemeSettings = {
   colorScheme: 'light',
@@ -74,6 +75,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                     {/* FIX: Pass user prop to ReceiptsPage to resolve type error */}
                     {currentPage === 'receipts' && <ReceiptsPage user={user} />}
                     {currentPage === 'reports' && <ReportsPage />}
+                    {currentPage === 'archives' && <ArchivesPage />}
                 </main>
             </div>
             <SettingsCog settings={settings} setSettings={setSettings} />

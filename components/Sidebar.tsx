@@ -177,6 +177,7 @@ const pageMapping: Record<string, Page> = {
     orders: 'orders',
     receipts: 'receipts',
     reports: 'reports',
+    archives: 'archives',
 };
 
 

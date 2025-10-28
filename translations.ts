@@ -615,6 +615,43 @@ export const translations = {
             }
         }
     },
+    archivesPage: {
+        title: "الأرشيفات",
+        searchPlaceholder: "بحث...",
+        allArchives: "كل الأرشيفات",
+        favorites: "المفضلة",
+        sidebarTitle: "الأرشيفات",
+        categories: {
+            operational: "التشغيل",
+            financial: "المالية",
+        },
+        archives: {
+            booking_archive: {
+                title: "ارشيف الحجز",
+                description: "يُسهِّل هذا الأرشيف جميع الإجراءات التي تحدث في النظام للحجوزات، مما يتيح تصفية البيانات بناءً على الوقت لتحقيق الدقة."
+            },
+            guests_archive: {
+                title: "ارشيف النزلاء",
+                description: "يُسهِّل هذا الأرشيف جميع الإجراءات التي تحدث في النظام للنزلاء مما يتيح تصفية البيانات بناءً على الوقت لتحقيق الدقة."
+            },
+            invoice_archive: {
+                title: "ارشيف الفاتورة",
+                description: "يُسهِّل هذا الأرشيف جميع الإجراءات التي تحدث في النظام للفواتير، مما يتيح تصفية البيانات بناءً على الوقت لتحقيق الدقة."
+            },
+            payment_vouchers_archive: {
+                title: "ارشيف سندات الصرف",
+                description: "يُسهِّل هذا الأرشيف جميع الإجراءات التي تحدث في النظام للمدفوعات، مما يتيح تصفية البيانات بناءً على الوقت لتحقيق الدقة."
+            },
+            receipts_archive: {
+                title: "ارشيف الاستلام",
+                description: "يُسهِّل هذا الأرشيف جميع الإجراءات التي تحدث في النظام للإيصالات، مما يتيح تصفية البيانات بناءً على الوقت لتحقيق الدقة."
+            },
+            apartments_archive: {
+                title: "ارشيف الشقق",
+                description: "يُسهِّل هذا الأرشيف جميع الإجراءات التي تحدث في النظام للشقق، مما يتيح تصفية البيانات بناءً على الوقت لتحقيق الدقة."
+            }
+        }
+    },
   },
   en: {
     "walid_ullah": "Walid Ullah",
@@ -1231,6 +1268,43 @@ export const translations = {
             }
         }
     },
+    archivesPage: {
+        title: "Archives",
+        searchPlaceholder: "Search...",
+        allArchives: "All Archives",
+        favorites: "Favorites",
+        sidebarTitle: "Archives",
+        categories: {
+            operational: "Operational",
+            financial: "Financial",
+        },
+        archives: {
+            booking_archive: {
+                title: "Booking Archive",
+                description: "This archive facilitates all actions that occur in the system for bookings, allowing time-based data filtering for accuracy."
+            },
+            guests_archive: {
+                title: "Guests Archive",
+                description: "This archive facilitates all actions that occur in the system for guests, allowing time-based data filtering for accuracy."
+            },
+            invoice_archive: {
+                title: "Invoice Archive",
+                description: "This archive facilitates all actions that occur in the system for invoices, allowing time-based data filtering for accuracy."
+            },
+            payment_vouchers_archive: {
+                title: "Payment Vouchers Archive",
+                description: "This archive facilitates all actions that occur in the system for payments, allowing time-based data filtering for accuracy."
+            },
+            receipts_archive: {
+                title: "Receipts Archive",
+                description: "This archive facilitates all actions that occur in the system for receipts, allowing time-based data filtering for accuracy."
+            },
+            apartments_archive: {
+                title: "Apartments Archive",
+                description: "This archive facilitates all actions that occur in the system for apartments, allowing time-based data filtering for accuracy."
+            }
+        }
+    },
   },
 };
 
@@ -1261,4 +1335,12 @@ export type TranslationKey = keyof typeof translations.ar | keyof typeof transla
   `reportsPage.reports.cash_flow.${keyof typeof translations.ar.reportsPage.reports.cash_flow}` |
   `reportsPage.reports.account_statement.${keyof typeof translations.ar.reportsPage.reports.account_statement}` |
   `reportsPage.reports.balady.${keyof typeof translations.ar.reportsPage.reports.balady}` |
-  `reportsPage.reports.daily_bookings.${keyof typeof translations.ar.reportsPage.reports.daily_bookings}`;
+  `reportsPage.reports.daily_bookings.${keyof typeof translations.ar.reportsPage.reports.daily_bookings}` |
+  `archivesPage.${keyof typeof translations.ar.archivesPage}` |
+  `archivesPage.categories.${keyof typeof translations.ar.archivesPage.categories}` |
+  `archivesPage.archives.booking_archive.${keyof typeof translations.ar.archivesPage.archives.booking_archive}` |
+  `archivesPage.archives.guests_archive.${keyof typeof translations.ar.archivesPage.archives.guests_archive}` |
+  `archivesPage.archives.invoice_archive.${keyof typeof translations.ar.archivesPage.archives.invoice_archive}` |
+  `archivesPage.archives.payment_vouchers_archive.${keyof typeof translations.ar.archivesPage.archives.payment_vouchers_archive}` |
+  `archivesPage.archives.receipts_archive.${keyof typeof translations.ar.archivesPage.archives.receipts_archive}` |
+  `archivesPage.archives.apartments_archive.${keyof typeof translations.ar.archivesPage.archives.apartments_archive}`;
