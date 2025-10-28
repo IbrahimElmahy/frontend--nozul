@@ -178,6 +178,7 @@ const pageMapping: Record<string, Page> = {
     receipts: 'receipts',
     reports: 'reports',
     archives: 'archives',
+    notifications: 'notifications',
 };
 
 
@@ -205,7 +206,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         {
             header: t('sidebar.guestManagement'),
             items: [
-            { id: 'guests', label: t('sidebar.guests'), icon: UserGroupIcon },
+            { id: 'guests', label: t('sidebar.guests'), icon: UsersIcon },
             { id: 'agencies', label: t('sidebar.bookingAgencies'), icon: PresentationChartLineIcon }
             ]
         },

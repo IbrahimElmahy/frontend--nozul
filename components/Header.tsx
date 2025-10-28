@@ -56,6 +56,7 @@ const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationK
     receipts: { title: 'receipts.manageReceipts', breadcrumb: 'sidebar.receipts', parent: 'sidebar.financialManagement' },
     reports: { title: 'reportsPage.title', breadcrumb: 'sidebar.reports', parent: 'sidebar.other' },
     archives: { title: 'archivesPage.title', breadcrumb: 'sidebar.archives', parent: 'sidebar.other' },
+    notifications: { title: 'notificationsPage.title', breadcrumb: 'sidebar.notifications', parent: 'sidebar.other' },
 }
 
 const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage, user }) => {
@@ -253,7 +254,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                         ))}
                     </div>
                     <div className="p-2 border-t dark:border-slate-700 text-center">
-                        <a href="#" className="text-sm font-medium text-blue-500 hover:underline">{t('view_all_notifications')}</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); setCurrentPage('notifications'); setIsNotificationsOpen(false); }} className="text-sm font-medium text-blue-500 hover:underline">{t('view_all_notifications')}</a>
                     </div>
                  </div>
             )}

@@ -92,7 +92,8 @@ export const translations = {
         passwordPlaceholder: "ادخل كلمة المرور",
         rememberMe: "تذكرني",
         loginButton: "تسجيل الدخول",
-        footerText: "جميع الحقوق محفوظة © نزولكم",
+        loggingIn: "جاري تسجيل الدخول...",
+        footerText: "جميع الحقوق محفوظة © نزلكم",
     },
     settings: {
         title: "إعدادات المظهر",
@@ -652,6 +653,24 @@ export const translations = {
             }
         }
     },
+    notificationsPage: {
+        title: "الإشعارات",
+        all: "الكل",
+        unread: "غير مقروء",
+        markAllAsRead: "وضع علامة على الكل كـ مقروء",
+        today: "اليوم",
+        yesterday: "الأمس",
+        earlier: "سابقًا",
+        noNotifications: "لا توجد إشعارات لعرضها.",
+    },
+    time: {
+        justNow: "الآن",
+        minutesAgo: "قبل {0} دقائق",
+        hourAgo: "قبل ساعة",
+        hoursAgo: "قبل {0} ساعات",
+        dayAgo: "أمس",
+        daysAgo: "قبل {0} أيام",
+    }
   },
   en: {
     "walid_ullah": "Walid Ullah",
@@ -746,6 +765,7 @@ export const translations = {
       passwordPlaceholder: "Enter your password",
       rememberMe: "Remember me",
       loginButton: "Login",
+      loggingIn: "Logging in...",
       footerText: "All rights reserved © Nuzulcom",
     },
     settings: {
@@ -1305,6 +1325,24 @@ export const translations = {
             }
         }
     },
+    notificationsPage: {
+        title: "Notifications",
+        all: "All",
+        unread: "Unread",
+        markAllAsRead: "Mark all as read",
+        today: "Today",
+        yesterday: "Yesterday",
+        earlier: "Earlier",
+        noNotifications: "No notifications to display.",
+    },
+    time: {
+        justNow: "just now",
+        minutesAgo: "{0} minutes ago",
+        hourAgo: "1 hour ago",
+        hoursAgo: "{0} hours ago",
+        dayAgo: "yesterday",
+        daysAgo: "{0} days ago",
+    },
   },
 };
 
@@ -1343,4 +1381,6 @@ export type TranslationKey = keyof typeof translations.ar | keyof typeof transla
   `archivesPage.archives.invoice_archive.${keyof typeof translations.ar.archivesPage.archives.invoice_archive}` |
   `archivesPage.archives.payment_vouchers_archive.${keyof typeof translations.ar.archivesPage.archives.payment_vouchers_archive}` |
   `archivesPage.archives.receipts_archive.${keyof typeof translations.ar.archivesPage.archives.receipts_archive}` |
-  `archivesPage.archives.apartments_archive.${keyof typeof translations.ar.archivesPage.archives.apartments_archive}`;
+  `archivesPage.archives.apartments_archive.${keyof typeof translations.ar.archivesPage.archives.apartments_archive}` |
+  `notificationsPage.${keyof typeof translations.ar.notificationsPage}` |
+  `time.${keyof typeof translations.ar.time}`
