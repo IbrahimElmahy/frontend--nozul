@@ -17,7 +17,7 @@ export const mapApiUnitToUnit = (apiUnit: any): Unit => {
             iron: false, restaurantMenu: false, 
             // FIX: Add missing 'washingMachine' property to satisfy the Unit type.
             washingMachine: false, 
-            microwave: false, newspaper: false, oven: false 
+            oven: false 
         }
     };
 

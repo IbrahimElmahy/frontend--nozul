@@ -70,7 +70,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                     {currentPage === 'guests' && <GuestsPage />}
                     {currentPage === 'agencies' && <BookingAgenciesPage />}
                     {currentPage === 'orders' && <OrdersPage />}
-                    {currentPage === 'receipts' && <ReceiptsPage />}
+                    {/* FIX: Pass user prop to ReceiptsPage to resolve type error */}
+                    {currentPage === 'receipts' && <ReceiptsPage user={user} />}
                 </main>
             </div>
             <SettingsCog settings={settings} setSettings={setSettings} />

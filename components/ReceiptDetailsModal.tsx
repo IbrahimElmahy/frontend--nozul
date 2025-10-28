@@ -3,9 +3,12 @@ import { LanguageContext } from '../contexts/LanguageContext';
 import { Receipt } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 
+type VoucherType = 'receipt' | 'payment';
+
 interface ReceiptDetailsModalProps {
     receipt: Receipt | null;
     onClose: () => void;
+    voucherType: VoucherType;
 }
 
 const DetailItem: React.FC<{ label: string; value: string | number | undefined | null }> = ({ label, value }) => (
@@ -25,13 +28,16 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 
-const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({ receipt, onClose }) => {
+const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({ receipt, onClose, voucherType }) => {
     const { t } = useContext(LanguageContext);
     
     if (!receipt) return null;
 
     const isOpen = !!receipt;
+    const isPaymentView = voucherType === 'payment';
     const formatDate = (dateString: string | null | undefined) => dateString ? new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '---';
+    
+    const title = isPaymentView ? t('receipts.detailsPaymentVoucherTitle') : t('receipts.detailsTitle');
 
     return (
         <div
@@ -45,7 +51,7 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({ receipt, onCl
             <div className={`relative w-full max-w-4xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 max-h-[90vh] ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
                 <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
                     <h2 id="receipt-details-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">
-                        {t('receipts.detailsTitle')} - {receipt.receiptNumber}
+                        {title} - {receipt.receiptNumber}
                     </h2>
                     <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
                         <XMarkIcon className="w-6 h-6" />
@@ -54,7 +60,7 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({ receipt, onCl
 
                 <div className="flex-grow p-6 overflow-y-auto">
                     <Section title={t('receipts.addReceiptPanel.receiptInfo')}>
-                        <DetailItem label={t('receipts.th_receiptNumber')} value={receipt.receiptNumber} />
+                        <DetailItem label={isPaymentView ? t('receipts.th_paymentVoucherNumber') : t('receipts.th_receiptNumber')} value={receipt.receiptNumber} />
                         <DetailItem label={t('receipts.th_value')} value={receipt.value.toFixed(2)} />
                         <DetailItem label={t('receipts.th_currency')} value={receipt.currency} />
                         <DetailItem label={t('receipts.th_date')} value={formatDate(receipt.date)} />

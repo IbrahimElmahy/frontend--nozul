@@ -1,10 +1,7 @@
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { Receipt } from '../types';
+import { Receipt, User, Invoice } from '../types';
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
-import PlusIcon from './icons-redesign/PlusIcon';
-import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
-import XCircleIcon from './icons-redesign/XCircleIcon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
@@ -13,6 +10,10 @@ import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import AddReceiptPanel from './AddReceiptPanel';
 import ConfirmationModal from './ConfirmationModal';
 import ReceiptDetailsModal from './ReceiptDetailsModal';
+import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
+import PrinterIcon from './icons-redesign/PrinterIcon';
+import InvoiceDetailsModal from './InvoiceDetailsModal';
+import PrintableInvoice from './PrintableInvoice';
 
 const mockReceipts: Receipt[] = [
   { id: 1, receiptNumber: '0000000018', currency: 'SAR', value: 152.0, date: '2025-10-07', time: '16:57:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: null, createdAt: '2025-10-07 13:58:41', updatedAt: '2025-10-07 13:58:41' },
@@ -27,6 +28,18 @@ const mockReceipts: Receipt[] = [
   { id: 10, receiptNumber: '0000000009', currency: 'SAR', value: 200.0, date: '2025-05-10', time: '03:33:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: null, createdAt: '2025-05-10 00:34:20', updatedAt: '2025-05-10 00:34:20' },
 ];
 
+const mockInvoices: Invoice[] = [
+  { id: 1, invoiceNumber: '0000000009', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-24 21:38:37', updatedAt: '2025-10-24 21:38:37' },
+  { id: 2, invoiceNumber: '0000000008', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 16:05:14', updatedAt: '2025-10-22 16:05:14' },
+  { id: 3, invoiceNumber: '0000000007', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 14:51:59', updatedAt: '2025-10-22 14:51:59' },
+  { id: 4, invoiceNumber: '0000000006', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 14:45:30', updatedAt: '2025-10-22 14:45:30' },
+  { id: 5, invoiceNumber: '0000000005', bookingNumber: '0000000008', value: 223, discount: 0.0, subtotal: 223, tax: 0, total: 223, createdAt: '2025-10-04 18:24:12', updatedAt: '2025-10-04 18:24:12' },
+  { id: 6, invoiceNumber: '0000000004', bookingNumber: '0000000008', value: 222, discount: 0.0, subtotal: 222, tax: 0, total: 222, createdAt: '2025-09-29 20:34:50', updatedAt: '2025-09-29 20:34:50' },
+  { id: 7, invoiceNumber: '0000000003', bookingNumber: '0000000002', value: 120, discount: 0.0, subtotal: 120, tax: 0, total: 120, createdAt: '2025-07-27 12:27:54', updatedAt: '2025-07-27 12:27:54' },
+  { id: 8, invoiceNumber: '0000000002', bookingNumber: '0000000001', value: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, createdAt: '2025-07-22 18:46:30', updatedAt: '2025-07-22 18:46:30' },
+  { id: 9, invoiceNumber: '0000000001', bookingNumber: '0000000001', value: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, createdAt: '2025-07-22 18:32:55', updatedAt: '2025-07-22 18:32:55' },
+];
+
 const newReceiptTemplate: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt'> = {
     receiptNumber: '',
     currency: 'SAR',
@@ -39,99 +52,215 @@ const newReceiptTemplate: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt'> = {
     bookingNumber: null,
 };
 
+type VoucherType = 'receipt' | 'payment' | 'invoice';
 
-const ReceiptsPage: React.FC = () => {
-    const { t } = useContext(LanguageContext);
+// FIX: Add user prop to component props
+interface ReceiptsPageProps {
+    user: User | null;
+}
+
+const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
+    const { t, language } = useContext(LanguageContext);
     const [receipts, setReceipts] = useState<Receipt[]>(mockReceipts);
+    const [paymentVouchers, setPaymentVouchers] = useState<Receipt[]>([]);
+    const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+    
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [activeFilter, setActiveFilter] = useState('vouchers');
+    const [voucherType, setVoucherType] = useState<VoucherType>('invoice');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
+
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
-    const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
-    const [receiptToDeleteId, setReceiptToDeleteId] = useState<number | null>(null);
-    const [viewingReceipt, setViewingReceipt] = useState<Receipt | null>(null);
+    const [editingVoucher, setEditingVoucher] = useState<Receipt | null>(null);
+    const [voucherToDelete, setVoucherToDelete] = useState<Receipt | null>(null);
+    const [viewingVoucher, setViewingVoucher] = useState<Receipt | null>(null);
+    
+    // State for invoice actions
+    const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
+    const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
+    const [invoiceToPrint, setInvoiceToPrint] = useState<Invoice | null>(null);
 
-    const filteredReceipts = useMemo(() => {
-        // Placeholder for filtering logic
-        return receipts;
-    }, [receipts, activeFilter]);
+    const isPaymentView = voucherType === 'payment';
+    const isInvoiceView = voucherType === 'invoice';
 
-    const totalPages = Math.ceil(filteredReceipts.length / itemsPerPage);
-    const paginatedReceipts = useMemo(() => {
+    const dataForCurrentTab = useMemo(() => {
+        switch (voucherType) {
+            case 'invoice': return invoices;
+            case 'payment': return paymentVouchers;
+            case 'receipt':
+            default:
+                return receipts;
+        }
+    }, [voucherType, invoices, paymentVouchers, receipts]);
+
+    const paymentMethodsForFilter = useMemo(() => [
+        t('receipts.paymentMethod_cash'),
+        t('receipts.paymentMethod_creditCard'),
+        t('receipts.paymentMethod_bankTransfer'),
+        t('receipts.paymentMethod_paidByCompany'),
+        t('receipts.paymentMethod_digitalPayment'),
+        t('receipts.paymentMethod_travelAgents'),
+        t('receipts.paymentMethod_electronicChannel'),
+        t('receipts.paymentMethod_unspecified'),
+    ], [t]);
+
+    const filteredData = useMemo(() => {
+        let data: (Receipt | Invoice)[] = dataForCurrentTab;
+
+        if (searchTerm) {
+            const lowerSearchTerm = searchTerm.toLowerCase();
+            data = data.filter(item => {
+                if ('receiptNumber' in item) { // Receipt or PaymentVoucher
+                    return (
+                        item.receiptNumber.toLowerCase().includes(lowerSearchTerm) ||
+                        (item.bookingNumber && item.bookingNumber.toLowerCase().includes(lowerSearchTerm))
+                    );
+                }
+                if ('invoiceNumber' in item) { // Invoice
+                    return (
+                        item.invoiceNumber.toLowerCase().includes(lowerSearchTerm) ||
+                        item.bookingNumber.toLowerCase().includes(lowerSearchTerm)
+                    );
+                }
+                return false;
+            });
+        }
+
+        if (voucherType !== 'invoice' && paymentMethodFilter !== 'all') {
+            data = (data as Receipt[]).filter(item => item.paymentMethod === paymentMethodFilter);
+        }
+        
+        return data;
+    }, [dataForCurrentTab, searchTerm, voucherType, paymentMethodFilter]);
+
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
-        return filteredReceipts.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredReceipts, currentPage, itemsPerPage]);
+        return filteredData.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredData, currentPage, itemsPerPage]);
     
     const handleAddNewClick = () => {
-        setEditingReceipt(null);
+        setEditingVoucher(null);
         setIsAddPanelOpen(true);
     };
 
-    const handleEditClick = (receipt: Receipt) => {
-        setEditingReceipt(receipt);
+    const handleEditClick = (voucher: Receipt) => {
+        setEditingVoucher(voucher);
         setIsAddPanelOpen(true);
     };
 
-    const handleDeleteClick = (id: number) => {
-        setReceiptToDeleteId(id);
+    const handleDeleteClick = (voucher: Receipt) => {
+        setVoucherToDelete(voucher);
     };
 
     const handleConfirmDelete = () => {
-        if (receiptToDeleteId) {
-            setReceipts(receipts.filter(r => r.id !== receiptToDeleteId));
-            setReceiptToDeleteId(null);
+        if (voucherToDelete) {
+            if (isPaymentView) {
+                setPaymentVouchers(prev => prev.filter(v => v.id !== voucherToDelete.id));
+            } else {
+                setReceipts(prev => prev.filter(v => v.id !== voucherToDelete.id));
+            }
+            setVoucherToDelete(null);
         }
     };
     
     const handleClosePanel = () => {
         setIsAddPanelOpen(false);
-        setEditingReceipt(null);
+        setEditingVoucher(null);
     };
 
-    const handleSaveReceipt = (receiptData: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt'>) => {
-        if (editingReceipt) {
-            const updatedReceipt: Receipt = {
-                ...editingReceipt,
-                ...receiptData,
+    const handleSaveVoucher = (voucherData: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const dataSource = isPaymentView ? paymentVouchers : receipts;
+        const setDataSource = isPaymentView ? setPaymentVouchers : setReceipts;
+
+        if (editingVoucher) {
+            const updatedVoucher: Receipt = {
+                ...editingVoucher,
+                ...voucherData,
                 updatedAt: new Date().toISOString(),
             };
-            setReceipts(receipts.map(r => r.id === updatedReceipt.id ? updatedReceipt : r));
+            setDataSource(dataSource.map(v => v.id === updatedVoucher.id ? updatedVoucher : v));
         } else {
-            const newReceipt: Receipt = {
-                ...receiptData,
-                id: Math.max(0, ...receipts.map(r => r.id)) + 1,
-                receiptNumber: `00000000${Math.max(0, ...receipts.map(r => parseInt(r.receiptNumber, 10))) + 1}`,
+            const maxId = Math.max(0, ...receipts.map(r => r.id), ...paymentVouchers.map(p => p.id));
+            const newVoucher: Receipt = {
+                ...voucherData,
+                id: maxId + 1,
+                receiptNumber: `00000000${maxId + 1}`,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
-            setReceipts(prev => [newReceipt, ...prev]);
+            setDataSource(prev => [newVoucher, ...prev]);
         }
         handleClosePanel();
     };
 
+    // Invoice action handlers
+    const handlePrintInvoice = (invoice: Invoice) => {
+        setInvoiceToPrint(invoice);
+    };
+    
+    useEffect(() => {
+        if (invoiceToPrint) {
+            const handleAfterPrint = () => {
+                setInvoiceToPrint(null);
+                window.removeEventListener('afterprint', handleAfterPrint);
+            };
+    
+            window.addEventListener('afterprint', handleAfterPrint);
+    
+            // A short timeout to ensure the printable component has rendered
+            const timer = setTimeout(() => {
+                window.print();
+            }, 100);
+    
+            // Cleanup function
+            return () => {
+                clearTimeout(timer);
+                window.removeEventListener('afterprint', handleAfterPrint);
+            };
+        }
+    }, [invoiceToPrint]);
 
-    const tableHeaders = [
-        'th_id', 'th_receiptNumber', 'th_currency', 'th_value', 'th_date', 'th_time',
+    const handleConfirmDeleteInvoice = () => {
+        if (invoiceToDelete) {
+            setInvoices(prev => prev.filter(i => i.id !== invoiceToDelete.id));
+            setInvoiceToDelete(null);
+        }
+    };
+
+    const receiptTableHeaders = [
+        'th_id', isPaymentView ? 'th_paymentVoucherNumber' : 'th_receiptNumber', 'th_currency', 'th_value', 'th_date', 'th_time',
         'th_paymentMethod', 'th_paymentType', 'th_transactionNumber', 'th_bookingNumber',
         'th_createdAt', 'th_updatedAt', 'th_actions'
     ];
+    
+    const invoiceTableHeaders = [
+        'th_id', 'th_invoiceNumber', 'th_bookingNumber', 'th_value', 'th_discount', 
+        'th_subtotal', 'th_tax', 'th_total', 'th_createdAt', 'th_updatedAt', 'th_actions'
+    ];
+    
+    const tableHeaders = isInvoiceView ? invoiceTableHeaders : receiptTableHeaders;
 
     const filterButtons = [
-        { key: 'vouchers', label: 'receipts.vouchers' },
-        { key: 'receiptVouchers', label: 'receipts.receiptVouchers' },
-        { key: 'paymentVouchers', label: 'receipts.paymentVouchers' },
-        { key: 'invoices', label: 'receipts.invoices' },
+        { key: 'receipt', label: 'receipts.receiptVouchers' },
+        { key: 'payment', label: 'receipts.paymentVouchers' },
+        { key: 'invoice', label: 'receipts.invoices' },
     ];
     
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('receipts.manageReceipts')}</h2>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
+                    {isInvoiceView ? t('receipts.manageInvoices') : isPaymentView ? t('receipts.managePaymentVouchers') : t('receipts.manageReceipts')}
+                </h2>
                  <div className="flex items-center gap-2">
-                    <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                        <PlusCircleIcon className="w-5 h-5" />
-                        <span>{t('receipts.addReceipt')}</span>
-                    </button>
+                    {!isInvoiceView && (
+                        <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                            <PlusCircleIcon className="w-5 h-5" />
+                            <span>{isPaymentView ? t('receipts.addPaymentVoucher') : t('receipts.addReceipt')}</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -139,8 +268,13 @@ const ReceiptsPage: React.FC = () => {
                 {filterButtons.map(btn => (
                      <button 
                         key={btn.key}
-                        onClick={() => setActiveFilter(btn.key)}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${activeFilter === btn.key ? 'bg-blue-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                        onClick={() => {
+                            setVoucherType(btn.key as VoucherType);
+                            setCurrentPage(1);
+                            setSearchTerm('');
+                            setPaymentMethodFilter('all');
+                        }}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${voucherType === btn.key ? 'bg-blue-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                     >
                          {t(btn.label as any)}
                      </button>
@@ -148,13 +282,31 @@ const ReceiptsPage: React.FC = () => {
             </div>
 
              <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                <div className="flex justify-between items-center mb-4 pb-4 border-b dark:border-slate-700">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('receipts.searchInfo')}</h3>
-                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <button className="p-1.5 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5"/></button>
-                        <button className="p-1.5 hover:text-slate-700 dark:hover:text-slate-200"><XCircleIcon className="w-5 h-5"/></button>
-                        <button className="p-1.5 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 pb-4 border-b dark:border-slate-700">
+                    <div className="relative w-full sm:w-auto sm:flex-grow max-w-lg">
+                        <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder={t('bookings.searchPlaceholder')}
+                            className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
+                        />
                     </div>
+                    {!isInvoiceView && (
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="paymentMethodFilter" className="text-sm font-medium text-slate-600 dark:text-slate-300">{t('receipts.th_paymentMethod')}:</label>
+                            <select
+                                id="paymentMethodFilter"
+                                value={paymentMethodFilter}
+                                onChange={(e) => setPaymentMethodFilter(e.target.value)}
+                                className="py-2 px-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 text-sm"
+                            >
+                                <option value="all">{t('units.all')}</option>
+                                {paymentMethodsForFilter.map(method => <option key={method} value={method}>{method}</option>)}
+                            </select>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
@@ -181,36 +333,68 @@ const ReceiptsPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedReceipts.map((receipt) => (
-                                <tr key={receipt.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                    <td className="px-6 py-4">{receipt.id}</td>
-                                    <td className="px-6 py-4">{receipt.receiptNumber}</td>
-                                    <td className="px-6 py-4"><span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300">{t('receipts.currency_sar')}</span></td>
-                                    <td className="px-6 py-4"><span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-red-900 dark:text-red-300">{receipt.value.toFixed(1)}</span></td>
-                                    <td className="px-6 py-4">{receipt.date}</td>
-                                    <td className="px-6 py-4">{receipt.time}</td>
-                                    <td className="px-6 py-4">{receipt.paymentMethod}</td>
-                                    <td className="px-6 py-4">{receipt.paymentType || '-'}</td>
-                                    <td className="px-6 py-4">{receipt.transactionNumber || '-'}</td>
-                                    <td className="px-6 py-4">{receipt.bookingNumber || '-'}</td>
-                                    <td className="px-6 py-4">{receipt.createdAt}</td>
-                                    <td className="px-6 py-4">{receipt.updatedAt}</td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-1">
-                                            <button onClick={() => setViewingReceipt(receipt)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => handleEditClick(receipt)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10" aria-label={t('bookings.edit')}><PencilSquareIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => handleDeleteClick(receipt.id)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" aria-label={t('bookings.delete')}><TrashIcon className="w-5 h-5"/></button>
-                                        </div>
+                            {paginatedData.length > 0 ? (
+                                isInvoiceView ? (
+                                    (paginatedData as Invoice[]).map(invoice => (
+                                        <tr key={invoice.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                                            <td className="px-6 py-4">{invoice.id}</td>
+                                            <td className="px-6 py-4">{invoice.invoiceNumber}</td>
+                                            <td className="px-6 py-4">{invoice.bookingNumber}</td>
+                                            <td className="px-6 py-4">{invoice.value.toFixed(2)}</td>
+                                            <td className="px-6 py-4">{invoice.discount.toFixed(2)}</td>
+                                            <td className="px-6 py-4">{invoice.subtotal.toFixed(2)}</td>
+                                            <td className="px-6 py-4">{invoice.tax.toFixed(2)}</td>
+                                            <td className="px-6 py-4">{invoice.total.toFixed(2)}</td>
+                                            <td className="px-6 py-4">{invoice.createdAt}</td>
+                                            <td className="px-6 py-4">{invoice.updatedAt}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => setViewingInvoice(invoice)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5"/></button>
+                                                    <button onClick={() => handlePrintInvoice(invoice)} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700" aria-label={t('receipts.print')}><PrinterIcon className="w-5 h-5"/></button>
+                                                    <button onClick={() => setInvoiceToDelete(invoice)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" aria-label={t('bookings.delete')}><TrashIcon className="w-5 h-5"/></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    (paginatedData as Receipt[]).map(voucher => (
+                                        <tr key={voucher.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                                            <td className="px-6 py-4">{voucher.id}</td>
+                                            <td className="px-6 py-4">{voucher.receiptNumber}</td>
+                                            <td className="px-6 py-4"><span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300">{t('receipts.currency_sar')}</span></td>
+                                            <td className="px-6 py-4"><span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-red-900 dark:text-red-300">{voucher.value.toFixed(1)}</span></td>
+                                            <td className="px-6 py-4">{voucher.date}</td>
+                                            <td className="px-6 py-4">{voucher.time}</td>
+                                            <td className="px-6 py-4">{voucher.paymentMethod}</td>
+                                            <td className="px-6 py-4">{voucher.paymentType || '-'}</td>
+                                            <td className="px-6 py-4">{voucher.transactionNumber || '-'}</td>
+                                            <td className="px-6 py-4">{voucher.bookingNumber || '-'}</td>
+                                            <td className="px-6 py-4">{voucher.createdAt}</td>
+                                            <td className="px-6 py-4">{voucher.updatedAt}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => setViewingVoucher(voucher)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5"/></button>
+                                                    <button onClick={() => handleEditClick(voucher)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10" aria-label={t('bookings.edit')}><PencilSquareIcon className="w-5 h-5"/></button>
+                                                    <button onClick={() => handleDeleteClick(voucher)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" aria-label={t('bookings.delete')}><TrashIcon className="w-5 h-5"/></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )
+                            ) : (
+                                <tr>
+                                    <td colSpan={tableHeaders.length} className="text-center py-10 text-slate-500 dark:text-slate-400">
+                                        {t('orders.noData')}
                                     </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                  <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                       {`${t('units.showing')} ${filteredReceipts.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, filteredReceipts.length)} ${t('units.of')} ${filteredReceipts.length} ${t('units.entries')}`}
+                       {`${t('units.showing')} ${filteredData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, filteredData.length)} ${t('units.of')} ${filteredData.length} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
                          <nav className="flex items-center gap-1" aria-label="Pagination">
@@ -220,30 +404,46 @@ const ReceiptsPage: React.FC = () => {
                         </nav>
                     )}
                 </div>
-
             </div>
             
             <AddReceiptPanel 
                 isOpen={isAddPanelOpen}
                 onClose={handleClosePanel}
-                onSave={handleSaveReceipt}
-                initialData={editingReceipt || newReceiptTemplate}
-                isEditing={!!editingReceipt}
+                onSave={handleSaveVoucher}
+                initialData={editingVoucher || newReceiptTemplate}
+                isEditing={!!editingVoucher}
+                voucherType={voucherType as 'receipt' | 'payment'}
+                user={user}
             />
 
             <ReceiptDetailsModal 
-                receipt={viewingReceipt}
-                onClose={() => setViewingReceipt(null)}
+                receipt={viewingVoucher}
+                onClose={() => setViewingVoucher(null)}
+                voucherType={voucherType as 'receipt' | 'payment'}
             />
 
             <ConfirmationModal
-                isOpen={!!receiptToDeleteId}
-                onClose={() => setReceiptToDeleteId(null)}
+                isOpen={!!voucherToDelete}
+                onClose={() => setVoucherToDelete(null)}
                 onConfirm={handleConfirmDelete}
-                title={t('receipts.deleteReceiptTitle')}
+                title={isPaymentView ? t('receipts.deletePaymentVoucherTitle') : t('receipts.deleteReceiptTitle')}
                 message={t('receipts.confirmDeleteMessage')}
             />
+            
+            <InvoiceDetailsModal 
+                invoice={viewingInvoice} 
+                onClose={() => setViewingInvoice(null)} 
+            />
 
+            <ConfirmationModal
+                isOpen={!!invoiceToDelete}
+                onClose={() => setInvoiceToDelete(null)}
+                onConfirm={handleConfirmDeleteInvoice}
+                title={t('receipts.deleteInvoiceTitle')}
+                message={t('receipts.confirmDeleteInvoiceMessage')}
+            />
+
+            {invoiceToPrint && <PrintableInvoice invoice={invoiceToPrint} />}
         </div>
     );
 };

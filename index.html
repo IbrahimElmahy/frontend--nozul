@@ -30,6 +30,21 @@
         -ms-overflow-style: none;  /* IE and Edge */
         scrollbar-width: none;  /* Firefox */
       }
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        .printable-invoice-container, .printable-invoice-container * {
+          visibility: visible;
+        }
+        .printable-invoice-container {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          padding: 2rem;
+        }
+      }
     </style>
   <script type="importmap">
 {

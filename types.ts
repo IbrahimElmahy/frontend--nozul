@@ -58,8 +58,6 @@ export interface Unit {
             iron: boolean;
             restaurantMenu: boolean;
             washingMachine: boolean;
-            microwave: boolean;
-            newspaper: boolean;
             oven: boolean;
         };
     };
@@ -206,6 +204,19 @@ export interface Receipt {
   paymentType: string | null;
   transactionNumber: string | null;
   bookingNumber: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Invoice {
+  id: number;
+  invoiceNumber: string;
+  bookingNumber: string;
+  value: number;
+  discount: number;
+  subtotal: number;
+  tax: number;
+  total: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -25,6 +25,36 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 
+const newUnitTemplate: Unit = {
+    id: '', // Will be generated on save
+    unitNumber: '',
+    unitName: '',
+    status: 'free',
+    customerName: undefined,
+    checkIn: undefined,
+    checkOut: undefined,
+    price: 0,
+    remaining: undefined,
+    unitType: '8e27565c-dcd0-47d0-a119-63f97d47fe3f', // Default to 'Small Room' ID
+    cleaningStatus: 'clean',
+    isAvailable: true,
+    floor: 1,
+    rooms: 1,
+    bathrooms: 1,
+    beds: 1,
+    doubleBeds: 0,
+    wardrobes: 1,
+    tvs: 1,
+    coolingType: 'split',
+    notes: '',
+    features: {
+        common: { roomCleaning: false, elevator: true, parking: true, internet: true },
+        // FIX: Add missing 'washingMachine' property to satisfy the Unit type.
+        special: { kitchen: false, lounge: false, diningTable: false, refrigerator: false, iron: false, restaurantMenu: false, washingMachine: false, oven: false },
+    },
+};
+
+
 const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, onSave, isAdding = false, unitTypeOptions, coolingTypeOptions }) => {
     const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState<Unit | null>(unit);
