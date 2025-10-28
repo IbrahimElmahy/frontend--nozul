@@ -2,10 +2,12 @@ import React, { useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Invoice } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
+import PrinterIcon from './icons-redesign/PrinterIcon';
 
 interface InvoiceDetailsModalProps {
     invoice: Invoice | null;
     onClose: () => void;
+    onPrint: (invoice: Invoice) => void;
 }
 
 const DetailItem: React.FC<{ label: string; value: string | number | undefined | null }> = ({ label, value }) => (
@@ -25,7 +27,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 
-const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({ invoice, onClose }) => {
+const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({ invoice, onClose, onPrint }) => {
     const { t } = useContext(LanguageContext);
     
     if (!invoice) return null;
@@ -47,9 +49,18 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({ invoice, onCl
                     <h2 id="invoice-details-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">
                         {t('receipts.detailsInvoiceTitle')} - {invoice.invoiceNumber}
                     </h2>
-                    <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
-                        <XMarkIcon className="w-6 h-6" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => onPrint(invoice)}
+                            className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+                        >
+                            <PrinterIcon className="w-5 h-5" />
+                            <span>{t('receipts.print')}</span>
+                        </button>
+                        <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
+                            <XMarkIcon className="w-6 h-6" />
+                        </button>
+                    </div>
                 </header>
 
                 <div className="flex-grow p-6 overflow-y-auto">

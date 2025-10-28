@@ -33,7 +33,7 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice }) => {
     });
 
     return (
-        <div className="printable-invoice-container invisible absolute">
+        <div className="printable-invoice-container">
             <div className="p-6 bg-white text-gray-800 font-sans text-xs" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                 
                 {/* Header */}

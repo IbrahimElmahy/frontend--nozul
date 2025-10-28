@@ -13,7 +13,7 @@ import ReceiptDetailsModal from './ReceiptDetailsModal';
 import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
 import PrinterIcon from './icons-redesign/PrinterIcon';
 import InvoiceDetailsModal from './InvoiceDetailsModal';
-import PrintableInvoice from './PrintableInvoice';
+import InvoicePrintPreview from './InvoicePrintPreview';
 
 const mockReceipts: Receipt[] = [
   { id: 1, receiptNumber: '0000000018', currency: 'SAR', value: 152.0, date: '2025-10-07', time: '16:57:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: null, createdAt: '2025-10-07 13:58:41', updatedAt: '2025-10-07 13:58:41' },
@@ -79,7 +79,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
     // State for invoice actions
     const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
     const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
-    const [invoiceToPrint, setInvoiceToPrint] = useState<Invoice | null>(null);
+    const [invoiceForPreview, setInvoiceForPreview] = useState<Invoice | null>(null);
 
     const isPaymentView = voucherType === 'payment';
     const isInvoiceView = voucherType === 'invoice';
@@ -197,30 +197,9 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
 
     // Invoice action handlers
     const handlePrintInvoice = (invoice: Invoice) => {
-        setInvoiceToPrint(invoice);
+        setViewingInvoice(null);
+        setInvoiceForPreview(invoice);
     };
-    
-    useEffect(() => {
-        if (invoiceToPrint) {
-            const handleAfterPrint = () => {
-                setInvoiceToPrint(null);
-                window.removeEventListener('afterprint', handleAfterPrint);
-            };
-    
-            window.addEventListener('afterprint', handleAfterPrint);
-    
-            // A short timeout to ensure the printable component has rendered
-            const timer = setTimeout(() => {
-                window.print();
-            }, 100);
-    
-            // Cleanup function
-            return () => {
-                clearTimeout(timer);
-                window.removeEventListener('afterprint', handleAfterPrint);
-            };
-        }
-    }, [invoiceToPrint]);
 
     const handleConfirmDeleteInvoice = () => {
         if (invoiceToDelete) {
@@ -433,6 +412,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
             <InvoiceDetailsModal 
                 invoice={viewingInvoice} 
                 onClose={() => setViewingInvoice(null)} 
+                onPrint={handlePrintInvoice}
             />
 
             <ConfirmationModal
@@ -443,7 +423,11 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 message={t('receipts.confirmDeleteInvoiceMessage')}
             />
 
-            {invoiceToPrint && <PrintableInvoice invoice={invoiceToPrint} />}
+            <InvoicePrintPreview
+                isOpen={!!invoiceForPreview}
+                invoice={invoiceForPreview}
+                onClose={() => setInvoiceForPreview(null)}
+            />
         </div>
     );
 };

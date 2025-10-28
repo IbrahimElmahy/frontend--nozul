@@ -31,6 +31,9 @@
         scrollbar-width: none;  /* Firefox */
       }
       @media print {
+        .no-print {
+          display: none !important;
+        }
         body * {
           visibility: hidden;
         }
@@ -42,7 +45,6 @@
           left: 0;
           top: 0;
           width: 100%;
-          padding: 2rem;
         }
       }
     </style>
