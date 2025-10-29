@@ -1,5 +1,4 @@
 import { Unit, UnitStatus, CoolingType, CleaningStatus } from '../../types';
-import { allFeatures } from './featureMappings';
 
 // Maps the raw API response for an apartment to the frontend's Unit type.
 export const mapApiUnitToUnit = (apiUnit: any): Unit => {
@@ -10,30 +9,6 @@ export const mapApiUnitToUnit = (apiUnit: any): Unit => {
         status = 'out-of-service';
     }
 
-    const unitFeatures = {
-        common: { roomCleaning: false, elevator: false, parking: false, internet: false },
-        special: { 
-            kitchen: false, lounge: false, diningTable: false, refrigerator: false, 
-            iron: false, restaurantMenu: false, 
-            // FIX: Add missing 'washingMachine' property to satisfy the Unit type.
-            washingMachine: false, 
-            oven: false 
-        }
-    };
-
-    if (apiUnit.features && Array.isArray(apiUnit.features)) {
-        for (const featureId of apiUnit.features) {
-            const feature = allFeatures.find(f => f.id === featureId);
-            if (feature) {
-                if (feature.category === 'common') {
-                    (unitFeatures.common as any)[feature.name] = true;
-                } else {
-                    (unitFeatures.special as any)[feature.name] = true;
-                }
-            }
-        }
-    }
-    
     let cleaningStatus: CleaningStatus = 'clean';
     if (apiUnit.cleanliness === 'dirty') {
         cleaningStatus = 'not-clean';
@@ -61,7 +36,7 @@ export const mapApiUnitToUnit = (apiUnit: any): Unit => {
         tvs: apiUnit.tvs || 0,
         coolingType: (apiUnit.cooling_type as CoolingType) || '',
         notes: apiUnit.description || apiUnit.note || '',
-        features: unitFeatures
+        features: apiUnit.features || []
     };
 };
 
@@ -91,16 +66,11 @@ export const mapUnitToFormData = (unit: Unit): FormData => {
     }
     formData.append('cleanliness', cleanlinessApiValue);
 
-    // Map boolean features back to an array of UUIDs
-    for (const category in unit.features) {
-        for (const featureName in (unit.features as any)[category]) {
-            if ((unit.features as any)[category][featureName]) {
-                const feature = allFeatures.find(f => f.name === featureName && f.category === category);
-                if (feature) {
-                    formData.append('features', feature.id);
-                }
-            }
-        }
+    // Append each feature ID
+    if (unit.features) {
+        unit.features.forEach(featureId => {
+            formData.append('features', featureId);
+        });
     }
 
     return formData;

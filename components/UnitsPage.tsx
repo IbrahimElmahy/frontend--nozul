@@ -52,13 +52,20 @@ const newUnitTemplate: Unit = {
     tvs: 1,
     coolingType: 'split',
     notes: '',
-    features: {
-        common: { roomCleaning: false, elevator: true, parking: true, internet: true },
-        // FIX: Add missing 'washingMachine' property to satisfy the Unit type.
-        special: { kitchen: false, lounge: false, diningTable: false, refrigerator: false, iron: false, restaurantMenu: false, washingMachine: false, oven: false },
-    },
+    features: [],
 };
 
+
+// API Feature Interfaces
+interface ApiFeature {
+    id: string;
+    name_en: string;
+    name_ar: string;
+    type: 'common' | 'special';
+}
+interface FeaturesApiResponse {
+    data: ApiFeature[];
+}
 
 const UnitsPage: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
@@ -86,6 +93,7 @@ const UnitsPage: React.FC = () => {
     // Options for dropdowns
     const [unitTypeOptions, setUnitTypeOptions] = useState<{ id: string, name: string }[]>([]);
     const [coolingTypeOptions, setCoolingTypeOptions] = useState<[string, string][]>([]);
+    const [allApiFeatures, setAllApiFeatures] = useState<ApiFeature[]>([]);
 
 
     useEffect(() => {
@@ -94,12 +102,15 @@ const UnitsPage: React.FC = () => {
             setError(null);
             try {
                 // Fetch options first
-                const [typesRes, coolingRes] = await Promise.all([
+                const [typesRes, coolingRes, featuresRes] = await Promise.all([
                     apiClient<{data: any[]}>('/ar/apartment/api/apartments-types/'),
-                    apiClient<[string, string][]>('/ar/apartment/api/apartments/cooling-types/')
+                    apiClient<[string, string][]>('/ar/apartment/api/apartments/cooling-types/'),
+                    apiClient<FeaturesApiResponse>('/ar/feature/api/features/?length=50')
                 ]);
                 setUnitTypeOptions(typesRes.data.map(t => ({ id: t.id, name: t.name })));
                 setCoolingTypeOptions(coolingRes);
+                setAllApiFeatures(featuresRes.data);
+
 
                 // Fetch units
                 const params = new URLSearchParams();
@@ -371,8 +382,8 @@ const UnitsPage: React.FC = () => {
                 <PaginationControls />
             </div>
 
-            <UnitEditPanel unit={editingUnit} isOpen={isPanelOpen} onClose={handleClosePanel} onSave={handleSaveUnit} isAdding={isAdding} unitTypeOptions={unitTypeOptions} coolingTypeOptions={coolingTypeOptions} />
-            <AddGroupPanel template={newUnitTemplate} isOpen={isAddGroupPanelOpen} onClose={() => setIsAddGroupPanelOpen(false)} onSave={handleSaveNewGroup} />
+            <UnitEditPanel unit={editingUnit} isOpen={isPanelOpen} onClose={handleClosePanel} onSave={handleSaveUnit} isAdding={isAdding} unitTypeOptions={unitTypeOptions} coolingTypeOptions={coolingTypeOptions} allApiFeatures={allApiFeatures} />
+            <AddGroupPanel template={newUnitTemplate} isOpen={isAddGroupPanelOpen} onClose={() => setIsAddGroupPanelOpen(false)} onSave={handleSaveNewGroup} allApiFeatures={allApiFeatures} />
             <ConfirmationModal isOpen={!!unitToDeleteId} onClose={handleCancelDelete} onConfirm={handleConfirmDelete} title={t('units.deleteUnit')} message={t('units.confirmDelete')} />
         </div>
     );

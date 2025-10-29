@@ -42,25 +42,8 @@ export interface Unit {
     coolingType: CoolingType;
     notes: string;
 
-    // Features (Booleans)
-    features: {
-        common: {
-            roomCleaning: boolean;
-            elevator: boolean;
-            parking: boolean;
-            internet: boolean;
-        };
-        special: {
-            kitchen: boolean;
-            lounge: boolean;
-            diningTable: boolean;
-            refrigerator: boolean;
-            iron: boolean;
-            restaurantMenu: boolean;
-            washingMachine: boolean;
-            oven: boolean;
-        };
-    };
+    // Features
+    features: string[]; // Array of feature IDs
 }
 
 export interface User {

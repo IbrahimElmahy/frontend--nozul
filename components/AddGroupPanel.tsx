@@ -6,11 +6,19 @@ import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import Switch from './Switch';
 import Checkbox from './Checkbox';
 
+interface ApiFeature {
+    id: string;
+    name_en: string;
+    name_ar: string;
+    type: 'common' | 'special';
+}
+
 interface AddGroupPanelProps {
     template: Unit; // The base template for new rooms
     isOpen: boolean;
     onClose: () => void;
     onSave: (newUnits: Unit[]) => void;
+    allApiFeatures: ApiFeature[];
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -20,15 +28,16 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
     </div>
 );
 
-const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose, onSave }) => {
+const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose, onSave, allApiFeatures }) => {
     const { t, language } = useContext(LanguageContext);
     const [fromNumber, setFromNumber] = useState(101);
     const [toNumber, setToNumber] = useState(110);
     const [templateUnit, setTemplateUnit] = useState<Unit>(template);
     const [error, setError] = useState<string>('');
 
-    const commonFeatures = useMemo(() => Object.keys(template.features.common), [template]);
-    const specialFeatures = useMemo(() => Object.keys(template.features.special), [template]);
+    const commonFeatures = useMemo(() => allApiFeatures.filter(f => f.type === 'common'), [allApiFeatures]);
+    const specialFeatures = useMemo(() => allApiFeatures.filter(f => f.type === 'special'), [allApiFeatures]);
+
 
     useEffect(() => {
         // Reset form when panel is opened with a new template
@@ -48,18 +57,16 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
         setTemplateUnit({ ...templateUnit, [name]: parseInt(value, 10) || 0 });
     };
     
-    const handleFeatureChange = (category: 'common' | 'special', key: string, checked: boolean) => {
-         setTemplateUnit({
-            ...templateUnit,
-            features: {
-                ...templateUnit.features,
-                [category]: {
-                    ...templateUnit.features[category],
-                    [key]: checked
-                }
-            }
-         });
-    }
+    const handleFeatureChange = (featureId: string, checked: boolean) => {
+        const currentFeatures = templateUnit.features || [];
+        const newFeatures = checked
+           ? [...currentFeatures, featureId]
+           : currentFeatures.filter(id => id !== featureId);
+        setTemplateUnit({
+           ...templateUnit,
+           features: newFeatures,
+        });
+   }
 
     const handleGenerateRooms = () => {
         const from = fromNumber;
@@ -179,16 +186,16 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
                             <div>
                                 <Section title={t('units.commonFeatures')}>
                                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                                        {commonFeatures.map(key => (
-                                            <Checkbox key={key} id={`template-common-${key}`} label={t(`units.${key}` as any)} checked={templateUnit.features.common[key as keyof typeof templateUnit.features.common]} onChange={(c) => handleFeatureChange('common', key, c)} />
+                                        {commonFeatures.map(feature => (
+                                            <Checkbox key={feature.id} id={`template-common-${feature.id}`} label={language === 'ar' ? feature.name_ar : feature.name_en} checked={templateUnit.features.includes(feature.id)} onChange={(c) => handleFeatureChange(feature.id, c)} />
                                         ))}
                                     </div>
                                 </Section>
                                 
                                 <Section title={t('units.specialFeatures')}>
                                     <div className="grid grid-cols-3 gap-x-4 gap-y-3">
-                                        {specialFeatures.map(key => (
-                                            <Checkbox key={key} id={`template-special-${key}`} label={t(`units.${key}` as any)} checked={templateUnit.features.special[key as keyof typeof templateUnit.features.special]} onChange={(c) => handleFeatureChange('special', key, c)} />
+                                        {specialFeatures.map(feature => (
+                                            <Checkbox key={feature.id} id={`template-special-${feature.id}`} label={language === 'ar' ? feature.name_ar : feature.name_en} checked={templateUnit.features.includes(feature.id)} onChange={(c) => handleFeatureChange(feature.id, c)} />
                                         ))}
                                     </div>
                                 </Section>

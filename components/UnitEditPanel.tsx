@@ -5,7 +5,13 @@ import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import Switch from './Switch';
 import Checkbox from './Checkbox';
-import { allFeatures } from './data/featureMappings';
+
+interface ApiFeature {
+    id: string;
+    name_en: string;
+    name_ar: string;
+    type: 'common' | 'special';
+}
 
 interface UnitEditPanelProps {
     unit: Unit | null;
@@ -15,6 +21,7 @@ interface UnitEditPanelProps {
     isAdding?: boolean;
     unitTypeOptions: { id: string; name: string }[];
     coolingTypeOptions: [string, string][];
+    allApiFeatures: ApiFeature[];
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -24,43 +31,12 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
     </div>
 );
 
-
-const newUnitTemplate: Unit = {
-    id: '', // Will be generated on save
-    unitNumber: '',
-    unitName: '',
-    status: 'free',
-    customerName: undefined,
-    checkIn: undefined,
-    checkOut: undefined,
-    price: 0,
-    remaining: undefined,
-    unitType: '8e27565c-dcd0-47d0-a119-63f97d47fe3f', // Default to 'Small Room' ID
-    cleaningStatus: 'clean',
-    isAvailable: true,
-    floor: 1,
-    rooms: 1,
-    bathrooms: 1,
-    beds: 1,
-    doubleBeds: 0,
-    wardrobes: 1,
-    tvs: 1,
-    coolingType: 'split',
-    notes: '',
-    features: {
-        common: { roomCleaning: false, elevator: true, parking: true, internet: true },
-        // FIX: Add missing 'washingMachine' property to satisfy the Unit type.
-        special: { kitchen: false, lounge: false, diningTable: false, refrigerator: false, iron: false, restaurantMenu: false, washingMachine: false, oven: false },
-    },
-};
-
-
-const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, onSave, isAdding = false, unitTypeOptions, coolingTypeOptions }) => {
+const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, onSave, isAdding = false, unitTypeOptions, coolingTypeOptions, allApiFeatures }) => {
     const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState<Unit | null>(unit);
 
-    const commonFeatures = useMemo(() => allFeatures.filter(f => f.category === 'common'), []);
-    const specialFeatures = useMemo(() => allFeatures.filter(f => f.category === 'special'), []);
+    const commonFeatures = useMemo(() => allApiFeatures.filter(f => f.type === 'common'), [allApiFeatures]);
+    const specialFeatures = useMemo(() => allApiFeatures.filter(f => f.type === 'special'), [allApiFeatures]);
 
     useEffect(() => {
         setFormData(unit ? JSON.parse(JSON.stringify(unit)) : null);
@@ -78,17 +54,15 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
         setFormData({ ...formData, [name]: parseInt(value, 10) || 0 });
     };
 
-    const handleFeatureChange = (category: 'common' | 'special', key: string, checked: boolean) => {
+    const handleFeatureChange = (featureId: string, checked: boolean) => {
          if (!formData) return;
+         const currentFeatures = formData.features || [];
+         const newFeatures = checked
+            ? [...currentFeatures, featureId]
+            : currentFeatures.filter(id => id !== featureId);
          setFormData({
             ...formData,
-            features: {
-                ...formData.features,
-                [category]: {
-                    ...formData.features[category],
-                    [key]: checked
-                }
-            }
+            features: newFeatures,
          });
     }
 
@@ -186,7 +160,7 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
                                     <Section title={t('units.commonFeatures')}>
                                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                                             {commonFeatures.map(feature => (
-                                                <Checkbox key={feature.id} id={`common-${feature.name}`} label={t(`units.${feature.name}` as any)} checked={formData.features.common[feature.name as keyof typeof formData.features.common]} onChange={(c) => handleFeatureChange('common', feature.name, c)} />
+                                                <Checkbox key={feature.id} id={`common-${feature.id}`} label={language === 'ar' ? feature.name_ar : feature.name_en} checked={formData.features.includes(feature.id)} onChange={(c) => handleFeatureChange(feature.id, c)} />
                                             ))}
                                         </div>
                                     </Section>
@@ -194,7 +168,7 @@ const UnitEditPanel: React.FC<UnitEditPanelProps> = ({ unit, isOpen, onClose, on
                                     <Section title={t('units.specialFeatures')}>
                                         <div className="grid grid-cols-3 gap-x-4 gap-y-3">
                                             {specialFeatures.map(feature => (
-                                                <Checkbox key={feature.id} id={`special-${feature.name}`} label={t(`units.${feature.name}` as any)} checked={formData.features.special[feature.name as keyof typeof formData.features.special]} onChange={(c) => handleFeatureChange('special', feature.name, c)} />
+                                                <Checkbox key={feature.id} id={`special-${feature.id}`} label={language === 'ar' ? feature.name_ar : feature.name_en} checked={formData.features.includes(feature.id)} onChange={(c) => handleFeatureChange(feature.id, c)} />
                                             ))}
                                         </div>
                                     </Section>
