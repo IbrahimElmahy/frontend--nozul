@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { Guest, GuestStatus, GuestType, IdType } from '../types';
+import { Guest, GuestTypeAPI, IdTypeAPI, CountryAPI } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import DatePicker from './DatePicker';
@@ -9,11 +9,14 @@ import SearchableSelect from './SearchableSelect';
 import Switch from './Switch';
 
 interface AddGuestPanelProps {
-    initialData: Guest | Omit<Guest, 'id' | 'createdAt' | 'updatedAt'>;
+    initialData: Guest | null;
     isEditing: boolean;
     isOpen: boolean;
     onClose: () => void;
-    onSave: (guest: Guest | Omit<Guest, 'id' | 'createdAt' | 'updatedAt'>) => void;
+    onSave: (formData: FormData) => void;
+    guestTypes: GuestTypeAPI[];
+    idTypes: IdTypeAPI[];
+    countries: CountryAPI;
 }
 
 const SectionHeader: React.FC<{ title: string; }> = ({ title }) => (
@@ -23,184 +26,165 @@ const SectionHeader: React.FC<{ title: string; }> = ({ title }) => (
     </div>
 );
 
-const AddGuestPanel: React.FC<AddGuestPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave }) => {
-    const { t } = useContext(LanguageContext);
-    const [formData, setFormData] = useState(initialData);
+const AddGuestPanel: React.FC<AddGuestPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave, guestTypes, idTypes, countries }) => {
+    const { t, language } = useContext(LanguageContext);
+    const [formData, setFormData] = useState<Record<string, any>>({});
+    
+    // Derived states for dropdowns
+    const countryOptions = useMemo(() => Object.entries(countries).map(([code, name]) => ({ value: code, label: name })), [countries]);
+    const guestTypeOptions = useMemo(() => guestTypes.map(gt => ({ value: gt.id, label: language === 'ar' ? gt.name_ar : gt.name_en })), [guestTypes, language]);
+
+    const availableIdTypes = useMemo(() => {
+        if (!formData.guest_type || !guestTypes.length || !idTypes.length) {
+            return [];
+        }
+        const selectedGuestType = guestTypes.find(gt => gt.id === formData.guest_type);
+        if (!selectedGuestType) {
+            return [];
+        }
+        return idTypes
+            .filter(it => selectedGuestType.ids.includes(it.id))
+            .map(it => ({ value: it.id, label: language === 'ar' ? it.name_ar : it.name_en }));
+    }, [formData.guest_type, guestTypes, idTypes, language]);
 
     useEffect(() => {
         if (isOpen) {
-            setFormData(JSON.parse(JSON.stringify(initialData)));
+            if (isEditing && initialData) {
+                // Find the UUID for guest_type and ids based on the display name
+                const guestTypeObj = guestTypes.find(gt => gt.name === initialData.guest_type);
+                const idTypeObj = idTypes.find(it => it.name === initialData.ids);
+                
+                setFormData({
+                    ...initialData,
+                    guest_type: guestTypeObj?.id || '',
+                    ids: idTypeObj?.id || '',
+                });
+            } else {
+                // Defaults for new guest
+                setFormData({
+                    name: '',
+                    gender: 'male',
+                    country: 'SA',
+                    phone_number: '',
+                    email: '',
+                    city: '',
+                    guest_type: guestTypes[0]?.id || '',
+                    id_number: '',
+                    ids: '',
+                });
+            }
         }
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, isEditing, guestTypes, idTypes]);
+    
+    // Effect to reset id type if it becomes invalid after guest type changes
+    useEffect(() => {
+        if (isOpen && !availableIdTypes.some(it => it.value === formData.ids)) {
+             setFormData(prev => ({...prev, ids: ''}));
+        }
+    }, [availableIdTypes, formData.ids, isOpen]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleSelectChange = (name: string, value: string) => {
+        setFormData(prev => ({...prev, [name]: value}));
+    }
+
     const handleSaveClick = () => {
-        onSave(formData);
+        const dataToSave = new FormData();
+        Object.keys(formData).forEach(key => {
+            if (formData[key] !== null && formData[key] !== undefined) {
+                 // The API expects certain fields that aren't in this simplified form.
+                // Add them with empty values to satisfy PUT requirements.
+                const apiValue = formData[key];
+                dataToSave.append(key, apiValue);
+            }
+        });
+        
+        // Ensure all required fields for PUT are present, even if empty
+        if (isEditing) {
+           ['work_number', 'work_place', 'note', 'postal_code', 'street', 'neighborhood'].forEach(key => {
+               if (!dataToSave.has(key)) {
+                   dataToSave.append(key, '');
+               }
+           });
+        }
+        onSave(dataToSave);
     };
 
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
     const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
     
-    const guestTypeOptions = [
-      { value: 'citizen', label: t('guests.guestType_citizen') },
-      { value: 'resident', label: t('guests.guestType_resident') },
-      { value: 'visitor', label: t('guests.guestType_visitor') },
-    ];
-
-    const idTypeOptions = [
-      { value: 'national_id', label: t('guests.idType_national_id') },
-      { value: 'residence_card', label: t('guests.idType_residence_card') },
-      { value: 'passport', label: t('guests.idType_passport') },
-    ];
-    
-    const nationalities = ["السعودية", "مصر", "أفغانستان", "ألبانيا", "الجزائر"];
-
-
     return (
-        <div
-            className={`fixed inset-0 z-50 flex items-start justify-center p-4 transition-opacity duration-300 overflow-y-auto ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="add-guest-title"
-        >
+        <div className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} role="dialog" aria-modal="true">
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
-
-            <div className={`relative w-full max-w-screen-2xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`} style={{ maxHeight: '90vh' }}>
-                <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
-                    <h2 id="add-guest-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">{isEditing ? t('guests.editGuestTitle') : t('guests.addGuestTitle')}</h2>
-                    <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
-                        <XMarkIcon className="w-6 h-6" />
-                    </button>
+            <div className={`relative h-full bg-slate-50 dark:bg-slate-800 shadow-2xl flex flex-col w-full max-w-2xl transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-900 z-10">
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">{isEditing ? t('guests.editGuestTitle') : t('guests.addGuestTitle')}</h2>
+                    <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close"><XMarkIcon className="w-6 h-6" /></button>
                 </header>
 
                 <div className="flex-grow p-6 overflow-y-auto">
-                    <form onSubmit={(e) => e.preventDefault()}>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8">
-                            {/* Column 1 */}
-                            <div>
-                                <SectionHeader title={t('guests.personalInfo')} />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="sm:col-span-2">
-                                        <label htmlFor="name" className={labelBaseClass}>{t('guests.th_name')}</label>
-                                        <input type="text" name="name" id="name" value={formData.name} onChange={handleInputChange} className={inputBaseClass} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="gender" className={labelBaseClass}>{t('guests.gender')}</label>
-                                        <SearchableSelect id="gender" options={[t('guests.male'), t('guests.female')]} value={formData.gender === 'male' ? t('guests.male') : formData.gender === 'female' ? t('guests.female') : ''} onChange={val => setFormData(p => ({...p, gender: val === t('guests.male') ? 'male' : 'female'}))} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="nationality" className={labelBaseClass}>{t('guests.th_nationality')}</label>
-                                        <SearchableSelect id="nationality" options={nationalities} value={formData.nationality} onChange={val => setFormData(p => ({...p, nationality: val}))} />
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label htmlFor="dob" className={labelBaseClass}>{t('guests.dob')}</label>
-                                        <DatePicker value={formData.dob || ''} onChange={date => setFormData(p => ({...p, dob: date}))} />
-                                    </div>
-                                </div>
-
-                                <SectionHeader title={t('guests.contactInfo')} />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label htmlFor="mobileNumber" className={labelBaseClass}>{t('guests.th_mobileNumber')}</label>
-                                        <PhoneNumberInput value={formData.mobileNumber} onChange={val => setFormData(p => ({...p, mobileNumber: val}))} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="workNumber" className={labelBaseClass}>{t('guests.workNumber')}</label>
-                                        <PhoneNumberInput value={formData.workNumber || ''} onChange={val => setFormData(p => ({...p, workNumber: val}))} />
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label htmlFor="email" className={labelBaseClass}>{t('guests.email')}</label>
-                                        <input type="email" name="email" id="email" value={formData.email || ''} onChange={handleInputChange} className={inputBaseClass} />
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label htmlFor="workLocation" className={labelBaseClass}>{t('guests.workLocation')}</label>
-                                        <input type="text" name="workLocation" id="workLocation" value={formData.workLocation || ''} onChange={handleInputChange} className={inputBaseClass} />
-                                    </div>
-                                </div>
+                    <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+                        <SectionHeader title={t('guests.personalInfo')} />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="sm:col-span-2">
+                                <label htmlFor="name" className={labelBaseClass}>{t('guests.th_name')}</label>
+                                <input type="text" name="name" id="name" value={formData.name || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
-                            
-                            {/* Column 2 */}
                             <div>
-                                <SectionHeader title={t('guests.addressInfo')} />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label htmlFor="country" className={labelBaseClass}>{t('guests.country')}</label>
-                                        <SearchableSelect id="country" options={nationalities} value={formData.country || ''} onChange={val => setFormData(p => ({...p, country: val}))} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="city" className={labelBaseClass}>{t('guests.city')}</label>
-                                        <input type="text" name="city" id="city" value={formData.city || ''} onChange={handleInputChange} className={inputBaseClass} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="district" className={labelBaseClass}>{t('guests.district')}</label>
-                                        <input type="text" name="district" id="district" value={formData.district || ''} onChange={handleInputChange} className={inputBaseClass} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="postalCode" className={labelBaseClass}>{t('guests.postalCode')}</label>
-                                        <input type="text" name="postalCode" id="postalCode" value={formData.postalCode || ''} onChange={handleInputChange} className={inputBaseClass} />
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label htmlFor="street" className={labelBaseClass}>{t('guests.street')}</label>
-                                        <input type="text" name="street" id="street" value={formData.street || ''} onChange={handleInputChange} className={inputBaseClass} />
-                                    </div>
-                                </div>
-
-                                <SectionHeader title={t('guests.notes')} />
-                                <textarea name="notes" rows={5} placeholder={t('guests.notesPlaceholder')} value={formData.notes || ''} onChange={handleInputChange} className={inputBaseClass}></textarea>
-                            </div>
-
-                            {/* Column 3 */}
-                            <div>
-                                <SectionHeader title={t('guests.guestSystemInfo')} />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label htmlFor="guestType" className={labelBaseClass}>{t('guests.th_guestType')}</label>
-                                        <SearchableSelect id="guestType" options={guestTypeOptions.map(o => o.label)} value={guestTypeOptions.find(o => o.value === formData.guestType)?.label || ''} onChange={(label) => { const opt = guestTypeOptions.find(o => o.label === label); if(opt) setFormData(p => ({ ...p, guestType: opt.value as GuestType }))}} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="idType" className={labelBaseClass}>{t('guests.th_idType')}</label>
-                                        <SearchableSelect id="idType" options={idTypeOptions.map(o => o.label)} value={idTypeOptions.find(o => o.value === formData.idType)?.label || ''} onChange={(label) => { const opt = idTypeOptions.find(o => o.label === label); if(opt) setFormData(p => ({ ...p, idType: opt.value as IdType }))}} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="idNumber" className={labelBaseClass}>{t('guests.th_idNumber')}</label>
-                                        <input type="text" name="idNumber" id="idNumber" value={formData.idNumber} onChange={handleInputChange} className={inputBaseClass} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="serialNumber" className={labelBaseClass}>{t('guests.serialNumber')}</label>
-                                        <input type="text" name="serialNumber" id="serialNumber" value={formData.serialNumber || ''} onChange={handleInputChange} className={inputBaseClass} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="issueDate" className={labelBaseClass}>{t('guests.th_issueDate')}</label>
-                                        <DatePicker value={formData.issueDate || ''} onChange={date => setFormData(p => ({...p, issueDate: date}))} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="issueLocation" className={labelBaseClass}>{t('guests.issueLocation')}</label>
-                                        <input type="text" name="issueLocation" id="issueLocation" value={formData.issueLocation || ''} onChange={handleInputChange} className={inputBaseClass} />
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label htmlFor="expiryDate" className={labelBaseClass}>{t('guests.th_expiryDate')}</label>
-                                        <DatePicker value={formData.expiryDate || ''} onChange={date => setFormData(p => ({...p, expiryDate: date}))} />
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg sm:col-span-2">
-                                        <span className="font-semibold text-slate-800 dark:text-slate-200">{t('guests.th_status')}</span>
-                                        <Switch id="status" checked={formData.status === 'active'} onChange={(c) => setFormData(p=> ({...p, status: c ? 'active' : 'inactive'}))} />
-                                    </div>
-                                </div>
+                                <label className={labelBaseClass}>{t('guests.gender')}</label>
+                                <SearchableSelect id="gender" options={[{ value: 'male', label: t('guests.male') }, { value: 'female', label: t('guests.female') }].map(o => o.label)} value={formData.gender === 'male' ? t('guests.male') : t('guests.female')} onChange={val => handleSelectChange('gender', val === t('guests.male') ? 'male' : 'female')} />
                             </div>
                         </div>
+
+                        <SectionHeader title={t('guests.contactInfo')} />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className={labelBaseClass}>{t('guests.th_mobileNumber')}</label>
+                                <PhoneNumberInput value={formData.phone_number || ''} onChange={val => handleSelectChange('phone_number', val)} />
+                            </div>
+                             <div>
+                                <label className={labelBaseClass}>{t('guests.country')}</label>
+                                <SearchableSelect id="country" options={countryOptions.map(o => o.label)} value={countryOptions.find(c => c.value === formData.country)?.label || ''} onChange={val => { const opt = countryOptions.find(c => c.label === val); if(opt) handleSelectChange('country', opt.value)}} />
+                            </div>
+                            <div className="sm:col-span-2">
+                                <label htmlFor="email" className={labelBaseClass}>{t('guests.email')} ({t('settings.light')})</label>
+                                <input type="email" name="email" id="email" value={formData.email || ''} onChange={handleInputChange} className={inputBaseClass} />
+                            </div>
+                             <div>
+                                <label htmlFor="city" className={labelBaseClass}>{t('guests.city')} ({t('settings.light')})</label>
+                                <input type="text" name="city" id="city" value={formData.city || ''} onChange={handleInputChange} className={inputBaseClass} />
+                            </div>
+                        </div>
+                        
+                        <SectionHeader title={t('guests.idInfo')} />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className={labelBaseClass}>{t('guests.th_guestType')}</label>
+                                <SearchableSelect id="guest_type" options={guestTypeOptions.map(o => o.label)} value={guestTypeOptions.find(gt => gt.value === formData.guest_type)?.label || ''} onChange={val => { const opt = guestTypeOptions.find(gt => gt.label === val); if (opt) handleSelectChange('guest_type', opt.value); }} />
+                            </div>
+                            <div>
+                                <label className={labelBaseClass}>{t('guests.th_idType')}</label>
+                                <SearchableSelect id="ids" options={availableIdTypes.map(o => o.label)} value={availableIdTypes.find(it => it.value === formData.ids)?.label || ''} onChange={val => { const opt = availableIdTypes.find(it => it.label === val); if (opt) handleSelectChange('ids', opt.value); }} />
+                            </div>
+                            <div className="sm:col-span-2">
+                                <label htmlFor="id_number" className={labelBaseClass}>{t('guests.th_idNumber')}</label>
+                                <input type="text" name="id_number" id="id_number" value={formData.id_number || ''} onChange={handleInputChange} className={inputBaseClass} />
+                            </div>
+                        </div>
+
                     </form>
                 </div>
 
-                <footer className="flex items-center justify-start p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-800 rounded-b-lg">
+                <footer className="flex items-center justify-start p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-900">
                     <button onClick={handleSaveClick} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
                         <CheckCircleIcon className="w-5 h-5" />
                         <span>{t('units.saveChanges')}</span>
                     </button>
-                     <button onClick={onClose} className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200">
+                    <button onClick={onClose} className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
                         {t('units.cancel')}
                     </button>
                 </footer>

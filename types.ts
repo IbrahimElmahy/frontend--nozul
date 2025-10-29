@@ -98,38 +98,53 @@ export interface Booking {
   order?: string;
 }
 
-export type GuestType = 'visitor' | 'citizen' | 'resident';
-export type IdType = 'passport' | 'national_id' | 'residence_card';
 export type GuestStatus = 'active' | 'inactive';
 
+// Updated Guest interface to match API
 export interface Guest {
-  id: number;
+  id: string; // It's a UUID
   name: string;
-  mobileNumber: string;
-  nationality: string;
-  guestType: GuestType;
-  idType: IdType;
-  idNumber: string;
-  issueDate: string | null;
-  expiryDate: string | null;
-  status: GuestStatus;
-  createdAt: string;
-  updatedAt: string;
-
-  // New detailed fields
-  gender?: 'male' | 'female';
-  dob?: string | null;
-  workNumber?: string;
+  gender: 'male' | 'female';
+  country: string; // e.g., "SA"
+  country_display: string;
+  phone_number: string;
   email?: string;
-  workLocation?: string;
-  country?: string;
   city?: string;
-  district?: string;
-  street?: string;
-  postalCode?: string;
-  issueLocation?: string;
-  serialNumber?: string;
-  notes?: string;
+  guest_type: string; // Display name like "مواطن"
+  id_number: string;
+  ids: string; // Display name like "جواز سفر"
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  birthdate: string | null;
+  work_number: string | null;
+  work_place: string | null;
+  issue_date: string | null;
+  expiry_date: string | null;
+  note: string;
+  postal_code: string;
+  street: string;
+  neighborhood: string;
+}
+
+export interface GuestTypeAPI {
+    id: string;
+    name: string;
+    name_ar: string;
+    name_en: string;
+    ids: string[]; // Array of compatible ID type UUIDs
+}
+
+export interface IdTypeAPI {
+    id: string;
+    name: string;
+    name_ar: string;
+    name_en: string;
+    guests_types: string[]; // Array of compatible Guest type UUIDs
+}
+
+export interface CountryAPI {
+    [code: string]: string;
 }
 
 // New Agency Types

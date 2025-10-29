@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { Guest, GuestStatus, GuestType, IdType } from '../types';
+import { Guest } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 
 interface GuestDetailsModalProps {
@@ -58,48 +58,45 @@ const GuestDetailsModal: React.FC<GuestDetailsModalProps> = ({ guest, onClose })
                             <Section title={t('guests.personalInfo')}>
                                 <DetailItem label={t('guests.th_name')} value={guest.name} />
                                 <DetailItem label={t('guests.gender')} value={guest.gender ? t(`guests.${guest.gender}` as any) : '---'} />
-                                <DetailItem label={t('guests.th_nationality')} value={guest.nationality} />
-                                <DetailItem label={t('guests.dob')} value={formatDate(guest.dob)} />
+                                <DetailItem label={t('guests.th_nationality')} value={guest.country_display} />
+                                <DetailItem label={t('guests.dob')} value={formatDate(guest.birthdate)} />
                             </Section>
 
                             <Section title={t('guests.contactInfo')}>
-                                <DetailItem label={t('guests.th_mobileNumber')} value={guest.mobileNumber} />
-                                <DetailItem label={t('guests.workNumber')} value={guest.workNumber} />
+                                <DetailItem label={t('guests.th_mobileNumber')} value={guest.phone_number} />
+                                <DetailItem label={t('guests.workNumber')} value={guest.work_number} />
                                 <DetailItem label={t('guests.email')} value={guest.email} />
-                                <DetailItem label={t('guests.workLocation')} value={guest.workLocation} />
+                                <DetailItem label={t('guests.workLocation')} value={guest.work_place} />
                             </Section>
                         </div>
                         <div>
                             <Section title={t('guests.addressInfo')}>
-                                <DetailItem label={t('guests.country')} value={guest.country} />
+                                <DetailItem label={t('guests.country')} value={guest.country_display} />
                                 <DetailItem label={t('guests.city')} value={guest.city} />
-                                <DetailItem label={t('guests.district')} value={guest.district} />
+                                <DetailItem label={t('guests.district')} value={guest.neighborhood} />
                                 <DetailItem label={t('guests.street')} value={guest.street} />
-                                <DetailItem label={t('guests.postalCode')} value={guest.postalCode} />
+                                <DetailItem label={t('guests.postalCode')} value={guest.postal_code} />
                             </Section>
                             
-                            <Section title={t('guests.guestSystemInfo')}>
-                                <DetailItem label={t('guests.th_guestType')} value={t(`guests.guestType_${guest.guestType}` as any)} />
-                                <DetailItem label={t('guests.th_idType')} value={t(`guests.idType_${guest.idType}` as any)} />
-                                <DetailItem label={t('guests.th_idNumber')} value={guest.idNumber} />
-                                <DetailItem label={t('guests.serialNumber')} value={guest.serialNumber} />
-                                <DetailItem label={t('guests.th_issueDate')} value={formatDate(guest.issueDate)} />
-                                <DetailItem label={t('guests.issueLocation')} value={guest.issueLocation} />
-                                <DetailItem label={t('guests.th_expiryDate')} value={formatDate(guest.expiryDate)} />
-                                <DetailItem label={t('guests.th_status')} value={t(`guests.status_${guest.status}` as any)} />
+                            <Section title={t('guests.idInfo')}>
+                                <DetailItem label={t('guests.th_guestType')} value={guest.guest_type} />
+                                <DetailItem label={t('guests.th_idType')} value={guest.ids} />
+                                <DetailItem label={t('guests.th_idNumber')} value={guest.id_number} />
+                                <DetailItem label={t('guests.th_issueDate')} value={formatDate(guest.issue_date)} />
+                                <DetailItem label={t('guests.th_expiryDate')} value={formatDate(guest.expiry_date)} />
+                                <DetailItem label={t('guests.th_status')} value={guest.is_active ? t('guests.status_active') : t('guests.status_inactive')} />
                             </Section>
                         </div>
                     </div>
 
                     <div className="py-4 border-b dark:border-slate-700 last:border-b-0">
                       <h3 className="text-base font-semibold text-blue-600 dark:text-blue-400 mb-3">{t('guests.notes')}</h3>
-                      <p className="text-sm text-slate-700 dark:text-slate-300">{guest.notes || '---'}</p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300">{guest.note || '---'}</p>
                     </div>
 
-                     {/* FIX: Changed translation key from 'units.timestamps' to 'bookings.details.timestamps' to match a valid TranslationKey. */}
                      <Section title={t('bookings.details.timestamps')}>
-                        <DetailItem label={t('guests.th_createdAt')} value={new Date(guest.createdAt).toLocaleString()} />
-                        <DetailItem label={t('guests.th_updatedAt')} value={new Date(guest.updatedAt).toLocaleString()} />
+                        <DetailItem label={t('guests.th_createdAt')} value={new Date(guest.created_at).toLocaleString()} />
+                        <DetailItem label={t('guests.th_updatedAt')} value={new Date(guest.updated_at).toLocaleString()} />
                     </Section>
                 </div>
             </div>
