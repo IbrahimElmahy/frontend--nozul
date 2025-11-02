@@ -218,3 +218,21 @@ export interface Invoice {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface HotelUser {
+    id: number;
+    username: string;
+    name: string;
+    mobile: string;
+    email: string;
+    role: string;
+    status: 'active' | 'inactive';
+    gender: 'male' | 'female' | '-';
+    lastLogin: string;
+    createdAt: string;
+    updatedAt: string;
+    dob?: string;
+    isManager?: boolean;
+    notes?: string;
+    permissions?: Record<string, boolean>;
+}

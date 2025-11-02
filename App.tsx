@@ -14,6 +14,9 @@ import SettingsCog from './components/SettingsCog';
 import ReportsPage from './components/ReportsPage';
 import ArchivesPage from './components/ArchivesPage';
 import NotificationsPage from './components/NotificationsPage';
+import HotelSettingsPage from './components/HotelSettingsPage';
+import HotelInfoPage from './components/HotelInfoPage';
+import UsersPage from './components/UsersPage';
 import { LanguageContext } from './contexts/LanguageContext';
 import { User } from './types';
 
@@ -26,7 +29,7 @@ export interface ThemeSettings {
   topbarColor: 'light' | 'dark';
 }
 
-export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports' | 'archives' | 'notifications';
+export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports' | 'archives' | 'notifications' | 'hotel-settings' | 'hotel-info' | 'hotel-users';
 
 const defaultSettings: ThemeSettings = {
   colorScheme: 'light',
@@ -73,11 +76,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                     {currentPage === 'guests' && <GuestsPage />}
                     {currentPage === 'agencies' && <BookingAgenciesPage />}
                     {currentPage === 'orders' && <OrdersPage />}
-                    {/* FIX: Pass user prop to ReceiptsPage to resolve type error */}
                     {currentPage === 'receipts' && <ReceiptsPage user={user} />}
                     {currentPage === 'reports' && <ReportsPage />}
                     {currentPage === 'archives' && <ArchivesPage />}
                     {currentPage === 'notifications' && <NotificationsPage />}
+                    {currentPage === 'hotel-settings' && <HotelSettingsPage setCurrentPage={setCurrentPage} />}
+                    {currentPage === 'hotel-info' && <HotelInfoPage />}
+                    {currentPage === 'hotel-users' && <UsersPage />}
                 </main>
             </div>
             <SettingsCog settings={settings} setSettings={setSettings} />

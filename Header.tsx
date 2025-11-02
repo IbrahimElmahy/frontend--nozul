@@ -45,7 +45,6 @@ interface HeaderProps {
   user: User | null;
 }
 
-// FIX: Added missing 'hotel-info' and 'hotel-users' properties to the pageDetails object to satisfy the Record<Page, ...> type, resolving a TypeScript error.
 const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationKey, parent?: TranslationKey}> = {
     dashboard: { title: 'header.dashboard', breadcrumb: 'header.hotelName' },
     profile: { title: 'header.userInformation', breadcrumb: 'header.dashboard', parent: 'header.dashboard' },

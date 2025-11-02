@@ -179,6 +179,7 @@ const pageMapping: Record<string, Page> = {
     reports: 'reports',
     archives: 'archives',
     notifications: 'notifications',
+    settings: 'hotel-settings',
 };
 
 
