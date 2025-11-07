@@ -138,14 +138,15 @@ const BookingAgenciesPage: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
-    const tableHeaders: { key: keyof BookingAgency | 'actions', labelKey: string }[] = [
-        { key: 'id', labelKey: 'agencies.th_id' },
+    const tableHeaders: { key: keyof BookingAgency | 'actions', labelKey: string, className?: string }[] = [
+        { key: 'id', labelKey: 'agencies.th_id', className: 'hidden 2xl:table-cell' },
         { key: 'name', labelKey: 'agencies.th_name' },
-        { key: 'mobileNumber', labelKey: 'agencies.th_mobileNumber' },
-        { key: 'country', labelKey: 'agencies.th_country' },
-        { key: 'agencyType', labelKey: 'agencies.th_agencyType' },
-        { key: 'idType', labelKey: 'agencies.th_idType' },
-        { key: 'idNumber', labelKey: 'agencies.th_idNumber' },
+        { key: 'mobileNumber', labelKey: 'agencies.th_mobileNumber', className: 'hidden sm:table-cell' },
+        { key: 'country', labelKey: 'agencies.th_country', className: 'hidden md:table-cell' },
+        { key: 'agencyType', labelKey: 'agencies.th_agencyType', className: 'hidden lg:table-cell' },
+        { key: 'idType', labelKey: 'agencies.th_idType', className: 'hidden xl:table-cell' },
+        { key: 'idNumber', labelKey: 'agencies.th_idNumber', className: 'hidden xl:table-cell' },
+        { key: 'createdAt', labelKey: 'agencies.th_createdAt', className: 'hidden 2xl:table-cell' },
         { key: 'status', labelKey: 'agencies.th_status' },
         { key: 'actions', labelKey: 'agencies.th_actions' },
     ];
@@ -166,6 +167,8 @@ const BookingAgenciesPage: React.FC = () => {
               {t(`agencies.status_${value as AgencyStatus}`)}
             </span>
           );
+        case 'createdAt':
+            return new Date(value as string).toLocaleDateString();
         default:
           return (value as string) || '-';
       }
@@ -259,7 +262,7 @@ const BookingAgenciesPage: React.FC = () => {
                             <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                                 <tr>
                                     {tableHeaders.map(header => (
-                                        <th key={header.key} scope="col" className="px-6 py-3">
+                                        <th key={header.key} scope="col" className={`px-2 py-2 ${header.className || ''}`}>
                                              <button 
                                                 className="flex items-center gap-1.5 group" 
                                                 onClick={() => requestSort(header.key as keyof BookingAgency)}
@@ -281,7 +284,7 @@ const BookingAgenciesPage: React.FC = () => {
                                 {paginatedAgencies.map(agency => (
                                     <tr key={agency.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                        {tableHeaders.map(header => (
-                                            <td key={`${agency.id}-${header.key}`} className="px-6 py-4 whitespace-nowrap">
+                                            <td key={`${agency.id}-${header.key}`} className={`px-2 py-2 whitespace-nowrap ${header.className || ''}`}>
                                                 {header.key === 'actions' ? (
                                                     <div className="flex items-center gap-1">
                                                         <button onClick={() => setViewingAgency(agency)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>

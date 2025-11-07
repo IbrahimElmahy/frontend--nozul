@@ -215,15 +215,17 @@ const BookingsPage: React.FC = () => {
         'check-out': { labelKey: 'bookings.status_check_out', className: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300' }
     };
 
-    const tableHeaders: { key: keyof Booking | 'actions', labelKey: string, numeric?: boolean }[] = [
+    const tableHeaders: { key: keyof Booking | 'actions', labelKey: string, numeric?: boolean, className?: string }[] = [
         { key: 'bookingNumber', labelKey: 'bookings.th_bookingNumber' },
         { key: 'guestName', labelKey: 'bookings.th_guestName' },
-        { key: 'unitName', labelKey: 'bookings.th_unitName' },
-        { key: 'checkInDate', labelKey: 'bookings.th_checkInDate' },
-        { key: 'checkOutDate', labelKey: 'bookings.th_checkOutDate' },
+        { key: 'unitName', labelKey: 'bookings.th_unitName', className: 'hidden sm:table-cell' },
+        { key: 'checkInDate', labelKey: 'bookings.th_checkInDate', className: 'hidden md:table-cell' },
+        { key: 'checkOutDate', labelKey: 'bookings.th_checkOutDate', className: 'hidden md:table-cell' },
+        { key: 'rentType', labelKey: 'bookings.th_rentType', className: 'hidden lg:table-cell' },
         { key: 'status', labelKey: 'bookings.th_status' },
-        { key: 'total', labelKey: 'bookings.th_total', numeric: true },
+        { key: 'total', labelKey: 'bookings.th_total', numeric: true, className: 'hidden xl:table-cell' },
         { key: 'balance', labelKey: 'bookings.th_balance', numeric: true },
+        { key: 'createdAt', labelKey: 'bookings.th_createdAt', className: 'hidden 2xl:table-cell' },
         { key: 'actions', labelKey: 'bookings.th_actions' },
     ];
 
@@ -338,7 +340,7 @@ const BookingsPage: React.FC = () => {
                             <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                                 <tr>
                                     {tableHeaders.map(header => (
-                                        <th key={header.key} scope="col" className={`px-6 py-3 ${header.numeric || header.key === 'actions' ? 'text-end' : 'text-start'}`}>
+                                        <th key={header.key} scope="col" className={`px-4 py-3 ${header.numeric || header.key === 'actions' ? 'text-end' : 'text-start'} ${header.className || ''}`}>
                                             {header.key !== 'actions' ? (
                                                 <button 
                                                     className="flex items-center gap-1.5 group" 
@@ -365,7 +367,7 @@ const BookingsPage: React.FC = () => {
                                 {paginatedBookings.map(booking => (
                                     <tr key={booking.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                         {tableHeaders.map(header => (
-                                            <td key={`${booking.id}-${header.key}`} className={`px-6 py-4 ${header.numeric || header.key === 'actions' ? 'text-end' : 'text-start'}`}>
+                                            <td key={`${booking.id}-${header.key}`} className={`px-4 py-3 whitespace-nowrap ${header.numeric || header.key === 'actions' ? 'text-end' : 'text-start'} ${header.className || ''}`}>
                                                 {header.key === 'actions' ? (
                                                     <div className="flex items-center gap-1 justify-end">
                                                         <button 
@@ -394,16 +396,20 @@ const BookingsPage: React.FC = () => {
                                                     <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusConfig[booking.status].className}`}>
                                                         {t(statusConfig[booking.status].labelKey as any)}
                                                     </span>
-                                                ) : header.key === 'checkInDate' || header.key === 'checkOutDate' ? (
-                                                    <span className="text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">
+                                                ) : header.key === 'checkInDate' || header.key === 'checkOutDate' || header.key === 'createdAt' ? (
+                                                    <span className="text-slate-800 dark:text-slate-200 font-medium">
                                                         {formatDate(booking[header.key] as string)}
                                                     </span>
+                                                ) : header.key === 'rentType' ? (
+                                                    <span className="font-medium">
+                                                        {t(`bookings.rent_${booking.rentType}` as any)}
+                                                    </span>
                                                 ) : header.key === 'balance' ? (
-                                                    <span className={`font-medium whitespace-nowrap font-mono ${booking.balance < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                                    <span className={`font-medium font-mono ${booking.balance < 0 ? 'text-red-500' : 'text-green-500'}`}>
                                                         {booking.balance.toFixed(2)}
                                                     </span>
                                                 ) : (
-                                                    <span className={`text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap ${header.numeric ? 'font-mono' : ''}`}>
+                                                    <span className={`text-slate-800 dark:text-slate-200 font-medium ${header.numeric ? 'font-mono' : ''}`}>
                                                         {(booking[header.key as keyof Booking] || '').toString()}
                                                     </span>
                                                 )}

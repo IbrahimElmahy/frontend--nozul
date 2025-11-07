@@ -140,12 +140,15 @@ const GuestsPage: React.FC = () => {
         }
     };
 
-    const tableHeaders: { key: keyof Guest | 'actions', labelKey: string }[] = [
+    const tableHeaders: { key: keyof Guest | 'actions', labelKey: string, className?: string }[] = [
+        { key: 'id', labelKey: 'guests.th_id', className: 'hidden 2xl:table-cell' },
         { key: 'name', labelKey: 'guests.th_name' },
-        { key: 'phone_number', labelKey: 'guests.th_mobileNumber' },
-        { key: 'country_display', labelKey: 'guests.th_nationality' },
-        { key: 'guest_type', labelKey: 'guests.th_guestType' },
-        { key: 'id_number', labelKey: 'guests.th_idNumber' },
+        { key: 'phone_number', labelKey: 'guests.th_mobileNumber', className: 'hidden sm:table-cell' },
+        { key: 'id_number', labelKey: 'guests.th_idNumber', className: 'hidden md:table-cell' },
+        { key: 'guest_type', labelKey: 'guests.th_guestType', className: 'hidden lg:table-cell' },
+        { key: 'ids', labelKey: 'guests.th_idType', className: 'hidden xl:table-cell' },
+        { key: 'country_display', labelKey: 'guests.th_nationality', className: 'hidden xl:table-cell' },
+        { key: 'created_at', labelKey: 'guests.th_createdAt', className: 'hidden 2xl:table-cell' },
         { key: 'is_active', labelKey: 'guests.th_status' },
         { key: 'actions', labelKey: 'guests.th_actions' },
     ];
@@ -189,33 +192,48 @@ const GuestsPage: React.FC = () => {
                         <table className="w-full text-sm text-start text-slate-500 dark:text-slate-400">
                             <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                                 <tr>
-                                    {tableHeaders.map(header => <th key={header.key} scope="col" className="px-6 py-3">{t(header.labelKey as any)}</th>)}
+                                    {tableHeaders.map(header => <th key={header.key} scope="col" className={`px-2 py-2 ${header.className || ''}`}>{t(header.labelKey as any)}</th>)}
                                 </tr>
                             </thead>
                             <tbody>
                                 {guests.map(guest => (
                                     <tr key={guest.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                        <td className="px-6 py-4">{guest.name}</td>
-                                        <td className="px-6 py-4">{guest.phone_number}</td>
-                                        <td className="px-6 py-4">{guest.country_display}</td>
-                                        <td className="px-6 py-4">{guest.guest_type}</td>
-                                        <td className="px-6 py-4">{guest.id_number}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${guest.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                                {guest.is_active ? t('guests.status_active') : t('guests.status_inactive')}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-1">
-                                                <button onClick={() => setViewingGuest(guest)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
-                                                <button onClick={() => handleEditClick(guest)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
-                                                <button onClick={() => setGuestToAction({ guest, action: 'delete' })} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
-                                                {guest.is_active ? 
-                                                    <button onClick={() => setGuestToAction({ guest, action: 'deactivate' })} className="p-1.5 rounded-full text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/10" title="Deactivate"><XCircleIcon className="w-5 h-5"/></button> :
-                                                    <button onClick={() => setGuestToAction({ guest, action: 'activate' })} className="p-1.5 rounded-full text-green-500 hover:bg-green-100 dark:hover:bg-green-500/10" title="Activate"><CheckCircleIcon className="w-5 h-5"/></button>
-                                                }
-                                            </div>
-                                        </td>
+                                        {tableHeaders.map(header => {
+                                            const key = header.key;
+                                            let content: React.ReactNode;
+
+                                            if (key === 'actions') {
+                                                content = (
+                                                    <div className="flex items-center gap-1">
+                                                        <button onClick={() => setViewingGuest(guest)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
+                                                        <button onClick={() => handleEditClick(guest)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
+                                                        <button onClick={() => setGuestToAction({ guest, action: 'delete' })} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
+                                                        {guest.is_active ? 
+                                                            <button onClick={() => setGuestToAction({ guest, action: 'deactivate' })} className="p-1.5 rounded-full text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/10" title="Deactivate"><XCircleIcon className="w-5 h-5"/></button> :
+                                                            <button onClick={() => setGuestToAction({ guest, action: 'activate' })} className="p-1.5 rounded-full text-green-500 hover:bg-green-100 dark:hover:bg-green-500/10" title="Activate"><CheckCircleIcon className="w-5 h-5"/></button>
+                                                        }
+                                                    </div>
+                                                );
+                                            } else if (key === 'is_active') {
+                                                content = (
+                                                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${guest.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
+                                                        {guest.is_active ? t('guests.status_active') : t('guests.status_inactive')}
+                                                    </span>
+                                                );
+                                            } else if (key === 'id') {
+                                                content = <span className="font-mono text-xs">{guest.id.substring(0, 8)}</span>;
+                                            } else if (key === 'created_at') {
+                                                content = new Date(guest.created_at).toLocaleDateString();
+                                            } else {
+                                                content = (guest[key as keyof Guest] as string) || '-';
+                                            }
+
+                                            return (
+                                                <td key={key} className={`px-2 py-2 whitespace-nowrap ${header.className || ''}`}>
+                                                    {content}
+                                                </td>
+                                            );
+                                        })}
                                     </tr>
                                 ))}
                             </tbody>
