@@ -45,7 +45,6 @@ interface HeaderProps {
   user: User | null;
 }
 
-// FIX: Added missing 'hotel-info' and 'hotel-users' properties to the pageDetails object to satisfy the Record<Page, ...> type, resolving a TypeScript error.
 const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationKey, parent?: TranslationKey}> = {
     dashboard: { title: 'header.dashboard', breadcrumb: 'header.hotelName' },
     profile: { title: 'header.userInformation', breadcrumb: 'header.dashboard', parent: 'header.dashboard' },
@@ -61,6 +60,10 @@ const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationK
     'hotel-settings': { title: 'hotelSettings.pageTitle', breadcrumb: 'sidebar.settings', parent: 'sidebar.other' },
     'hotel-info': { title: 'hotelInfo.pageTitle', breadcrumb: 'hotelInfo.breadcrumb', parent: 'sidebar.settings' },
     'hotel-users': { title: 'usersPage.pageTitle', breadcrumb: 'usersPage.breadcrumb', parent: 'sidebar.settings' },
+    'apartment-prices': { title: 'apartmentPrices.pageTitle', breadcrumb: 'hotelSettings.manageApartmentPrices', parent: 'sidebar.settings' },
+    // FIX: Add missing 'peak-times' and 'taxes' entries to pageDetails record to satisfy the Page type.
+    'peak-times': { title: 'peakTimes.pageTitle', breadcrumb: 'hotelSettings.managePeakTimes', parent: 'sidebar.settings' },
+    'taxes': { title: 'taxes.pageTitle', breadcrumb: 'hotelSettings.manageTaxes', parent: 'sidebar.settings' },
 }
 
 const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage, user }) => {

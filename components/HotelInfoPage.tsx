@@ -3,6 +3,9 @@ import { LanguageContext } from '../contexts/LanguageContext';
 import PhoneNumberInput from './PhoneNumberInput';
 import SearchableSelect from './SearchableSelect';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
+import { Page } from '../App';
+import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
+
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
@@ -24,8 +27,12 @@ const FormField: React.FC<{ label: string; children: React.ReactNode; className?
     );
 };
 
-const HotelInfoPage: React.FC = () => {
-    const { t } = useContext(LanguageContext);
+interface HotelInfoPageProps {
+    setCurrentPage: (page: Page) => void;
+}
+
+const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
+    const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState({
         englishName: 'demo',
         arabicName: 'demo',
@@ -58,50 +65,62 @@ const HotelInfoPage: React.FC = () => {
 
 
     return (
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-            <Section title={t('hotelInfo.hotelManagement')}>
-                <FormField label={t('hotelInfo.englishName')}><input name="englishName" value={formData.englishName} onChange={handleInputChange} className={inputClass} /></FormField>
-                <FormField label={t('hotelInfo.arabicName')}><input name="arabicName" value={formData.arabicName} onChange={handleInputChange} className={inputClass} /></FormField>
-                <FormField label={t('hotelInfo.email')}><input name="email" type="email" value={formData.email} onChange={handleInputChange} className={inputClass} /></FormField>
-                <FormField label={t('hotelInfo.companyLogo')}><input type="file" className={fileInputClass} /></FormField>
-                <FormField label={t('hotelInfo.poBox')}><input name="poBox" value={formData.poBox} onChange={handleInputChange} className={inputClass} /></FormField>
-                <FormField label={t('hotelInfo.location')}><input name="location" value={formData.location} onChange={handleInputChange} className={inputClass} /></FormField>
-            </Section>
-
-            <Section title={t('hotelInfo.addressInfo')}>
-                <FormField label={t('hotelInfo.country')}><SearchableSelect id="country" options={['Saudi Arabia', 'Egypt', 'UAE']} value={formData.country} onChange={val => setFormData(p => ({...p, country: val}))} /></FormField>
-                <FormField label={t('hotelInfo.city')}><input name="city" value={formData.city} onChange={handleInputChange} className={inputClass} /></FormField>
-                <FormField label={t('hotelInfo.district')}><input name="district" value={formData.district} onChange={handleInputChange} className={inputClass} /></FormField>
-                <FormField label={t('hotelInfo.street')}><input name="street" value={formData.street} onChange={handleInputChange} className={inputClass} /></FormField>
-                <FormField label={t('hotelInfo.timeZone')}><SearchableSelect id="timezone" options={['(GMT+03:00) Riyadh', '(GMT+04:00) Dubai']} value={formData.timeZone} onChange={val => setFormData(p => ({...p, timeZone: val}))} /></FormField>
-                <FormField label={t('hotelInfo.postalCode')}><input name="postalCode" value={formData.postalCode} onChange={handleInputChange} className={inputClass} /></FormField>
-            </Section>
-
-            <Section title={t('hotelInfo.companyInfo')}>
-                <FormField label={t('hotelInfo.taxNumber')}><input name="taxNumber" value={formData.taxNumber} onChange={handleInputChange} className={inputClass} /></FormField>
-                <FormField label={t('hotelInfo.commercialRegNo')}><input name="commercialRegNo" value={formData.commercialRegNo} onChange={handleInputChange} className={inputClass} /></FormField>
-            </Section>
-            
-            <Section title={t('hotelInfo.contactInfo')}>
-                <FormField label={t('hotelInfo.mobileNumber')}><PhoneNumberInput value={formData.mobileNumber} onChange={val => setFormData(p => ({...p, mobileNumber: val}))} /></FormField>
-                <FormField label={t('hotelInfo.phoneNumber')}><PhoneNumberInput value={formData.phoneNumber} onChange={val => setFormData(p => ({...p, phoneNumber: val}))} /></FormField>
-                <FormField label={t('hotelInfo.quickContact')}><PhoneNumberInput value={formData.quickContact} onChange={val => setFormData(p => ({...p, quickContact: val}))} /></FormField>
-                <FormField label={t('hotelInfo.fax')}><PhoneNumberInput value={formData.fax} onChange={val => setFormData(p => ({...p, fax: val}))} /></FormField>
-            </Section>
-            
-             <Section title={t('hotelInfo.description')}>
-                <FormField label="" className="md:col-span-2">
-                    <textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} placeholder={t('hotelInfo.descriptionPlaceholder')} className={inputClass}></textarea>
-                </FormField>
-            </Section>
-            
-            <div className="flex justify-start">
-                <button type="submit" className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
-                    <CheckCircleIcon className="w-5 h-5" />
-                    <span>{t('hotelInfo.saveChanges')}</span>
+        <div className="space-y-6">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('hotelInfo.pageTitle')}</h2>
+                <button
+                    onClick={() => setCurrentPage('hotel-settings')}
+                    className={`flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-2 px-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${language === 'ar' ? 'flex-row-reverse' : ''}`}
+                >
+                    <ChevronLeftIcon className={`w-5 h-5 transform ${language === 'ar' ? 'rotate-180' : ''}`} />
+                    <span>{t('buttons.back')}</span>
                 </button>
             </div>
-        </form>
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+                <Section title={t('hotelInfo.hotelManagement')}>
+                    <FormField label={t('hotelInfo.englishName')}><input name="englishName" value={formData.englishName} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.arabicName')}><input name="arabicName" value={formData.arabicName} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.email')}><input name="email" type="email" value={formData.email} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.companyLogo')}><input type="file" className={fileInputClass} /></FormField>
+                    <FormField label={t('hotelInfo.poBox')}><input name="poBox" value={formData.poBox} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.location')}><input name="location" value={formData.location} onChange={handleInputChange} className={inputClass} /></FormField>
+                </Section>
+    
+                <Section title={t('hotelInfo.addressInfo')}>
+                    <FormField label={t('hotelInfo.country')}><SearchableSelect id="country" options={['Saudi Arabia', 'Egypt', 'UAE']} value={formData.country} onChange={val => setFormData(p => ({...p, country: val}))} /></FormField>
+                    <FormField label={t('hotelInfo.city')}><input name="city" value={formData.city} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.district')}><input name="district" value={formData.district} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.street')}><input name="street" value={formData.street} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.timeZone')}><SearchableSelect id="timezone" options={['(GMT+03:00) Riyadh', '(GMT+04:00) Dubai']} value={formData.timeZone} onChange={val => setFormData(p => ({...p, timeZone: val}))} /></FormField>
+                    <FormField label={t('hotelInfo.postalCode')}><input name="postalCode" value={formData.postalCode} onChange={handleInputChange} className={inputClass} /></FormField>
+                </Section>
+    
+                <Section title={t('hotelInfo.companyInfo')}>
+                    <FormField label={t('hotelInfo.taxNumber')}><input name="taxNumber" value={formData.taxNumber} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.commercialRegNo')}><input name="commercialRegNo" value={formData.commercialRegNo} onChange={handleInputChange} className={inputClass} /></FormField>
+                </Section>
+                
+                <Section title={t('hotelInfo.contactInfo')}>
+                    <FormField label={t('hotelInfo.mobileNumber')}><PhoneNumberInput value={formData.mobileNumber} onChange={val => setFormData(p => ({...p, mobileNumber: val}))} /></FormField>
+                    <FormField label={t('hotelInfo.phoneNumber')}><PhoneNumberInput value={formData.phoneNumber} onChange={val => setFormData(p => ({...p, phoneNumber: val}))} /></FormField>
+                    <FormField label={t('hotelInfo.quickContact')}><PhoneNumberInput value={formData.quickContact} onChange={val => setFormData(p => ({...p, quickContact: val}))} /></FormField>
+                    <FormField label={t('hotelInfo.fax')}><PhoneNumberInput value={formData.fax} onChange={val => setFormData(p => ({...p, fax: val}))} /></FormField>
+                </Section>
+                
+                 <Section title={t('hotelInfo.description')}>
+                    <FormField label="" className="md:col-span-2">
+                        <textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} placeholder={t('hotelInfo.descriptionPlaceholder')} className={inputClass}></textarea>
+                    </FormField>
+                </Section>
+                
+                <div className="flex justify-start">
+                    <button type="submit" className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
+                        <CheckCircleIcon className="w-5 h-5" />
+                        <span>{t('hotelInfo.saveChanges')}</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 };
 

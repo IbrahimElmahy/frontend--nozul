@@ -1,5 +1,8 @@
 export const translations = {
   ar: {
+    buttons: {
+        back: "رجوع",
+    },
     "walid_ullah": "وليد উল্লাহ",
     "manager": "مدير",
     "notifications": "إشعارات",
@@ -870,9 +873,72 @@ export const translations = {
     userDetailsModal: {
         title: "تفاصيل المستخدم",
         activity: "النشاط",
-    }
+    },
+    apartmentPrices: {
+        pageTitle: "إدارة أسعار الشقق",
+        searchInfo: "معلومات البحث",
+        th_id: "#",
+        th_apartment: "الشقق السكنية",
+        th_roomType: "نوع الغرفة",
+        th_floor: "الطابق",
+        th_rooms: "الغرف",
+        th_price_group: "السعر",
+        th_daily: "اليومي",
+        th_monthly: "بالشهر",
+        th_peak: "الذروة",
+        th_price: "السعر",
+        th_lowestPrice: "اقل سعر",
+        th_action: "الحدث",
+        view: {
+            title: "معاينة أسعار الشقة"
+        },
+        edit: {
+            title: "تعديل أسعار الشقة"
+        }
+    },
+    peakTimes: {
+      pageTitle: "إدارة اوقات الذروة",
+      addPeakTime: "إضافة وقت ذروة",
+      th_id: "#",
+      th_item: "الصنف",
+      th_startDate: "تاريخ البداية",
+      th_endDate: "تاريخ النهاية",
+      th_saturday: "السبت",
+      th_sunday: "الأحد",
+      th_monday: "الاثنين",
+      th_tuesday: "يوم الثلاثاء",
+      th_wednesday: "الأربعاء",
+      th_thursday: "يوم الخميس",
+      th_friday: "الجمعة",
+      th_createdAt: "تاريخ الإنشاء",
+      th_updatedAt: "تاريخ التعديل",
+      th_actions: "الحدث",
+    },
+    taxes: {
+      pageTitle: "إدارة الضرائب",
+      addTax: "إضافة ضريبة",
+      th_id: "#",
+      th_name: "الاسم",
+      th_tax: "الضريبة",
+      th_applyTo: "تطبّق على",
+      th_startDate: "تاريخ البداية",
+      th_endDate: "تاريخ النهاية",
+      th_addedToFees: "مضافة في الرسوم",
+      th_subjectToVat: "خاضع للقيمة المضافة",
+      th_status: "الحالة",
+      th_createdAt: "تاريخ الإنشاء",
+      th_updatedAt: "تاريخ التعديل",
+      th_actions: "الحدث",
+      applyTo_bookings: "الحجوزات",
+      applyTo_services: "الخدمات",
+      status_active: "مفعل",
+      status_inactive: "غير مفعل",
+    },
   },
   en: {
+    buttons: {
+        back: "Back",
+    },
     "walid_ullah": "Walid Ullah",
     "manager": "Manager",
     "notifications": "Notifications",
@@ -1743,11 +1809,72 @@ export const translations = {
     userDetailsModal: {
         title: "User Details",
         activity: "Activity",
-    }
+    },
+    apartmentPrices: {
+        pageTitle: "Manage Apartment Prices",
+        searchInfo: "Search Information",
+        th_id: "#",
+        th_apartment: "Apartment",
+        th_roomType: "Room Type",
+        th_floor: "Floor",
+        th_rooms: "Rooms",
+        th_price_group: "Price",
+        th_daily: "Daily",
+        th_monthly: "Monthly",
+        th_peak: "Peak",
+        th_price: "Price",
+        th_lowestPrice: "Lowest Price",
+        th_action: "Action",
+        view: {
+            title: "View Apartment Prices"
+        },
+        edit: {
+            title: "Edit Apartment Prices"
+        }
+    },
+    peakTimes: {
+      pageTitle: "Manage Peak Times",
+      addPeakTime: "Add Peak Time",
+      th_id: "#",
+      th_item: "Item",
+      th_startDate: "Start Date",
+      th_endDate: "End Date",
+      th_saturday: "Saturday",
+      th_sunday: "Sunday",
+      th_monday: "Monday",
+      th_tuesday: "Tuesday",
+      th_wednesday: "Wednesday",
+      th_thursday: "Thursday",
+      th_friday: "Friday",
+      th_createdAt: "Created At",
+      th_updatedAt: "Updated At",
+      th_actions: "Actions",
+    },
+    taxes: {
+      pageTitle: "Manage Taxes",
+      addTax: "Add Tax",
+      th_id: "#",
+      th_name: "Name",
+      th_tax: "Tax",
+      th_applyTo: "Apply To",
+      th_startDate: "Start Date",
+      th_endDate: "End Date",
+      th_addedToFees: "Added in Fees",
+      th_subjectToVat: "Subject to VAT",
+      th_status: "Status",
+      th_createdAt: "Created At",
+      th_updatedAt: "Updated At",
+      th_actions: "Actions",
+      applyTo_bookings: "Bookings",
+      applyTo_services: "Services",
+      status_active: "Active",
+      status_inactive: "Inactive",
+    },
   },
 };
 
 export type TranslationKey = keyof typeof translations.ar | keyof typeof translations.en |
+  `buttons.${keyof typeof translations.ar.buttons}` |
   `userMenu.${keyof typeof translations.ar.userMenu}` |
   `sidebar.${keyof typeof translations.ar.sidebar}` |
   `header.${keyof typeof translations.ar.header}` |
@@ -1790,4 +1917,9 @@ export type TranslationKey = keyof typeof translations.ar | keyof typeof transla
   `usersPage.${keyof typeof translations.ar.usersPage}` |
   `addUserPanel.${keyof typeof translations.ar.addUserPanel}` |
   `addUserPanel.permissionsList.${keyof typeof translations.ar.addUserPanel.permissionsList}` |
-  `userDetailsModal.${keyof typeof translations.ar.userDetailsModal}`;
+  `userDetailsModal.${keyof typeof translations.ar.userDetailsModal}` |
+  `apartmentPrices.${keyof typeof translations.ar.apartmentPrices}` |
+  `apartmentPrices.view.${keyof typeof translations.ar.apartmentPrices.view}` |
+  `apartmentPrices.edit.${keyof typeof translations.ar.apartmentPrices.edit}` |
+  `peakTimes.${keyof typeof translations.ar.peakTimes}` |
+  `taxes.${keyof typeof translations.ar.taxes}`;

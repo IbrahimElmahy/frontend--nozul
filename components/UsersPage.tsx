@@ -11,6 +11,8 @@ import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
 import AddUserPanel from './AddUserPanel';
 import ConfirmationModal from './ConfirmationModal';
 import UserDetailsModal from './UserDetailsModal';
+import { Page } from '../App';
+
 
 const mockUsers: HotelUser[] = [
     { id: 1, username: 'demo_hotel', name: 'table-userdemo', mobile: '+966567289647', email: 'demo@gmail.com', role: 'مدير', status: 'active', gender: '-', lastLogin: '2025-11-02 14:55:28', createdAt: '2025-06-16 14:41:54', updatedAt: '2025-06-16 14:41:54', dob: '1995-03-14', isManager: true, permissions: {} },
@@ -32,12 +34,16 @@ const newUserTemplate: Omit<HotelUser, 'id' | 'lastLogin' | 'createdAt' | 'updat
     permissions: {},
 };
 
+interface UsersPageProps {
+    setCurrentPage: (page: Page) => void;
+}
 
-const UsersPage: React.FC = () => {
-    const { t } = useContext(LanguageContext);
+const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
+    const { t, language } = useContext(LanguageContext);
     const [users, setUsers] = useState<HotelUser[]>(mockUsers);
     const [searchTerm, setSearchTerm] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
+    // FIX: Rename `currentPage` to `paginationCurrentPage` and `setCurrentPage` to `setPaginationCurrentPage` to avoid conflict with the `setCurrentPage` prop.
+    const [paginationCurrentPage, setPaginationCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
@@ -101,9 +107,9 @@ const UsersPage: React.FC = () => {
     
     const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
     const paginatedUsers = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
+        const startIndex = (paginationCurrentPage - 1) * itemsPerPage;
         return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredUsers, currentPage, itemsPerPage]);
+    }, [filteredUsers, paginationCurrentPage, itemsPerPage]);
 
     const tableHeaders = [
         'th_id', 'th_username', 'th_name', 'th_mobile', 'th_email', 'th_role', 'th_status', 'th_gender', 
@@ -113,11 +119,20 @@ const UsersPage: React.FC = () => {
     return (
         <div className="space-y-6">
              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('usersPage.pageTitle')}</h2>
+                <div className="flex items-center gap-4">
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('usersPage.pageTitle')}</h2>
+                </div>
                  <div className="flex flex-wrap items-center gap-2">
                     <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                         <PlusCircleIcon className="w-5 h-5" />
                         <span>{t('usersPage.addUser')}</span>
+                    </button>
+                    <button 
+                        onClick={() => setCurrentPage('hotel-settings')}
+                        className={`flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-2 px-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${language === 'ar' ? 'flex-row-reverse' : ''}`}
+                    >
+                        <ChevronLeftIcon className={`w-5 h-5 transform ${language === 'ar' ? 'rotate-180' : ''}`} />
+                        <span>{t('buttons.back')}</span>
                     </button>
                 </div>
             </div>
@@ -128,7 +143,7 @@ const UsersPage: React.FC = () => {
                         <span>{t('usersPage.showing')}</span>
                         <select
                             value={itemsPerPage}
-                            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setPaginationCurrentPage(1); }}
                             className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
                         >
                             <option value={10}>10</option>
@@ -142,7 +157,7 @@ const UsersPage: React.FC = () => {
                         <input
                             type="text"
                             value={searchTerm}
-                            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                            onChange={(e) => { setSearchTerm(e.target.value); setPaginationCurrentPage(1); }}
                             placeholder={t('guests.searchPlaceholder')}
                             className="w-full py-2 pl-10 pr-4 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200"
                         />
@@ -189,13 +204,13 @@ const UsersPage: React.FC = () => {
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} ${filteredUsers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(currentPage * itemsPerPage, filteredUsers.length)} ${t('usersPage.of')} ${filteredUsers.length} ${t('usersPage.entries')}`}
+                        {`${t('usersPage.showing')} ${filteredUsers.length > 0 ? (paginationCurrentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(paginationCurrentPage * itemsPerPage, filteredUsers.length)} ${t('usersPage.of')} ${filteredUsers.length} ${t('usersPage.entries')}`}
                     </div>
                     {totalPages > 1 && (
                          <nav className="flex items-center gap-1" aria-label="Pagination">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
+                            <button onClick={() => setPaginationCurrentPage(p => Math.max(1, p - 1))} disabled={paginationCurrentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
+                             <span className="text-sm font-semibold px-2">{paginationCurrentPage} / {totalPages}</span>
+                            <button onClick={() => setPaginationCurrentPage(p => Math.min(totalPages, p + 1))} disabled={paginationCurrentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
                         </nav>
                     )}
                 </div>

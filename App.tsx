@@ -17,6 +17,9 @@ import NotificationsPage from './components/NotificationsPage';
 import HotelSettingsPage from './components/HotelSettingsPage';
 import HotelInfoPage from './components/HotelInfoPage';
 import UsersPage from './components/UsersPage';
+import ApartmentPricesPage from './components/ApartmentPricesPage';
+import PeakTimesPage from './components/PeakTimesPage';
+import TaxesPage from './components/TaxesPage';
 import { LanguageContext } from './contexts/LanguageContext';
 import { User } from './types';
 
@@ -29,7 +32,7 @@ export interface ThemeSettings {
   topbarColor: 'light' | 'dark';
 }
 
-export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports' | 'archives' | 'notifications' | 'hotel-settings' | 'hotel-info' | 'hotel-users';
+export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports' | 'archives' | 'notifications' | 'hotel-settings' | 'hotel-info' | 'hotel-users' | 'apartment-prices' | 'peak-times' | 'taxes';
 
 const defaultSettings: ThemeSettings = {
   colorScheme: 'light',
@@ -81,8 +84,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                     {currentPage === 'archives' && <ArchivesPage />}
                     {currentPage === 'notifications' && <NotificationsPage />}
                     {currentPage === 'hotel-settings' && <HotelSettingsPage setCurrentPage={setCurrentPage} />}
-                    {currentPage === 'hotel-info' && <HotelInfoPage />}
-                    {currentPage === 'hotel-users' && <UsersPage />}
+                    {currentPage === 'hotel-info' && <HotelInfoPage setCurrentPage={setCurrentPage} />}
+                    {currentPage === 'hotel-users' && <UsersPage setCurrentPage={setCurrentPage} />}
+                    {currentPage === 'apartment-prices' && <ApartmentPricesPage />}
+                    {currentPage === 'peak-times' && <PeakTimesPage />}
+                    {currentPage === 'taxes' && <TaxesPage />}
                 </main>
             </div>
             <SettingsCog settings={settings} setSettings={setSettings} />

@@ -60,6 +60,7 @@ const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationK
     'hotel-settings': { title: 'hotelSettings.pageTitle', breadcrumb: 'sidebar.settings', parent: 'sidebar.other' },
     'hotel-info': { title: 'hotelInfo.pageTitle', breadcrumb: 'hotelInfo.breadcrumb', parent: 'sidebar.settings' },
     'hotel-users': { title: 'usersPage.pageTitle', breadcrumb: 'usersPage.breadcrumb', parent: 'sidebar.settings' },
+    'apartment-prices': { title: 'apartmentPrices.pageTitle', breadcrumb: 'hotelSettings.manageApartmentPrices', parent: 'sidebar.settings' },
 }
 
 const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage, user }) => {

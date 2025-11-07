@@ -236,3 +236,48 @@ export interface HotelUser {
     notes?: string;
     permissions?: Record<string, boolean>;
 }
+
+export interface ApartmentPrice {
+    id: number;
+    apartmentName: string;
+    roomType: string;
+    floor: number;
+    rooms: number;
+    price: number;
+    dailyPrice: number;
+    dailyLowestPrice: number;
+    monthlyPrice: number;
+    monthlyLowestPrice: number;
+    peakPrice: number;
+    peakLowestPrice: number;
+}
+
+export interface PeakTime {
+    id: number;
+    item: string;
+    startDate: string;
+    endDate: string;
+    saturday: boolean;
+    sunday: boolean;
+    monday: boolean;
+    tuesday: boolean;
+    wednesday: boolean;
+    thursday: boolean;
+    friday: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface Tax {
+    id: number;
+    name: string;
+    tax: number;
+    applyTo: 'الحجوزات' | 'الخدمات';
+    startDate: string;
+    endDate: string;
+    addedToFees: boolean;
+    subjectToVat: boolean;
+    status: 'مفعل' | 'غير مفعل';
+    createdAt: string;
+    updatedAt: string;
+}

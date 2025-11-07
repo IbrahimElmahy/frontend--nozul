@@ -182,6 +182,8 @@ const pageMapping: Record<string, Page> = {
     settings: 'hotel-settings',
 };
 
+const settingsSubPages: Page[] = ['hotel-settings', 'hotel-info', 'hotel-users', 'apartment-prices', 'peak-times', 'taxes'];
+
 
 const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen, setMobileMenuOpen, setCurrentPage, currentPage, user }) => {
     const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
@@ -306,7 +308,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
                     <NavItem 
                         key={itemIndex}
                         {...item}
-                        active={currentPage === pageMapping[item.id]}
+                        active={item.id === 'settings' ? settingsSubPages.includes(currentPage) : currentPage === pageMapping[item.id]}
                         collapsed={isEffectivelyCollapsed}
                         sidebarColor={effectiveSidebarColor}
                         onClick={(e) => handleNavItemClick(e, item.id)}
