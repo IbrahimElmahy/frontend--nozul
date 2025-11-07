@@ -45,6 +45,7 @@ interface HeaderProps {
   user: User | null;
 }
 
+// FIX: Completed the `pageDetails` object by adding missing page entries to satisfy the `Record<Page, ...>` type definition, resolving a TypeScript error.
 const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationKey, parent?: TranslationKey}> = {
     dashboard: { title: 'header.dashboard', breadcrumb: 'header.hotelName' },
     profile: { title: 'header.userInformation', breadcrumb: 'header.dashboard', parent: 'header.dashboard' },
@@ -61,10 +62,15 @@ const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationK
     'hotel-info': { title: 'hotelInfo.pageTitle', breadcrumb: 'hotelInfo.breadcrumb', parent: 'sidebar.settings' },
     'hotel-users': { title: 'usersPage.pageTitle', breadcrumb: 'usersPage.breadcrumb', parent: 'sidebar.settings' },
     'apartment-prices': { title: 'apartmentPrices.pageTitle', breadcrumb: 'hotelSettings.manageApartmentPrices', parent: 'sidebar.settings' },
-    // FIX: Add missing 'peak-times' and 'taxes' entries to pageDetails record to satisfy the Page type.
     'peak-times': { title: 'peakTimes.pageTitle', breadcrumb: 'hotelSettings.managePeakTimes', parent: 'sidebar.settings' },
     'taxes': { title: 'taxes.pageTitle', breadcrumb: 'hotelSettings.manageTaxes', parent: 'sidebar.settings' },
-}
+    'items': { title: 'itemsPage.pageTitle', breadcrumb: 'hotelSettings.manageItems', parent: 'sidebar.settings' },
+    'currencies': { title: 'currenciesPage.pageTitle', breadcrumb: 'hotelSettings.manageCurrency', parent: 'sidebar.settings' },
+    'funds': { title: 'fundsPage.pageTitle', breadcrumb: 'hotelSettings.manageFunds', parent: 'sidebar.settings' },
+    'banks': { title: 'banksPage.pageTitle', breadcrumb: 'hotelSettings.manageBanks', parent: 'sidebar.settings' },
+    'expenses': { title: 'expensesPage.pageTitle', breadcrumb: 'hotelSettings.manageExpenses', parent: 'sidebar.settings' },
+    'hotel-conditions': { title: 'hotelConditions.pageTitle', breadcrumb: 'hotelSettings.manageConditions', parent: 'sidebar.settings' },
+};
 
 const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage, user }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);

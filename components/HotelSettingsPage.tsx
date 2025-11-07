@@ -57,12 +57,12 @@ const HotelSettingsPage: React.FC<HotelSettingsPageProps> = ({ setCurrentPage })
         { id: 'manageApartmentPrices', icon: CurrencySaudiRiyalIcon, page: 'apartment-prices' as Page },
         { id: 'managePeakTimes', icon: ClockIcon, page: 'peak-times' as Page },
         { id: 'manageTaxes', icon: CreditCardIcon, page: 'taxes' as Page },
-        { id: 'manageItems', icon: CartIcon, page: 'orders' as Page },
-        { id: 'manageCurrency', icon: CurrencyDollarIcon, page: 'dashboard' as Page },
-        { id: 'manageFunds', icon: ArchiveBoxIcon, page: 'dashboard' as Page },
-        { id: 'manageBanks', icon: CreditCardIcon, page: 'dashboard' as Page },
-        { id: 'manageExpenses', icon: CreditCardIcon, page: 'dashboard' as Page },
-        { id: 'manageConditions', icon: ClipboardDocumentListIcon, page: 'dashboard' as Page },
+        { id: 'manageItems', icon: CartIcon, page: 'items' as Page },
+        { id: 'manageCurrency', icon: CurrencyDollarIcon, page: 'currencies' as Page },
+        { id: 'manageFunds', icon: ArchiveBoxIcon, page: 'funds' as Page },
+        { id: 'manageBanks', icon: CreditCardIcon, page: 'banks' as Page },
+        { id: 'manageExpenses', icon: CreditCardIcon, page: 'expenses' as Page },
+        { id: 'manageConditions', icon: ClipboardDocumentListIcon, page: 'hotel-conditions' as Page },
     ];
 
 

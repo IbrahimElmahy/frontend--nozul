@@ -10,23 +10,87 @@ import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
 import EyeIcon from './icons-redesign/EyeIcon';
 import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
+import AddTaxPanel from './AddTaxPanel';
+import ConfirmationModal from './ConfirmationModal';
+import TaxDetailsModal from './TaxDetailsModal';
 
 const mockTaxes: Tax[] = [
     { id: 1, name: 'القيمة المضافة', tax: 15.0, applyTo: 'الحجوزات', startDate: '2025-01-07 01:00:00', endDate: '2031-01-09 01:00:00', addedToFees: false, subjectToVat: false, status: 'مفعل', createdAt: '2025-01-07 18:28:35', updatedAt: '2025-06-07 13:59:44' },
     { id: 2, name: 'القيمة المضافة', tax: 15.0, applyTo: 'الخدمات', startDate: '2025-10-07 00:00:00', endDate: '2026-02-26 01:00:00', addedToFees: false, subjectToVat: false, status: 'مفعل', createdAt: '2025-10-07 14:21:10', updatedAt: '2025-10-07 14:21:10' },
 ];
 
+const newTaxTemplate: Omit<Tax, 'id' | 'createdAt' | 'updatedAt'> = {
+    name: '',
+    tax: 0,
+    applyTo: 'الحجوزات',
+    startDate: new Date().toISOString(),
+    endDate: new Date().toISOString(),
+    addedToFees: false,
+    subjectToVat: false,
+    status: 'مفعل',
+};
+
 const TaxesPage: React.FC = () => {
     const { t } = useContext(LanguageContext);
-    const [taxes] = useState<Tax[]>(mockTaxes);
+    const [taxes, setTaxes] = useState<Tax[]>(mockTaxes);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    
+    // UI State
+    const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
+    const [editingTax, setEditingTax] = useState<Tax | null>(null);
+    const [taxToDelete, setTaxToDelete] = useState<Tax | null>(null);
+    const [viewingTax, setViewingTax] = useState<Tax | null>(null);
+
 
     const totalPages = Math.ceil(taxes.length / itemsPerPage);
     const paginatedData = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         return taxes.slice(startIndex, startIndex + itemsPerPage);
     }, [taxes, currentPage, itemsPerPage]);
+
+    // Handlers
+    const handleClosePanel = () => {
+        setIsAddPanelOpen(false);
+        setEditingTax(null);
+    };
+
+    const handleSaveTax = (taxData: Omit<Tax, 'id' | 'createdAt' | 'updatedAt'>) => {
+        if (editingTax) {
+            const updatedTax = { ...editingTax, ...taxData, updatedAt: new Date().toISOString() };
+            setTaxes(taxes.map(t => t.id === updatedTax.id ? updatedTax : t));
+        } else {
+            const newTax: Tax = {
+                ...taxData,
+                id: Math.max(...taxes.map(t => t.id), 0) + 1,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            setTaxes(prev => [newTax, ...prev]);
+        }
+        handleClosePanel();
+    };
+
+    const handleAddNewClick = () => {
+        setEditingTax(null);
+        setIsAddPanelOpen(true);
+    };
+
+    const handleEditClick = (tax: Tax) => {
+        setEditingTax(tax);
+        setIsAddPanelOpen(true);
+    };
+
+    const handleDeleteClick = (tax: Tax) => {
+        setTaxToDelete(tax);
+    };
+
+    const handleConfirmDelete = () => {
+        if (taxToDelete) {
+            setTaxes(taxes.filter(t => t.id !== taxToDelete.id));
+            setTaxToDelete(null);
+        }
+    };
 
     const tableHeaders = [
         { key: 'th_id', className: '' },
@@ -47,7 +111,7 @@ const TaxesPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('taxes.pageTitle')}</h2>
-                 <button className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                 <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                     <PlusCircleIcon className="w-5 h-5" />
                     <span>{t('taxes.addTax')}</span>
                 </button>
@@ -99,7 +163,7 @@ const TaxesPage: React.FC = () => {
                                     <td className="px-4 py-2 hidden lg:table-cell"><input type="checkbox" checked={tax.addedToFees} readOnly className="form-checkbox h-4 w-4 text-blue-600 rounded" /></td>
                                     <td className="px-4 py-2 hidden lg:table-cell"><input type="checkbox" checked={tax.subjectToVat} readOnly className="form-checkbox h-4 w-4 text-blue-600 rounded" /></td>
                                     <td className="px-4 py-2">
-                                        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${tax.status === 'مفعل' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
                                             {tax.status}
                                         </span>
                                     </td>
@@ -107,9 +171,9 @@ const TaxesPage: React.FC = () => {
                                     <td className="px-4 py-2 hidden xl:table-cell">{tax.updatedAt}</td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center justify-center gap-1">
-                                            <button className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
-                                            <button className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
-                                            <button className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => setViewingTax(tax)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => handleEditClick(tax)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => handleDeleteClick(tax)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -131,6 +195,24 @@ const TaxesPage: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            <AddTaxPanel
+                isOpen={isAddPanelOpen}
+                onClose={handleClosePanel}
+                onSave={handleSaveTax}
+                initialData={editingTax || newTaxTemplate}
+                isEditing={!!editingTax}
+            />
+
+            <TaxDetailsModal tax={viewingTax} onClose={() => setViewingTax(null)} />
+            
+            <ConfirmationModal
+                isOpen={!!taxToDelete}
+                onClose={() => setTaxToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                title={t('taxes.deleteTaxTitle')}
+                message={t('taxes.confirmDeleteMessage')}
+            />
         </div>
     );
 };

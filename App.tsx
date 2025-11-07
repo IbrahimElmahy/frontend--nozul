@@ -20,6 +20,12 @@ import UsersPage from './components/UsersPage';
 import ApartmentPricesPage from './components/ApartmentPricesPage';
 import PeakTimesPage from './components/PeakTimesPage';
 import TaxesPage from './components/TaxesPage';
+import ItemsPage from './components/ItemsPage';
+import CurrenciesPage from './components/CurrenciesPage';
+import FundsPage from './components/FundsPage';
+import BanksPage from './components/BanksPage';
+import ExpensesPage from './components/ExpensesPage';
+import HotelConditionsPage from './components/HotelConditionsPage';
 import { LanguageContext } from './contexts/LanguageContext';
 import { User } from './types';
 
@@ -32,7 +38,7 @@ export interface ThemeSettings {
   topbarColor: 'light' | 'dark';
 }
 
-export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports' | 'archives' | 'notifications' | 'hotel-settings' | 'hotel-info' | 'hotel-users' | 'apartment-prices' | 'peak-times' | 'taxes';
+export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports' | 'archives' | 'notifications' | 'hotel-settings' | 'hotel-info' | 'hotel-users' | 'apartment-prices' | 'peak-times' | 'taxes' | 'items' | 'currencies' | 'funds' | 'banks' | 'expenses' | 'hotel-conditions';
 
 const defaultSettings: ThemeSettings = {
   colorScheme: 'light',
@@ -89,6 +95,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
                     {currentPage === 'apartment-prices' && <ApartmentPricesPage />}
                     {currentPage === 'peak-times' && <PeakTimesPage />}
                     {currentPage === 'taxes' && <TaxesPage />}
+                    {currentPage === 'items' && <ItemsPage />}
+                    {currentPage === 'currencies' && <CurrenciesPage />}
+                    {currentPage === 'funds' && <FundsPage />}
+                    {currentPage === 'banks' && <BanksPage />}
+                    {currentPage === 'expenses' && <ExpensesPage />}
+                    {currentPage === 'hotel-conditions' && <HotelConditionsPage />}
                 </main>
             </div>
             <SettingsCog settings={settings} setSettings={setSettings} />

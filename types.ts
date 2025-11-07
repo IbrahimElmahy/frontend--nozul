@@ -281,3 +281,55 @@ export interface Tax {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface Item {
+    id: number;
+    name_en: string;
+    name_ar: string;
+    services: number;
+    status: 'active' | 'inactive';
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface Currency {
+    id: number;
+    name_en: string;
+    name_ar: string;
+    type: 'local' | 'foreign';
+    exchange_rate: number;
+    status: 'active' | 'inactive';
+    symbol_en: string;
+    fraction_en: string;
+    symbol_ar: string;
+    fraction_ar: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface Fund {
+    id: number;
+    name_en: string;
+    name_ar: string;
+    status: 'active' | 'inactive';
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface Bank {
+    id: number;
+    name_en: string;
+    name_ar: string;
+    status: 'active' | 'inactive';
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface Expense {
+    id: number;
+    name_en: string;
+    name_ar: string;
+    status: 'active' | 'inactive';
+    createdAt: string;
+    updatedAt: string;
+}
