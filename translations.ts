@@ -97,10 +97,6 @@ export const translations = {
         loginButton: "تسجيل الدخول",
         loggingIn: "جاري تسجيل الدخول...",
         footerText: "جميع الحقوق محفوظة © نزلكم",
-        logoSubtitle: "نزلكم لإدارة الفنادق",
-        marketingTitle: "منصة نُزُلكم مهيأة لإدارة الفنادق الراقية",
-        marketingSubtitle: "حلول ضيافة متقدمة",
-        marketingDescription: "تتبع الحجوزات، المدفوعات، وتجارب الضيوف لحظة بلحظة عبر لوحة تحكم واحدة تمزج مع روح الضيافة العربية.",
     },
     settings: {
         title: "إعدادات المظهر",
@@ -1171,10 +1167,6 @@ export const translations = {
       loginButton: "Login",
       loggingIn: "Logging in...",
       footerText: "All rights reserved © Nuzulcom",
-      logoSubtitle: "Nuzulcom for Hotel Management",
-      marketingTitle: "An Elegant Platform for Managing Luxury Hotels",
-      marketingSubtitle: "Advanced Hospitality Solutions",
-      marketingDescription: "Track bookings, payments, and guest experiences in real-time through a single dashboard that blends with the spirit of Arabian hospitality.",
     },
     settings: {
       title: "Theme Settings",
