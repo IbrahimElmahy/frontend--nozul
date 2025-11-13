@@ -16,28 +16,47 @@ import InvoiceDetailsModal from './InvoiceDetailsModal';
 import InvoicePrintPreview from './InvoicePrintPreview';
 
 const mockReceipts: Receipt[] = [
-  { id: 1, receiptNumber: '0000000018', currency: 'SAR', value: 152.0, date: '2025-10-07', time: '16:57:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: null, createdAt: '2025-10-07 13:58:41', updatedAt: '2025-10-07 13:58:41' },
-  { id: 2, receiptNumber: '0000000017', currency: 'SAR', value: 8000.0, date: '2025-08-23', time: '22:33:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000196', createdAt: '2025-08-23 19:34:23', updatedAt: '2025-08-23 19:34:23' },
-  { id: 3, receiptNumber: '0000000016', currency: 'SAR', value: 100.0, date: '2025-08-23', time: '21:53:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000195', createdAt: '2025-08-23 18:54:24', updatedAt: '2025-08-23 18:54:24' },
-  { id: 4, receiptNumber: '0000000015', currency: 'SAR', value: 100.0, date: '2025-08-23', time: '19:30:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000192', createdAt: '2025-08-23 16:31:45', updatedAt: '2025-08-23 16:31:45' },
-  { id: 5, receiptNumber: '0000000014', currency: 'SAR', value: 250.0, date: '2025-06-26', time: '12:57:00', paymentMethod: 'بطاقة ائتمانية', paymentType: null, transactionNumber: null, bookingNumber: '0000000182', createdAt: '2025-06-28 10:26:17', updatedAt: '2025-06-28 10:26:17' },
-  { id: 6, receiptNumber: '0000000013', currency: 'SAR', value: 150.0, date: '2025-06-07', time: '07:51:00', paymentMethod: 'التحويل البنكي', paymentType: null, transactionNumber: null, bookingNumber: '0000000177', createdAt: '2025-06-07 13:51:37', updatedAt: '2025-07-30 02:10:11' },
-  { id: 7, receiptNumber: '0000000012', currency: 'SAR', value: 2750.0, date: '2025-06-07', time: '13:59:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000176', createdAt: '2025-06-07 10:59:39', updatedAt: '2025-06-07 10:59:39' },
-  { id: 8, receiptNumber: '0000000011', currency: 'SAR', value: 2750.0, date: '2025-06-07', time: '13:58:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000176', createdAt: '2025-06-07 10:59:01', updatedAt: '2025-06-07 10:59:01' },
-  { id: 9, receiptNumber: '0000000010', currency: 'SAR', value: 1400.0, date: '2025-05-22', time: '01:43:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000154', createdAt: '2025-05-22 22:46:17', updatedAt: '2025-05-22 22:46:17' },
-  { id: 10, receiptNumber: '0000000009', currency: 'SAR', value: 200.0, date: '2025-05-10', time: '03:33:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: null, createdAt: '2025-05-10 00:34:20', updatedAt: '2025-05-10 00:34:20' },
+  // FIX: Converted numeric `id` to string to match the Receipt type definition.
+  { id: '1', receiptNumber: '0000000018', currency: 'SAR', value: 152.0, date: '2025-10-07', time: '16:57:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: null, createdAt: '2025-10-07 13:58:41', updatedAt: '2025-10-07 13:58:41' },
+  // FIX: Converted numeric `id` to string to match the Receipt type definition.
+  { id: '2', receiptNumber: '0000000017', currency: 'SAR', value: 8000.0, date: '2025-08-23', time: '22:33:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000196', createdAt: '2025-08-23 19:34:23', updatedAt: '2025-08-23 19:34:23' },
+  // FIX: Converted numeric `id` to string to match the Receipt type definition.
+  { id: '3', receiptNumber: '0000000016', currency: 'SAR', value: 100.0, date: '2025-08-23', time: '21:53:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000195', createdAt: '2025-08-23 18:54:24', updatedAt: '2025-08-23 18:54:24' },
+  // FIX: Converted numeric `id` to string to match the Receipt type definition.
+  { id: '4', receiptNumber: '0000000015', currency: 'SAR', value: 100.0, date: '2025-08-23', time: '19:30:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000192', createdAt: '2025-08-23 16:31:45', updatedAt: '2025-08-23 16:31:45' },
+  // FIX: Converted numeric `id` to string to match the Receipt type definition.
+  { id: '5', receiptNumber: '0000000014', currency: 'SAR', value: 250.0, date: '2025-06-26', time: '12:57:00', paymentMethod: 'بطاقة ائتمانية', paymentType: null, transactionNumber: null, bookingNumber: '0000000182', createdAt: '2025-06-28 10:26:17', updatedAt: '2025-06-28 10:26:17' },
+  // FIX: Converted numeric `id` to string to match the Receipt type definition.
+  { id: '6', receiptNumber: '0000000013', currency: 'SAR', value: 150.0, date: '2025-06-07', time: '07:51:00', paymentMethod: 'التحويل البنكي', paymentType: null, transactionNumber: null, bookingNumber: '0000000177', createdAt: '2025-06-07 13:51:37', updatedAt: '2025-07-30 02:10:11' },
+  // FIX: Converted numeric `id` to string to match the Receipt type definition.
+  { id: '7', receiptNumber: '0000000012', currency: 'SAR', value: 2750.0, date: '2025-06-07', time: '13:59:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000176', createdAt: '2025-06-07 10:59:39', updatedAt: '2025-06-07 10:59:39' },
+  // FIX: Converted numeric `id` to string to match the Receipt type definition.
+  { id: '8', receiptNumber: '0000000011', currency: 'SAR', value: 2750.0, date: '2025-06-07', time: '13:58:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000176', createdAt: '2025-06-07 10:59:01', updatedAt: '2025-06-07 10:59:01' },
+  // FIX: Converted numeric `id` to string to match the Receipt type definition.
+  { id: '9', receiptNumber: '0000000010', currency: 'SAR', value: 1400.0, date: '2025-05-22', time: '01:43:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000154', createdAt: '2025-05-22 22:46:17', updatedAt: '2025-05-22 22:46:17' },
+  // FIX: Converted numeric `id` to string to match the Receipt type definition.
+  { id: '10', receiptNumber: '0000000009', currency: 'SAR', value: 200.0, date: '2025-05-10', time: '03:33:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: null, createdAt: '2025-05-10 00:34:20', updatedAt: '2025-05-10 00:34:20' },
 ];
 
 const mockInvoices: Invoice[] = [
-  { id: 1, invoiceNumber: '0000000009', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-24 21:38:37', updatedAt: '2025-10-24 21:38:37' },
-  { id: 2, invoiceNumber: '0000000008', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 16:05:14', updatedAt: '2025-10-22 16:05:14' },
-  { id: 3, invoiceNumber: '0000000007', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 14:51:59', updatedAt: '2025-10-22 14:51:59' },
-  { id: 4, invoiceNumber: '0000000006', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 14:45:30', updatedAt: '2025-10-22 14:45:30' },
-  { id: 5, invoiceNumber: '0000000005', bookingNumber: '0000000008', value: 223, discount: 0.0, subtotal: 223, tax: 0, total: 223, createdAt: '2025-10-04 18:24:12', updatedAt: '2025-10-04 18:24:12' },
-  { id: 6, invoiceNumber: '0000000004', bookingNumber: '0000000008', value: 222, discount: 0.0, subtotal: 222, tax: 0, total: 222, createdAt: '2025-09-29 20:34:50', updatedAt: '2025-09-29 20:34:50' },
-  { id: 7, invoiceNumber: '0000000003', bookingNumber: '0000000002', value: 120, discount: 0.0, subtotal: 120, tax: 0, total: 120, createdAt: '2025-07-27 12:27:54', updatedAt: '2025-07-27 12:27:54' },
-  { id: 8, invoiceNumber: '0000000002', bookingNumber: '0000000001', value: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, createdAt: '2025-07-22 18:46:30', updatedAt: '2025-07-22 18:46:30' },
-  { id: 9, invoiceNumber: '0000000001', bookingNumber: '0000000001', value: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, createdAt: '2025-07-22 18:32:55', updatedAt: '2025-07-22 18:32:55' },
+  // FIX: Converted numeric `id` to string to match the Invoice type definition.
+  { id: '1', invoiceNumber: '0000000009', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-24 21:38:37', updatedAt: '2025-10-24 21:38:37' },
+  // FIX: Converted numeric `id` to string to match the Invoice type definition.
+  { id: '2', invoiceNumber: '0000000008', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 16:05:14', updatedAt: '2025-10-22 16:05:14' },
+  // FIX: Converted numeric `id` to string to match the Invoice type definition.
+  { id: '3', invoiceNumber: '0000000007', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 14:51:59', updatedAt: '2025-10-22 14:51:59' },
+  // FIX: Converted numeric `id` to string to match the Invoice type definition.
+  { id: '4', invoiceNumber: '0000000006', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 14:45:30', updatedAt: '2025-10-22 14:45:30' },
+  // FIX: Converted numeric `id` to string to match the Invoice type definition.
+  { id: '5', invoiceNumber: '0000000005', bookingNumber: '0000000008', value: 223, discount: 0.0, subtotal: 223, tax: 0, total: 223, createdAt: '2025-10-04 18:24:12', updatedAt: '2025-10-04 18:24:12' },
+  // FIX: Converted numeric `id` to string to match the Invoice type definition.
+  { id: '6', invoiceNumber: '0000000004', bookingNumber: '0000000008', value: 222, discount: 0.0, subtotal: 222, tax: 0, total: 222, createdAt: '2025-09-29 20:34:50', updatedAt: '2025-09-29 20:34:50' },
+  // FIX: Converted numeric `id` to string to match the Invoice type definition.
+  { id: '7', invoiceNumber: '0000000003', bookingNumber: '0000000002', value: 120, discount: 0.0, subtotal: 120, tax: 0, total: 120, createdAt: '2025-07-27 12:27:54', updatedAt: '2025-07-27 12:27:54' },
+  // FIX: Converted numeric `id` to string to match the Invoice type definition.
+  { id: '8', invoiceNumber: '0000000002', bookingNumber: '0000000001', value: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, createdAt: '2025-07-22 18:46:30', updatedAt: '2025-07-22 18:46:30' },
+  // FIX: Converted numeric `id` to string to match the Invoice type definition.
+  { id: '9', invoiceNumber: '0000000001', bookingNumber: '0000000001', value: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, createdAt: '2025-07-22 18:32:55', updatedAt: '2025-07-22 18:32:55' },
 ];
 
 const newReceiptTemplate: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -182,10 +201,12 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
             };
             setDataSource(dataSource.map(v => v.id === updatedVoucher.id ? updatedVoucher : v));
         } else {
-            const maxId = Math.max(0, ...receipts.map(r => r.id), ...paymentVouchers.map(p => p.id));
+            // FIX: Correctly calculate the next ID by converting string IDs to numbers for Math.max.
+            const maxId = Math.max(0, ...receipts.map(r => Number(r.id)), ...paymentVouchers.map(p => Number(p.id)));
             const newVoucher: Receipt = {
                 ...voucherData,
-                id: maxId + 1,
+                // FIX: Converted the new numeric ID back to a string to match the Receipt type.
+                id: (maxId + 1).toString(),
                 receiptNumber: `00000000${maxId + 1}`,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),

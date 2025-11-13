@@ -22,9 +22,12 @@ import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 
 
 const mockAgencies: BookingAgency[] = [
-  { id: 1, name: 'صالح محمد', mobileNumber: '+966556170543', country: 'السعودية', agencyType: 'company', idType: 'tax_id', idNumber: '11', issueDate: '2025-02-03', expiryDate: '2025-10-30', status: 'active', createdAt: '2025-02-08 16:31:47', updatedAt: '2025-02-08 16:31:47' },
-  { id: 2, name: 'TEST2', mobileNumber: '+966505000084', country: 'السعودية', agencyType: 'company', idType: 'unified_establishment_number', idNumber: '2056012202', issueDate: '2008-10-02', expiryDate: '2025-02-04', status: 'active', createdAt: '2024-10-17 09:55:45', updatedAt: '2025-02-03 10:33:12' },
-  { id: 3, name: 'test', mobileNumber: '+966568765432', country: 'السعودية', agencyType: 'company', idType: 'unified_establishment_number', idNumber: '654321', issueDate: null, expiryDate: null, status: 'active', createdAt: '2024-10-17 09:44:08', updatedAt: '2024-10-17 09:44:08' },
+  // FIX: Converted `id` to string and added `is_active` to match the BookingAgency type.
+  { id: '1', name: 'صالح محمد', mobileNumber: '+966556170543', country: 'السعودية', agencyType: 'company', idType: 'tax_id', idNumber: '11', issueDate: '2025-02-03', expiryDate: '2025-10-30', status: 'active', createdAt: '2025-02-08 16:31:47', updatedAt: '2025-02-08 16:31:47', is_active: true },
+  // FIX: Converted `id` to string and added `is_active` to match the BookingAgency type.
+  { id: '2', name: 'TEST2', mobileNumber: '+966505000084', country: 'السعودية', agencyType: 'company', idType: 'unified_establishment_number', idNumber: '2056012202', issueDate: '2008-10-02', expiryDate: '2025-02-04', status: 'active', createdAt: '2024-10-17 09:55:45', updatedAt: '2025-02-03 10:33:12', is_active: true },
+  // FIX: Converted `id` to string and added `is_active` to match the BookingAgency type.
+  { id: '3', name: 'test', mobileNumber: '+966568765432', country: 'السعودية', agencyType: 'company', idType: 'unified_establishment_number', idNumber: '654321', issueDate: null, expiryDate: null, status: 'active', createdAt: '2024-10-17 09:44:08', updatedAt: '2024-10-17 09:44:08', is_active: true },
 ];
 
 const newAgencyTemplate: Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -37,6 +40,8 @@ const newAgencyTemplate: Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'> =
     issueDate: null,
     expiryDate: null,
     status: 'active',
+    // FIX: Added missing `is_active` property to satisfy the BookingAgency type.
+    is_active: true,
 };
 
 
@@ -48,7 +53,8 @@ const BookingAgenciesPage: React.FC = () => {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingAgency, setEditingAgency] = useState<BookingAgency | null>(null);
-    const [agencyToDeleteId, setAgencyToDeleteId] = useState<number | null>(null);
+    // FIX: Changed state type from `number` to `string` to match the `id` type of BookingAgency.
+    const [agencyToDeleteId, setAgencyToDeleteId] = useState<string | null>(null);
     const [sortConfig, setSortConfig] = useState<{ key: keyof BookingAgency | null; direction: 'ascending' | 'descending' }>({ key: 'id', direction: 'ascending' });
     const [viewingAgency, setViewingAgency] = useState<BookingAgency | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
@@ -70,7 +76,10 @@ const BookingAgenciesPage: React.FC = () => {
                 if (b[key] === null || b[key] === undefined) return -1;
                 
                 let comparison = 0;
-                if (typeof a[key] === 'number' && typeof b[key] === 'number') {
+                // FIX: Corrected comparison for string IDs which could be numbers.
+                if (key === 'id') {
+                    comparison = Number(a[key]) - Number(b[key]);
+                } else if (typeof a[key] === 'number' && typeof b[key] === 'number') {
                     comparison = (a[key] as number) - (b[key] as number);
                 } else {
                     comparison = String(a[key]).localeCompare(String(b[key]));
@@ -100,7 +109,8 @@ const BookingAgenciesPage: React.FC = () => {
         } else {
             const newAgency: BookingAgency = {
                 ...(agencyData as Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'>),
-                id: Math.max(...agencies.map(b => b.id), 0) + 1,
+                // FIX: Converted string IDs to numbers for Math.max and converted the result back to a string for the new ID.
+                id: (Math.max(0, ...agencies.map(b => Number(b.id))) + 1).toString(),
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
@@ -119,7 +129,8 @@ const BookingAgenciesPage: React.FC = () => {
         setIsAddPanelOpen(true);
     };
 
-    const handleDeleteClick = (agencyId: number) => {
+    // FIX: Changed parameter type from `number` to `string` to match the `id` type.
+    const handleDeleteClick = (agencyId: string) => {
         setAgencyToDeleteId(agencyId);
     };
 

@@ -17,21 +17,11 @@ interface AgencyCardProps {
     onDeleteClick: () => void;
 }
 
-const statusConfig: Record<AgencyStatus, { labelKey: string, borderColor: string }> = {
-    'active': { 
-        labelKey: 'agencies.status_active', 
-        borderColor: 'border-green-500',
-    },
-    'inactive': { 
-        labelKey: 'agencies.status_inactive', 
-        borderColor: 'border-red-500',
-    }
-};
 
 const AgencyCard: React.FC<AgencyCardProps> = ({ agency, onViewClick, onEditClick, onDeleteClick }) => {
     const { t } = useContext(LanguageContext);
     
-    const config = statusConfig[agency.status];
+    const borderColor = agency.status === 'active' ? 'border-green-500' : 'border-red-500';
 
     const handleActionClick = (e: React.MouseEvent, action: () => void) => {
         e.stopPropagation();
@@ -41,13 +31,13 @@ const AgencyCard: React.FC<AgencyCardProps> = ({ agency, onViewClick, onEditClic
     return (
         <div 
             onClick={onViewClick}
-            className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-t-4 ${config.borderColor} flex flex-col h-full transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer`}>
+            className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-t-4 ${borderColor} flex flex-col h-full transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer`}>
             {/* Header */}
             <div className="p-4 flex items-start justify-between">
                 <div>
                     <p className="font-bold text-lg text-slate-800 dark:text-slate-200 truncate">{agency.name}</p>
                     <span className="text-sm text-blue-500 font-medium">
-                        {t(`agencies.agencyType_${agency.agencyType}` as any)}
+                        {agency.agencyType}
                     </span>
                 </div>
             </div>
@@ -90,7 +80,7 @@ const AgencyCard: React.FC<AgencyCardProps> = ({ agency, onViewClick, onEditClic
                 </div>
                  <div className="text-end">
                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${agency.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                        {t(config.labelKey as any)}
+                        {t(`agencies.status_${agency.status}` as any)}
                     </span>
                 </div>
             </div>

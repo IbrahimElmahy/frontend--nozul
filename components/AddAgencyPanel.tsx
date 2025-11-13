@@ -1,56 +1,94 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { BookingAgency, AgencyStatus, AgencyType, AgencyIdType } from '../types';
+import { BookingAgency, AgencyStatus, AgencyType, AgencyIdType, CountryAPI, GuestTypeAPI, IdTypeAPI } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import DatePicker from './DatePicker';
 import PhoneNumberInput from './PhoneNumberInput';
 import SearchableSelect from './SearchableSelect';
 import Switch from './Switch';
+import { apiClient } from '../apiClient';
 
 interface AddAgencyPanelProps {
-    initialData: BookingAgency | Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'>;
+    initialData: Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'>;
     isEditing: boolean;
     isOpen: boolean;
     onClose: () => void;
-    onSave: (agency: BookingAgency | Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'>) => void;
+    onSave: (agency: Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }
 
 const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave }) => {
-    const { t } = useContext(LanguageContext);
+    const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState(initialData);
 
+    const [countries, setCountries] = useState<CountryAPI>({});
+    const [agentTypes, setAgentTypes] = useState<GuestTypeAPI[]>([]);
+    const [idTypes, setIdTypes] = useState<IdTypeAPI[]>([]);
+    const [discountTypes, setDiscountTypes] = useState<[string, string][]>([]);
+    
     useEffect(() => {
+        const fetchOptions = async () => {
+            try {
+                const [countriesRes, agentTypesRes, discountTypesRes] = await Promise.all([
+                    apiClient<CountryAPI>('/ar/country/api/countries/'),
+                    apiClient<{ data: GuestTypeAPI[] }>('/ar/guest/api/guests-types/?category=agent'),
+                    apiClient<[string, string][]>('/ar/discount/api/discount-types/')
+                ]);
+                setCountries(countriesRes);
+                setAgentTypes(agentTypesRes.data);
+                setDiscountTypes(discountTypesRes);
+            } catch (error) {
+                console.error("Failed to fetch agency options", error);
+            }
+        };
+
         if (isOpen) {
+            fetchOptions();
             setFormData(JSON.parse(JSON.stringify(initialData)));
         }
     }, [isOpen, initialData]);
+
+    useEffect(() => {
+        const fetchIdTypes = async () => {
+            if (formData.agencyType) {
+                const selectedAgentType = agentTypes.find(at => at.id === formData.agencyType);
+                if (selectedAgentType) {
+                    try {
+                        const idTypesRes = await apiClient<{ data: IdTypeAPI[] }>(`/ar/guest/api/ids/?guests_types=${selectedAgentType.id}`);
+                        setIdTypes(idTypesRes.data);
+                        // Reset idType if it's not valid for the new agencyType
+                        if (!idTypesRes.data.some(it => it.id === formData.idType)) {
+                            setFormData(p => ({ ...p, idType: '' }));
+                        }
+                    } catch (error) {
+                        console.error("Failed to fetch ID types", error);
+                    }
+                }
+            } else {
+                setIdTypes([]);
+            }
+        };
+        fetchIdTypes();
+    }, [formData.agencyType, agentTypes]);
+
+
+    const handleSaveClick = () => {
+        // Here we'd convert back to API format, but since we are just updating state, we pass it as is.
+        // In a real scenario, this would create FormData and map fields.
+        onSave(formData);
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSaveClick = () => {
-        onSave(formData);
-    };
-
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
     const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
     
-    const agencyTypeOptions = [
-      { value: 'company', label: t('agencies.agencyType_company') },
-      { value: 'individual', label: t('agencies.agencyType_individual') },
-    ];
-
-    const idTypeOptions = [
-      { value: 'tax_id', label: t('agencies.idType_tax_id') },
-      { value: 'unified_establishment_number', label: t('agencies.idType_unified_establishment_number') },
-      { value: 'other', label: t('agencies.idType_other') },
-    ];
-    
-    const countries = ["السعودية", "مصر", "أفغانستان", "ألبانيا", "الجزائر"];
-
+    const countryOptions = Object.entries(countries).map(([code, name]) => ({ value: code, label: name }));
+    const agentTypeOptions = agentTypes.map(at => ({ value: at.id, label: language === 'ar' ? at.name_ar : at.name_en }));
+    const idTypeOptions = idTypes.map(it => ({ value: it.id, label: language === 'ar' ? it.name_ar : it.name_en }));
 
     return (
         <div
@@ -78,16 +116,16 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                         </div>
                          <div>
                             <label htmlFor="country" className={labelBaseClass}>{t('agencies.th_country')}</label>
-                            <SearchableSelect id="country" options={countries} value={formData.country} onChange={val => setFormData(p => ({...p, country: val}))} />
+                            <SearchableSelect id="country" options={countryOptions.map(o => o.label)} value={countryOptions.find(o => o.value === formData.country)?.label || ''} onChange={label => { const opt = countryOptions.find(o => o.label === label); if (opt) setFormData(p => ({...p, country: opt.value}))}} />
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="agencyType" className={labelBaseClass}>{t('agencies.th_agencyType')}</label>
-                                <SearchableSelect id="agencyType" options={agencyTypeOptions.map(o => o.label)} value={agencyTypeOptions.find(o => o.value === formData.agencyType)?.label || ''} onChange={(label) => { const opt = agencyTypeOptions.find(o => o.label === label); if(opt) setFormData(p => ({ ...p, agencyType: opt.value as AgencyType }))}} />
+                                <SearchableSelect id="agencyType" options={agentTypeOptions.map(o => o.label)} value={agentTypeOptions.find(o => o.value === formData.agencyType)?.label || ''} onChange={(label) => { const opt = agentTypeOptions.find(o => o.label === label); if(opt) setFormData(p => ({ ...p, agencyType: opt.value }))}} />
                             </div>
                              <div>
                                 <label htmlFor="idType" className={labelBaseClass}>{t('agencies.th_idType')}</label>
-                                <SearchableSelect id="idType" options={idTypeOptions.map(o => o.label)} value={idTypeOptions.find(o => o.value === formData.idType)?.label || ''} onChange={(label) => { const opt = idTypeOptions.find(o => o.label === label); if(opt) setFormData(p => ({ ...p, idType: opt.value as AgencyIdType }))}} />
+                                <SearchableSelect id="idType" options={idTypeOptions.map(o => o.label)} value={idTypeOptions.find(o => o.value === formData.idType)?.label || ''} onChange={(label) => { const opt = idTypeOptions.find(o => o.label === label); if(opt) setFormData(p => ({ ...p, idType: opt.value }))}} />
                             </div>
                         </div>
                         <div>

@@ -153,18 +153,23 @@ export type AgencyIdType = 'tax_id' | 'unified_establishment_number' | 'other';
 export type AgencyStatus = 'active' | 'inactive';
 
 export interface BookingAgency {
-  id: number;
+  id: string; // was number
   name: string;
   mobileNumber: string;
   country: string;
-  agencyType: AgencyType;
-  idType: AgencyIdType;
+  agencyType: string;
+  idType: string;
   idNumber: string;
   issueDate: string | null;
   expiryDate: string | null;
   status: AgencyStatus;
   createdAt: string;
   updatedAt: string;
+  email?: string;
+  is_active: boolean;
+  discount_type?: string;
+  discount_value?: number;
+  discount_display?: string;
 }
 
 export interface OrderItem {
@@ -192,7 +197,7 @@ export interface Order {
 }
 
 export interface Receipt {
-  id: number;
+  id: string; // was number
   receiptNumber: string;
   currency: string;
   value: number;
@@ -207,7 +212,7 @@ export interface Receipt {
 }
 
 export interface Invoice {
-  id: number;
+  id: string; // was number
   invoiceNumber: string;
   bookingNumber: string;
   value: number;
