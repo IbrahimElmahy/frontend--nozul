@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { BookingAgency, AgencyStatus, AgencyType, AgencyIdType, CountryAPI, GuestTypeAPI, IdTypeAPI } from '../types';
+// FIX: Removed unused and undefined type imports
+import { BookingAgency, CountryAPI, GuestTypeAPI, IdTypeAPI } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import DatePicker from './DatePicker';
@@ -10,11 +11,11 @@ import Switch from './Switch';
 import { apiClient } from '../apiClient';
 
 interface AddAgencyPanelProps {
-    initialData: Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'>;
+    initialData: Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'>;
     isEditing: boolean;
     isOpen: boolean;
     onClose: () => void;
-    onSave: (agency: Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'>) => void;
+    onSave: (agency: Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'>) => void;
 }
 
 const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave }) => {
@@ -50,15 +51,17 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
 
     useEffect(() => {
         const fetchIdTypes = async () => {
-            if (formData.agencyType) {
-                const selectedAgentType = agentTypes.find(at => at.id === formData.agencyType);
+            // FIX: Use correct property 'guest_type'
+            if (formData.guest_type) {
+                const selectedAgentType = agentTypes.find(at => at.id === formData.guest_type);
                 if (selectedAgentType) {
                     try {
                         const idTypesRes = await apiClient<{ data: IdTypeAPI[] }>(`/ar/guest/api/ids/?guests_types=${selectedAgentType.id}`);
                         setIdTypes(idTypesRes.data);
                         // Reset idType if it's not valid for the new agencyType
-                        if (!idTypesRes.data.some(it => it.id === formData.idType)) {
-                            setFormData(p => ({ ...p, idType: '' }));
+                        // FIX: Use correct property 'ids'
+                        if (!idTypesRes.data.some(it => it.id === formData.ids)) {
+                            setFormData(p => ({ ...p, ids: '' }));
                         }
                     } catch (error) {
                         console.error("Failed to fetch ID types", error);
@@ -69,7 +72,8 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
             }
         };
         fetchIdTypes();
-    }, [formData.agencyType, agentTypes]);
+        // FIX: Use correct property 'guest_type'
+    }, [formData.guest_type, agentTypes]);
 
 
     const handleSaveClick = () => {
@@ -111,8 +115,9 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                             <input type="text" name="name" id="name" value={formData.name} onChange={handleInputChange} className={inputBaseClass} />
                         </div>
                          <div>
-                            <label htmlFor="mobileNumber" className={labelBaseClass}>{t('agencies.th_mobileNumber')}</label>
-                            <PhoneNumberInput value={formData.mobileNumber} onChange={val => setFormData(p => ({...p, mobileNumber: val}))} />
+                            {/* FIX: Use correct property 'phone_number' */}
+                            <label htmlFor="phone_number" className={labelBaseClass}>{t('agencies.th_mobileNumber')}</label>
+                            <PhoneNumberInput value={formData.phone_number} onChange={val => setFormData(p => ({...p, phone_number: val}))} />
                         </div>
                          <div>
                             <label htmlFor="country" className={labelBaseClass}>{t('agencies.th_country')}</label>
@@ -120,31 +125,28 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label htmlFor="agencyType" className={labelBaseClass}>{t('agencies.th_agencyType')}</label>
-                                <SearchableSelect id="agencyType" options={agentTypeOptions.map(o => o.label)} value={agentTypeOptions.find(o => o.value === formData.agencyType)?.label || ''} onChange={(label) => { const opt = agentTypeOptions.find(o => o.label === label); if(opt) setFormData(p => ({ ...p, agencyType: opt.value }))}} />
+                                {/* FIX: Use correct property 'guest_type' */}
+                                <label htmlFor="guest_type" className={labelBaseClass}>{t('agencies.th_agencyType')}</label>
+                                <SearchableSelect id="guest_type" options={agentTypeOptions.map(o => o.label)} value={agentTypeOptions.find(o => o.value === formData.guest_type)?.label || ''} onChange={(label) => { const opt = agentTypeOptions.find(o => o.label === label); if(opt) setFormData(p => ({ ...p, guest_type: opt.value }))}} />
                             </div>
                              <div>
-                                <label htmlFor="idType" className={labelBaseClass}>{t('agencies.th_idType')}</label>
-                                <SearchableSelect id="idType" options={idTypeOptions.map(o => o.label)} value={idTypeOptions.find(o => o.value === formData.idType)?.label || ''} onChange={(label) => { const opt = idTypeOptions.find(o => o.label === label); if(opt) setFormData(p => ({ ...p, idType: opt.value }))}} />
+                                {/* FIX: Use correct property 'ids' */}
+                                <label htmlFor="ids" className={labelBaseClass}>{t('agencies.th_idType')}</label>
+                                <SearchableSelect id="ids" options={idTypeOptions.map(o => o.label)} value={idTypeOptions.find(o => o.value === formData.ids)?.label || ''} onChange={(label) => { const opt = idTypeOptions.find(o => o.label === label); if(opt) setFormData(p => ({ ...p, ids: opt.value }))}} />
                             </div>
                         </div>
                         <div>
-                            <label htmlFor="idNumber" className={labelBaseClass}>{t('agencies.th_idNumber')}</label>
-                            <input type="text" name="idNumber" id="idNumber" value={formData.idNumber} onChange={handleInputChange} className={inputBaseClass} />
+                            {/* FIX: Use correct property 'id_number' */}
+                            <label htmlFor="id_number" className={labelBaseClass}>{t('agencies.th_idNumber')}</label>
+                            <input type="text" name="id_number" id="id_number" value={formData.id_number} onChange={handleInputChange} className={inputBaseClass} />
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                             <div>
-                                <label htmlFor="issueDate" className={labelBaseClass}>{t('agencies.th_issueDate')}</label>
-                                <DatePicker value={formData.issueDate || ''} onChange={date => setFormData(p => ({...p, issueDate: date}))} />
-                            </div>
-                            <div>
-                                <label htmlFor="expiryDate" className={labelBaseClass}>{t('agencies.th_expiryDate')}</label>
-                                <DatePicker value={formData.expiryDate || ''} onChange={date => setFormData(p => ({...p, expiryDate: date}))} />
-                            </div>
+                             {/* FIX: Removed date fields not present in BookingAgency type */}
                         </div>
                          <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                            {/* FIX: Use correct property 'is_active' */}
                             <span className="font-semibold text-slate-800 dark:text-slate-200">{t('agencies.th_status')}</span>
-                            <Switch id="status" checked={formData.status === 'active'} onChange={(c) => setFormData(p=> ({...p, status: c ? 'active' : 'inactive'}))} />
+                            <Switch id="is_active" checked={formData.is_active} onChange={(c) => setFormData(p=> ({...p, is_active: c}))} />
                         </div>
                     </form>
                 </div>

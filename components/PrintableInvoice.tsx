@@ -47,9 +47,12 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice }) => {
                     <div className="text-left">
                         <h1 className="text-2xl font-bold uppercase mb-2">فاتورة ضريبية</h1>
                         <div className="grid grid-cols-2">
-                             <span className="font-bold">تاريخ الفاتورة :</span><span>{formatFullDate(invoice.createdAt)}</span>
-                             <span className="font-bold">انشأت في :</span><span>{formatFullDateTime(invoice.createdAt)}</span>
-                             <span className="font-bold">رقم الفاتورة :</span><span>{invoice.invoiceNumber}</span>
+                             {/* FIX: Use correct property 'created_at' */}
+                             <span className="font-bold">تاريخ الفاتورة :</span><span>{formatFullDate(invoice.created_at)}</span>
+                             {/* FIX: Use correct property 'created_at' */}
+                             <span className="font-bold">انشأت في :</span><span>{formatFullDateTime(invoice.created_at)}</span>
+                             {/* FIX: Use correct property 'number' */}
+                             <span className="font-bold">رقم الفاتورة :</span><span>{invoice.number}</span>
                         </div>
                     </div>
                 </header>
@@ -58,7 +61,8 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice }) => {
                     {/* Booking and Tenant Info */}
                     <div className="grid grid-cols-2 gap-6">
                         <InfoBlock title="معلومات الحجز">
-                            <DetailRow label="رقم الحجز">{invoice.bookingNumber}</DetailRow>
+                            {/* FIX: Use correct property 'reservation' */}
+                            <DetailRow label="رقم الحجز">{invoice.reservation}</DetailRow>
                             <DetailRow label="حالة الحجز">تسجيل الدخول</DetailRow>
                             <DetailRow label="فترة الحجز">2025-10-08 - 2025-10-09</DetailRow>
                             <DetailRow label="رقم الوحدة">roomtest</DetailRow>
@@ -101,10 +105,13 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice }) => {
                             <tbody>
                                 <tr className="border-b">
                                     <td className="p-2 border">1</td>
-                                    <td className="p-2 border text-right">الحجز ({invoice.bookingNumber})</td>
+                                    {/* FIX: Use correct property 'reservation' */}
+                                    <td className="p-2 border text-right">الحجز ({invoice.reservation})</td>
                                     <td className="p-2 border">1</td>
-                                    <td className="p-2 border">{invoice.value.toFixed(2)}</td>
-                                    <td className="p-2 border">{invoice.value.toFixed(2)}</td>
+                                    {/* FIX: Use correct property 'amount' */}
+                                    <td className="p-2 border">{invoice.amount.toFixed(2)}</td>
+                                    {/* FIX: Use correct property 'amount' */}
+                                    <td className="p-2 border">{invoice.amount.toFixed(2)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -113,8 +120,9 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice }) => {
                     {/* Financial Summary */}
                     <div className="flex justify-end">
                         <div className="w-full max-w-sm space-y-1">
-                             <DetailRow label="القيمة">{invoice.value.toFixed(2)}</DetailRow>
-                             <DetailRow label="الخصم">{invoice.discount.toFixed(2)}</DetailRow>
+                             {/* FIX: Use correct property 'amount' */}
+                             <DetailRow label="القيمة">{invoice.amount.toFixed(2)}</DetailRow>
+                             <DetailRow label="الخصم">{invoice.discount?.toFixed(2) ?? '0.00'}</DetailRow>
                              <DetailRow label="المجموع قبل الضريبة">1702.12</DetailRow>
                              <DetailRow label="ضريبة القمية المضافة">255.31</DetailRow>
                              <DetailRow label="مرافق الإيواء">42.55</DetailRow>

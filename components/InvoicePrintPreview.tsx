@@ -32,7 +32,8 @@ const InvoicePrintPreview: React.FC<InvoicePrintPreviewProps> = ({ invoice, isOp
             <div className={`relative h-full bg-slate-50 dark:bg-slate-800 shadow-2xl flex flex-col w-full max-w-4xl transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                 <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-900 z-10 no-print">
                     <h2 id="invoice-print-preview-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">
-                        {t('receipts.detailsInvoiceTitle')} - {invoice.invoiceNumber}
+                        {/* FIX: Use correct property 'number' instead of 'invoiceNumber' */}
+                        {t('receipts.detailsInvoiceTitle')} - {invoice.number}
                     </h2>
                     <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
                         <XMarkIcon className="w-6 h-6" />

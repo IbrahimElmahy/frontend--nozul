@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { BookingAgency, AgencyStatus, AgencyType, AgencyIdType } from '../types';
+import { BookingAgency } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AgencyCard from './AgencyCard';
 import AddAgencyPanel from './AddAgencyPanel';
@@ -20,27 +20,29 @@ import TrashIcon from './icons-redesign/TrashIcon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 
+// FIX: Define local types as they are not exported from types.ts
+type AgencyStatus = 'active' | 'inactive';
+type AgencyType = 'company' | 'individual';
+type AgencyIdType = 'tax_id' | 'unified_establishment_number' | 'other';
+
 
 const mockAgencies: BookingAgency[] = [
-  // FIX: Converted `id` to string and added `is_active` to match the BookingAgency type.
-  { id: '1', name: 'صالح محمد', mobileNumber: '+966556170543', country: 'السعودية', agencyType: 'company', idType: 'tax_id', idNumber: '11', issueDate: '2025-02-03', expiryDate: '2025-10-30', status: 'active', createdAt: '2025-02-08 16:31:47', updatedAt: '2025-02-08 16:31:47', is_active: true },
-  // FIX: Converted `id` to string and added `is_active` to match the BookingAgency type.
-  { id: '2', name: 'TEST2', mobileNumber: '+966505000084', country: 'السعودية', agencyType: 'company', idType: 'unified_establishment_number', idNumber: '2056012202', issueDate: '2008-10-02', expiryDate: '2025-02-04', status: 'active', createdAt: '2024-10-17 09:55:45', updatedAt: '2025-02-03 10:33:12', is_active: true },
-  // FIX: Converted `id` to string and added `is_active` to match the BookingAgency type.
-  { id: '3', name: 'test', mobileNumber: '+966568765432', country: 'السعودية', agencyType: 'company', idType: 'unified_establishment_number', idNumber: '654321', issueDate: null, expiryDate: null, status: 'active', createdAt: '2024-10-17 09:44:08', updatedAt: '2024-10-17 09:44:08', is_active: true },
+  // FIX: Converted `id` to string and updated property names to match the BookingAgency type.
+  { id: '1', name: 'صالح محمد', phone_number: '+966556170543', country: 'SA', country_display: 'السعودية', guest_type: 'شركة', ids: 'رقم السجل الضريبي', id_number: '11', created_at: '2025-02-08 16:31:47', updated_at: '2025-02-08 16:31:47', is_active: true },
+  // FIX: Converted `id` to string and updated property names to match the BookingAgency type.
+  { id: '2', name: 'TEST2', phone_number: '+966505000084', country: 'SA', country_display: 'السعودية', guest_type: 'شركة', ids: 'رقم المنشأة الموحد', id_number: '2056012202', created_at: '2024-10-17 09:55:45', updated_at: '2025-02-03 10:33:12', is_active: true },
+  // FIX: Converted `id` to string and updated property names to match the BookingAgency type.
+  { id: '3', name: 'test', phone_number: '+966568765432', country: 'SA', country_display: 'السعودية', guest_type: 'شركة', ids: 'رقم المنشأة الموحد', id_number: '654321', created_at: '2024-10-17 09:44:08', updated_at: '2024-10-17 09:44:08', is_active: true },
 ];
 
-const newAgencyTemplate: Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'> = {
+const newAgencyTemplate: Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'> = {
     name: '',
-    mobileNumber: '',
-    country: 'السعودية',
-    agencyType: 'company',
-    idType: 'tax_id',
-    idNumber: '',
-    issueDate: null,
-    expiryDate: null,
-    status: 'active',
-    // FIX: Added missing `is_active` property to satisfy the BookingAgency type.
+    phone_number: '',
+    country: 'SA',
+    country_display: 'السعودية',
+    guest_type: 'شركة',
+    ids: 'رقم السجل الضريبي',
+    id_number: '',
     is_active: true,
 };
 
@@ -62,8 +64,10 @@ const BookingAgenciesPage: React.FC = () => {
     const filteredAgencies = useMemo(() => {
         return agencies.filter(agency => 
             agency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            agency.mobileNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            agency.idNumber.toLowerCase().includes(searchTerm.toLowerCase())
+            // FIX: Use correct property 'phone_number'
+            agency.phone_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            // FIX: Use correct property 'id_number'
+            agency.id_number.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [agencies, searchTerm]);
 
@@ -102,17 +106,19 @@ const BookingAgenciesPage: React.FC = () => {
         setEditingAgency(null);
     };
 
-    const handleSaveAgency = (agencyData: BookingAgency | Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const handleSaveAgency = (agencyData: BookingAgency | Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'>) => {
         if (editingAgency) {
-            const updatedAgency = { ...agencyData, id: editingAgency.id, updatedAt: new Date().toISOString() } as BookingAgency;
+            // FIX: Use correct property 'updated_at'
+            const updatedAgency = { ...agencyData, id: editingAgency.id, updated_at: new Date().toISOString() } as BookingAgency;
             setAgencies(agencies.map(b => b.id === updatedAgency.id ? updatedAgency : b));
         } else {
             const newAgency: BookingAgency = {
-                ...(agencyData as Omit<BookingAgency, 'id' | 'createdAt' | 'updatedAt'>),
+                ...(agencyData as Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'>),
                 // FIX: Converted string IDs to numbers for Math.max and converted the result back to a string for the new ID.
                 id: (Math.max(0, ...agencies.map(b => Number(b.id))) + 1).toString(),
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
+                // FIX: Use correct property 'created_at' and 'updated_at'
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
             };
             setAgencies(prev => [newAgency, ...prev]);
         }
@@ -149,36 +155,34 @@ const BookingAgenciesPage: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
+    // FIX: Corrected table header keys to match BookingAgency type
     const tableHeaders: { key: keyof BookingAgency | 'actions', labelKey: string, className?: string }[] = [
         { key: 'id', labelKey: 'agencies.th_id', className: 'hidden 2xl:table-cell' },
         { key: 'name', labelKey: 'agencies.th_name' },
-        { key: 'mobileNumber', labelKey: 'agencies.th_mobileNumber', className: 'hidden sm:table-cell' },
-        { key: 'country', labelKey: 'agencies.th_country', className: 'hidden md:table-cell' },
-        { key: 'agencyType', labelKey: 'agencies.th_agencyType', className: 'hidden lg:table-cell' },
-        { key: 'idType', labelKey: 'agencies.th_idType', className: 'hidden xl:table-cell' },
-        { key: 'idNumber', labelKey: 'agencies.th_idNumber', className: 'hidden xl:table-cell' },
-        { key: 'createdAt', labelKey: 'agencies.th_createdAt', className: 'hidden 2xl:table-cell' },
-        { key: 'status', labelKey: 'agencies.th_status' },
+        { key: 'phone_number', labelKey: 'agencies.th_mobileNumber', className: 'hidden sm:table-cell' },
+        { key: 'country_display', labelKey: 'agencies.th_country', className: 'hidden md:table-cell' },
+        { key: 'guest_type', labelKey: 'agencies.th_agencyType', className: 'hidden lg:table-cell' },
+        { key: 'ids', labelKey: 'agencies.th_idType', className: 'hidden xl:table-cell' },
+        { key: 'id_number', labelKey: 'agencies.th_idNumber', className: 'hidden xl:table-cell' },
+        { key: 'created_at', labelKey: 'agencies.th_createdAt', className: 'hidden 2xl:table-cell' },
+        { key: 'is_active', labelKey: 'agencies.th_status' },
         { key: 'actions', labelKey: 'agencies.th_actions' },
     ];
     
+    // FIX: Corrected rendering logic for cell content
     const renderCellContent = (agency: BookingAgency, key: keyof BookingAgency) => {
       const value = agency[key];
       switch (key) {
-        case 'agencyType':
-          return t(`agencies.agencyType_${value as AgencyType}`);
-        case 'idType':
-          return t(`agencies.idType_${value as AgencyIdType}`);
-        case 'status':
-          const statusClass = value === 'active' 
+        case 'is_active':
+          const statusClass = value 
             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
             : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
           return (
             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusClass}`}>
-              {t(`agencies.status_${value as AgencyStatus}`)}
+              {t(value ? 'agencies.status_active' : 'agencies.status_inactive' as any)}
             </span>
           );
-        case 'createdAt':
+        case 'created_at':
             return new Date(value as string).toLocaleDateString();
         default:
           return (value as string) || '-';

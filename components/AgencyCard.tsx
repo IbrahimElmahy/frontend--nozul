@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { BookingAgency, AgencyStatus } from '../types';
+import { BookingAgency } from '../types';
 
 // Icons
 import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
@@ -21,7 +21,7 @@ interface AgencyCardProps {
 const AgencyCard: React.FC<AgencyCardProps> = ({ agency, onViewClick, onEditClick, onDeleteClick }) => {
     const { t } = useContext(LanguageContext);
     
-    const borderColor = agency.status === 'active' ? 'border-green-500' : 'border-red-500';
+    const borderColor = agency.is_active ? 'border-green-500' : 'border-red-500';
 
     const handleActionClick = (e: React.MouseEvent, action: () => void) => {
         e.stopPropagation();
@@ -37,7 +37,7 @@ const AgencyCard: React.FC<AgencyCardProps> = ({ agency, onViewClick, onEditClic
                 <div>
                     <p className="font-bold text-lg text-slate-800 dark:text-slate-200 truncate">{agency.name}</p>
                     <span className="text-sm text-blue-500 font-medium">
-                        {agency.agencyType}
+                        {agency.guest_type}
                     </span>
                 </div>
             </div>
@@ -46,16 +46,16 @@ const AgencyCard: React.FC<AgencyCardProps> = ({ agency, onViewClick, onEditClic
             <div className="px-4 pb-4 space-y-3 text-sm flex-grow">
                  <div className="flex items-center gap-2">
                     <PhoneIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                    <span className="text-slate-600 dark:text-slate-400" dir="ltr">{agency.mobileNumber}</span>
+                    <span className="text-slate-600 dark:text-slate-400" dir="ltr">{agency.phone_number}</span>
                 </div>
                  <div className="flex items-center gap-2">
                     <GlobeAltIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                    <span className="text-slate-600 dark:text-slate-400">{agency.country}</span>
+                    <span className="text-slate-600 dark:text-slate-400">{agency.country_display}</span>
                 </div>
                 <div className="flex items-center gap-2 border-t dark:border-slate-700 pt-3">
                      <IdentificationIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
                      <span className="font-medium text-slate-600 dark:text-slate-300">
-                        {agency.idNumber}
+                        {agency.id_number}
                      </span>
                 </div>
             </div>
@@ -79,8 +79,8 @@ const AgencyCard: React.FC<AgencyCardProps> = ({ agency, onViewClick, onEditClic
                     </button>
                 </div>
                  <div className="text-end">
-                     <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${agency.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                        {t(`agencies.status_${agency.status}` as any)}
+                     <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${agency.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
+                        {t(agency.is_active ? 'agencies.status_active' : 'agencies.status_inactive' as any)}
                     </span>
                 </div>
             </div>

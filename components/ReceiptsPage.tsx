@@ -39,24 +39,24 @@ const mockReceipts: Receipt[] = [
 ];
 
 const mockInvoices: Invoice[] = [
-  // FIX: Converted numeric `id` to string to match the Invoice type definition.
-  { id: '1', invoiceNumber: '0000000009', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-24 21:38:37', updatedAt: '2025-10-24 21:38:37' },
-  // FIX: Converted numeric `id` to string to match the Invoice type definition.
-  { id: '2', invoiceNumber: '0000000008', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 16:05:14', updatedAt: '2025-10-22 16:05:14' },
-  // FIX: Converted numeric `id` to string to match the Invoice type definition.
-  { id: '3', invoiceNumber: '0000000007', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 14:51:59', updatedAt: '2025-10-22 14:51:59' },
-  // FIX: Converted numeric `id` to string to match the Invoice type definition.
-  { id: '4', invoiceNumber: '0000000006', bookingNumber: '0000000009', value: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, createdAt: '2025-10-22 14:45:30', updatedAt: '2025-10-22 14:45:30' },
-  // FIX: Converted numeric `id` to string to match the Invoice type definition.
-  { id: '5', invoiceNumber: '0000000005', bookingNumber: '0000000008', value: 223, discount: 0.0, subtotal: 223, tax: 0, total: 223, createdAt: '2025-10-04 18:24:12', updatedAt: '2025-10-04 18:24:12' },
-  // FIX: Converted numeric `id` to string to match the Invoice type definition.
-  { id: '6', invoiceNumber: '0000000004', bookingNumber: '0000000008', value: 222, discount: 0.0, subtotal: 222, tax: 0, total: 222, createdAt: '2025-09-29 20:34:50', updatedAt: '2025-09-29 20:34:50' },
-  // FIX: Converted numeric `id` to string to match the Invoice type definition.
-  { id: '7', invoiceNumber: '0000000003', bookingNumber: '0000000002', value: 120, discount: 0.0, subtotal: 120, tax: 0, total: 120, createdAt: '2025-07-27 12:27:54', updatedAt: '2025-07-27 12:27:54' },
-  // FIX: Converted numeric `id` to string to match the Invoice type definition.
-  { id: '8', invoiceNumber: '0000000002', bookingNumber: '0000000001', value: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, createdAt: '2025-07-22 18:46:30', updatedAt: '2025-07-22 18:46:30' },
-  // FIX: Converted numeric `id` to string to match the Invoice type definition.
-  { id: '9', invoiceNumber: '0000000001', bookingNumber: '0000000001', value: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, createdAt: '2025-07-22 18:32:55', updatedAt: '2025-07-22 18:32:55' },
+  // FIX: Updated property names to match the Invoice type definition.
+  { id: '1', number: '0000000009', reservation: '0000000009', amount: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, created_at: '2025-10-24 21:38:37', updated_at: '2025-10-24 21:38:37' },
+  // FIX: Updated property names to match the Invoice type definition.
+  { id: '2', number: '0000000008', reservation: '0000000009', amount: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, created_at: '2025-10-22 16:05:14', updated_at: '2025-10-22 16:05:14' },
+  // FIX: Updated property names to match the Invoice type definition.
+  { id: '3', number: '0000000007', reservation: '0000000009', amount: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, created_at: '2025-10-22 14:51:59', updated_at: '2025-10-22 14:51:59' },
+  // FIX: Updated property names to match the Invoice type definition.
+  { id: '4', number: '0000000006', reservation: '0000000009', amount: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, created_at: '2025-10-22 14:45:30', updated_at: '2025-10-22 14:45:30' },
+  // FIX: Updated property names to match the Invoice type definition.
+  { id: '5', number: '0000000005', reservation: '0000000008', amount: 223, discount: 0.0, subtotal: 223, tax: 0, total: 223, created_at: '2025-10-04 18:24:12', updated_at: '2025-10-04 18:24:12' },
+  // FIX: Updated property names to match the Invoice type definition.
+  { id: '6', number: '0000000004', reservation: '0000000008', amount: 222, discount: 0.0, subtotal: 222, tax: 0, total: 222, created_at: '2025-09-29 20:34:50', updated_at: '2025-09-29 20:34:50' },
+  // FIX: Updated property names to match the Invoice type definition.
+  { id: '7', number: '0000000003', reservation: '0000000002', amount: 120, discount: 0.0, subtotal: 120, tax: 0, total: 120, created_at: '2025-07-27 12:27:54', updated_at: '2025-07-27 12:27:54' },
+  // FIX: Updated property names to match the Invoice type definition.
+  { id: '8', number: '0000000002', reservation: '0000000001', amount: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, created_at: '2025-07-22 18:46:30', updated_at: '2025-07-22 18:46:30' },
+  // FIX: Updated property names to match the Invoice type definition.
+  { id: '9', number: '0000000001', reservation: '0000000001', amount: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, created_at: '2025-07-22 18:32:55', updated_at: '2025-07-22 18:32:55' },
 ];
 
 const newReceiptTemplate: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -136,10 +136,11 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                         (item.bookingNumber && item.bookingNumber.toLowerCase().includes(lowerSearchTerm))
                     );
                 }
-                if ('invoiceNumber' in item) { // Invoice
+                // FIX: Use correct property names for Invoice and ensure type safety
+                if ('number' in item) { // Invoice
                     return (
-                        item.invoiceNumber.toLowerCase().includes(lowerSearchTerm) ||
-                        item.bookingNumber.toLowerCase().includes(lowerSearchTerm)
+                        item.number.toLowerCase().includes(lowerSearchTerm) ||
+                        item.reservation.toLowerCase().includes(lowerSearchTerm)
                     );
                 }
                 return false;
@@ -235,6 +236,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
         'th_createdAt', 'th_updatedAt', 'th_actions'
     ];
     
+    // FIX: Updated invoice table headers to use correct keys from the Invoice type.
     const invoiceTableHeaders = [
         'th_id', 'th_invoiceNumber', 'th_bookingNumber', 'th_value', 'th_discount', 
         'th_subtotal', 'th_tax', 'th_total', 'th_createdAt', 'th_updatedAt', 'th_actions'
@@ -337,16 +339,17 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                                 isInvoiceView ? (
                                     (paginatedData as Invoice[]).map(invoice => (
                                         <tr key={invoice.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                                            {/* FIX: Use correct property names for Invoice */}
                                             <td className="px-6 py-4">{invoice.id}</td>
-                                            <td className="px-6 py-4">{invoice.invoiceNumber}</td>
-                                            <td className="px-6 py-4">{invoice.bookingNumber}</td>
-                                            <td className="px-6 py-4">{invoice.value.toFixed(2)}</td>
-                                            <td className="px-6 py-4">{invoice.discount.toFixed(2)}</td>
-                                            <td className="px-6 py-4">{invoice.subtotal.toFixed(2)}</td>
-                                            <td className="px-6 py-4">{invoice.tax.toFixed(2)}</td>
+                                            <td className="px-6 py-4">{invoice.number}</td>
+                                            <td className="px-6 py-4">{invoice.reservation}</td>
+                                            <td className="px-6 py-4">{invoice.amount.toFixed(2)}</td>
+                                            <td className="px-6 py-4">{invoice.discount?.toFixed(2) ?? 'N/A'}</td>
+                                            <td className="px-6 py-4">{invoice.subtotal?.toFixed(2) ?? 'N/A'}</td>
+                                            <td className="px-6 py-4">{invoice.tax?.toFixed(2) ?? 'N/A'}</td>
                                             <td className="px-6 py-4">{invoice.total.toFixed(2)}</td>
-                                            <td className="px-6 py-4">{invoice.createdAt}</td>
-                                            <td className="px-6 py-4">{invoice.updatedAt}</td>
+                                            <td className="px-6 py-4">{invoice.created_at}</td>
+                                            <td className="px-6 py-4">{invoice.updated_at}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1">
                                                     <button onClick={() => setViewingInvoice(invoice)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5"/></button>

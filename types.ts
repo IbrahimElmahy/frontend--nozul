@@ -147,30 +147,32 @@ export interface CountryAPI {
     [code: string]: string;
 }
 
-// New Agency Types
-export type AgencyType = 'company' | 'individual';
-export type AgencyIdType = 'tax_id' | 'unified_establishment_number' | 'other';
-export type AgencyStatus = 'active' | 'inactive';
-
+// Aligned with Agent API (which is a Guest with category='agent')
 export interface BookingAgency {
-  id: string; // was number
+  id: string;
   name: string;
-  mobileNumber: string;
+  phone_number: string;
   country: string;
-  agencyType: string;
-  idType: string;
-  idNumber: string;
-  issueDate: string | null;
-  expiryDate: string | null;
-  status: AgencyStatus;
-  createdAt: string;
-  updatedAt: string;
+  country_display: string;
+  guest_type: string; // This is the UUID for the form, but display name from list
+  ids: string; // This is the UUID for the form, but display name from list
+  id_number: string;
   email?: string;
   is_active: boolean;
-  discount_type?: string;
+  created_at: string;
+  updated_at: string;
+  discount_type?: 'percent' | 'amount' | string;
   discount_value?: number;
   discount_display?: string;
+  
+  // Address fields
+  address_country?: string;
+  city?: string;
+  neighborhood?: string;
+  street?: string;
+  postal_code?: string;
 }
+
 
 export interface OrderItem {
   id: string;
@@ -212,16 +214,17 @@ export interface Receipt {
 }
 
 export interface Invoice {
-  id: string; // was number
-  invoiceNumber: string;
-  bookingNumber: string;
-  value: number;
-  discount: number;
-  subtotal: number;
-  tax: number;
+  id: string;
+  number: string; // was invoiceNumber
+  reservation: string; // was bookingNumber
+  amount: number; // was value
   total: number;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string; // was createdAt
+  updated_at: string; // was updatedAt
+  // The old fields were: discount, subtotal, tax. They are not in the main list response
+  discount?: number;
+  subtotal?: number;
+  tax?: number;
 }
 
 export interface HotelUser {

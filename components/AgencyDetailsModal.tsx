@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { BookingAgency, AgencyStatus, AgencyType, AgencyIdType } from '../types';
+import { BookingAgency } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 
 interface AgencyDetailsModalProps {
@@ -31,7 +31,6 @@ const AgencyDetailsModal: React.FC<AgencyDetailsModalProps> = ({ agency, onClose
     if (!agency) return null;
 
     const isOpen = !!agency;
-    const formatDate = (dateString: string | null | undefined) => dateString ? new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '---';
 
     return (
         <div
@@ -57,25 +56,28 @@ const AgencyDetailsModal: React.FC<AgencyDetailsModalProps> = ({ agency, onClose
                 <div className="flex-grow p-6 overflow-y-auto">
                     <Section title={t('agencies.agencyInfo')}>
                         <DetailItem label={t('agencies.th_name')} value={agency.name} />
-                        <DetailItem label={t('agencies.th_agencyType')} value={agency.agencyType} />
-                        <DetailItem label={t('agencies.th_status')} value={t(`agencies.status_${agency.status}` as any)} />
+                        <DetailItem label={t('agencies.th_agencyType')} value={agency.guest_type} />
+                        <DetailItem label={t('agencies.th_status')} value={t(agency.is_active ? 'agencies.status_active' : 'agencies.status_inactive' as any)} />
                     </Section>
 
                     <Section title={t('agencies.contactInfo')}>
-                        <DetailItem label={t('agencies.th_mobileNumber')} value={agency.mobileNumber} />
-                        <DetailItem label={t('agencies.th_country')} value={agency.country} />
+                        <DetailItem label={t('agencies.th_mobileNumber')} value={agency.phone_number} />
+                        <DetailItem label={t('agencies.th_country')} value={agency.country_display} />
+                        <DetailItem label={t('profilePage.email')} value={agency.email} />
                     </Section>
                     
                     <Section title={t('agencies.idInfo')}>
-                        <DetailItem label={t('agencies.th_idType')} value={agency.idType} />
-                        <DetailItem label={t('agencies.th_idNumber')} value={agency.idNumber} />
-                        <DetailItem label={t('agencies.th_issueDate')} value={formatDate(agency.issueDate)} />
-                        <DetailItem label={t('agencies.th_expiryDate')} value={formatDate(agency.expiryDate)} />
+                        <DetailItem label={t('agencies.th_idType')} value={agency.ids} />
+                        <DetailItem label={t('agencies.th_idNumber')} value={agency.id_number} />
+                    </Section>
+
+                     <Section title={t('bookings.financialInfo')}>
+                        <DetailItem label={t('bookings.discountType')} value={agency.discount_display} />
                     </Section>
                     
                      <Section title={t('bookings.details.timestamps')}>
-                        <DetailItem label={t('agencies.th_createdAt')} value={new Date(agency.createdAt).toLocaleString()} />
-                        <DetailItem label={t('agencies.th_updatedAt')} value={new Date(agency.updatedAt).toLocaleString()} />
+                        <DetailItem label={t('agencies.th_createdAt')} value={new Date(agency.created_at).toLocaleString()} />
+                        <DetailItem label={t('agencies.th_updatedAt')} value={new Date(agency.updated_at).toLocaleString()} />
                     </Section>
                 </div>
             </div>

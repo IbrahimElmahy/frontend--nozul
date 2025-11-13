@@ -42,7 +42,6 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
     const { t, language } = useContext(LanguageContext);
     const [users, setUsers] = useState<HotelUser[]>(mockUsers);
     const [searchTerm, setSearchTerm] = useState('');
-    // FIX: Rename `currentPage` to `paginationCurrentPage` and `setCurrentPage` to `setPaginationCurrentPage` to avoid conflict with the `setCurrentPage` prop.
     const [paginationCurrentPage, setPaginationCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
