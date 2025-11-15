@@ -246,34 +246,35 @@ export interface HotelUser {
 }
 
 export interface ApartmentPrice {
-    id: number;
-    apartmentName: string;
-    roomType: string;
-    floor: number;
-    rooms: number;
-    price: number;
-    dailyPrice: number;
-    dailyLowestPrice: number;
-    monthlyPrice: number;
-    monthlyLowestPrice: number;
-    peakPrice: number;
-    peakLowestPrice: number;
+    id: string; // price object UUID
+    apartment: string; // name
+    apartment_id: string; // apartment UUID
+    apartment_type: string;
+    floor: string;
+    rooms: string;
+    regular_price: number;
+    regular_minimum_price: number;
+    peak_price: number;
+    monthly_price: number;
+    monthly_minimum_price: number;
+    hourly_price: number;
+    hourly_minimum_price: number;
 }
 
 export interface PeakTime {
-    id: number;
-    item: string;
-    startDate: string;
-    endDate: string;
-    saturday: boolean;
-    sunday: boolean;
-    monday: boolean;
-    tuesday: boolean;
-    wednesday: boolean;
-    thursday: boolean;
-    friday: boolean;
-    createdAt: string;
-    updatedAt: string;
+    id: string;
+    category: string;
+    start_date: string;
+    end_date: string;
+    sat: boolean;
+    sun: boolean;
+    mon: boolean;
+    tue: boolean;
+    wed: boolean;
+    thu: boolean;
+    fri: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Tax {

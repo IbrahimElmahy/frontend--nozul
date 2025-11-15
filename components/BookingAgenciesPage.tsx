@@ -155,15 +155,14 @@ const BookingAgenciesPage: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
-    // FIX: Corrected table header keys to match BookingAgency type
     const tableHeaders: { key: keyof BookingAgency | 'actions', labelKey: string, className?: string }[] = [
         { key: 'id', labelKey: 'agencies.th_id', className: 'hidden 2xl:table-cell' },
         { key: 'name', labelKey: 'agencies.th_name' },
         { key: 'phone_number', labelKey: 'agencies.th_mobileNumber', className: 'hidden sm:table-cell' },
-        { key: 'country_display', labelKey: 'agencies.th_country', className: 'hidden md:table-cell' },
-        { key: 'guest_type', labelKey: 'agencies.th_agencyType', className: 'hidden lg:table-cell' },
-        { key: 'ids', labelKey: 'agencies.th_idType', className: 'hidden xl:table-cell' },
-        { key: 'id_number', labelKey: 'agencies.th_idNumber', className: 'hidden xl:table-cell' },
+        { key: 'id_number', labelKey: 'agencies.th_idNumber', className: 'hidden md:table-cell' },
+        { key: 'country_display', labelKey: 'agencies.th_country', className: 'hidden lg:table-cell' },
+        { key: 'guest_type', labelKey: 'agencies.th_agencyType', className: 'hidden xl:table-cell' },
+        { key: 'ids', labelKey: 'agencies.th_idType', className: 'hidden 2xl:table-cell' },
         { key: 'created_at', labelKey: 'agencies.th_createdAt', className: 'hidden 2xl:table-cell' },
         { key: 'is_active', labelKey: 'agencies.th_status' },
         { key: 'actions', labelKey: 'agencies.th_actions' },
@@ -189,22 +188,6 @@ const BookingAgenciesPage: React.FC = () => {
       }
     }
     
-    const showingEntriesControls = (
-        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-            <span>{t('units.showing')}</span>
-            <select
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
-            >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-            </select>
-            <span>{t('units.entries')}</span>
-        </div>
-    );
-
     const searchAndViewsControls = (
         <div className="flex items-center gap-4 w-full sm:w-auto">
             <div className="relative flex-grow sm:flex-grow-0 sm:w-96">
@@ -245,18 +228,8 @@ const BookingAgenciesPage: React.FC = () => {
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-                    {language === 'ar' ? (
-                        <>
-                            {searchAndViewsControls}
-                            {showingEntriesControls}
-                        </>
-                    ) : (
-                        <>
-                            {showingEntriesControls}
-                            {searchAndViewsControls}
-                        </>
-                    )}
+                 <div className="flex flex-col sm:flex-row justify-end items-center gap-4 mb-4">
+                    {searchAndViewsControls}
                 </div>
 
                 {viewMode === 'grid' ? (
@@ -319,8 +292,23 @@ const BookingAgenciesPage: React.FC = () => {
                 )}
                 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
-                    <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('units.showing')} ${sortedAgencies.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, sortedAgencies.length)} ${t('units.of')} ${sortedAgencies.length} ${t('units.entries')}`}
+                    <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
+                        <div className="flex items-center gap-2">
+                            <span>{t('units.showing')}</span>
+                            <select
+                                value={itemsPerPage}
+                                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                                className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                            >
+                                <option value={10}>10</option>
+                                <option value={25}>25</option>
+                                <option value={50}>50</option>
+                            </select>
+                            <span>{t('units.entries')}</span>
+                        </div>
+                        <span>
+                            {`${t('units.showing')} ${sortedAgencies.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, sortedAgencies.length)} ${t('units.of')} ${sortedAgencies.length} ${t('units.entries')}`}
+                        </span>
                     </div>
                     {totalPages > 1 && (
                          <nav className="flex items-center gap-1" aria-label="Pagination">
