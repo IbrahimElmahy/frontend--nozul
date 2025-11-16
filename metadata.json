@@ -1,5 +1,5 @@
 {
-  "name": "Copy of Hotel Dashboard",
+  "name": "نزلكم",
   "description": "A modern, responsive hotel management dashboard inspired by a provided design, built with React, TypeScript, and Tailwind CSS. It features various data visualizations including statistical cards, donut charts, and bar charts to display key metrics.",
   "requestFramePermissions": []
 }
