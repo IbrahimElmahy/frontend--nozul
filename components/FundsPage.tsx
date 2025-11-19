@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Fund } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AddFundPanel from './AddFundPanel';
 import FundDetailsModal from './FundDetailsModal';
+import { apiClient } from '../apiClient';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -16,22 +17,21 @@ import XMarkIcon from './icons-redesign/XMarkIcon';
 import PlusIcon from './icons-redesign/PlusIcon';
 import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
 
-const mockFunds: Fund[] = [
-    { id: 1, name_en: 'Cash', name_ar: 'الصندوق', status: 'active', createdAt: '18:08:20 2023-07-16', updatedAt: '18:08:20 2023-07-16' },
-    { id: 2, name_en: 'Agkj', name_ar: 'لتمو', status: 'active', createdAt: '14:21:45 2025-10-07', updatedAt: '14:21:45 2025-10-07' },
-];
-
-const newFundTemplate: Omit<Fund, 'id' | 'createdAt' | 'updatedAt'> = {
+const newFundTemplate: Omit<Fund, 'id' | 'created_at' | 'updated_at'> = {
     name_en: '',
     name_ar: '',
+    description: '',
     status: 'active',
+    is_active: true,
 };
 
 const FundsPage: React.FC = () => {
     const { t } = useContext(LanguageContext);
-    const [funds, setFunds] = useState<Fund[]>(mockFunds);
+    const [funds, setFunds] = useState<Fund[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
@@ -39,12 +39,35 @@ const FundsPage: React.FC = () => {
     const [fundToDelete, setFundToDelete] = useState<Fund | null>(null);
     const [viewingFund, setViewingFund] = useState<Fund | null>(null);
 
-    const paginatedData = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return funds.slice(startIndex, startIndex + itemsPerPage);
-    }, [funds, currentPage, itemsPerPage]);
+    const fetchFunds = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const params = new URLSearchParams();
+            params.append('start', ((currentPage - 1) * itemsPerPage).toString());
+            params.append('length', itemsPerPage.toString());
+            
+            const response = await apiClient<{ data: Fund[], recordsFiltered: number }>(`/ar/cash/api/cash/?${params.toString()}`);
+            // Normalize API response
+            const mappedData = response.data.map(item => ({
+                ...item,
+                status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
+            }));
+            setFunds(mappedData);
 
-    const totalPages = Math.ceil(funds.length / itemsPerPage);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+        } finally {
+            setLoading(false);
+        }
+    }, [currentPage, itemsPerPage]);
+
+    useEffect(() => {
+        fetchFunds();
+    }, [fetchFunds]);
+
+
+    const totalPages = Math.ceil(funds.length / itemsPerPage); // Ideally use recordsFiltered from API for true total
 
     // Handlers
     const handleClosePanel = () => {
@@ -52,20 +75,41 @@ const FundsPage: React.FC = () => {
         setEditingFund(null);
     };
 
-    const handleSaveFund = (fundData: Omit<Fund, 'id' | 'createdAt' | 'updatedAt'>) => {
-        if (editingFund) {
-            const updatedFund = { ...editingFund, ...fundData, updatedAt: new Date().toISOString() };
-            setFunds(funds.map(f => f.id === updatedFund.id ? updatedFund : f));
-        } else {
-            const newFund: Fund = {
-                ...fundData,
-                id: Math.max(...funds.map(f => f.id), 0) + 1,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setFunds(prev => [newFund, ...prev]);
+    const handleSaveFund = async (fundData: Omit<Fund, 'id' | 'created_at' | 'updated_at'>) => {
+        try {
+            const formData = new FormData();
+            formData.append('name_en', fundData.name_en);
+            formData.append('name_ar', fundData.name_ar);
+            formData.append('description', fundData.description || '');
+
+            let savedFund: Fund;
+
+            if (editingFund) {
+                 savedFund = await apiClient<Fund>(`/ar/cash/api/cash/${editingFund.id}/`, {
+                    method: 'PUT',
+                    body: formData
+                });
+            } else {
+                 savedFund = await apiClient<Fund>(`/ar/cash/api/cash/`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            // Handle Activation/Deactivation separately if status changed or is new
+            if (fundData.is_active !== undefined) {
+                 const action = fundData.is_active ? 'active' : 'disable';
+                 // If editing, check if status actually changed. If new, enforce status.
+                 if (!editingFund || editingFund.is_active !== fundData.is_active) {
+                     await apiClient(`/ar/cash/api/cash/${savedFund.id}/${action}/`, { method: 'POST' });
+                 }
+            }
+
+            fetchFunds();
+            handleClosePanel();
+        } catch (err) {
+             alert(`Error saving fund: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
-        handleClosePanel();
     };
 
     const handleAddNewClick = () => {
@@ -82,15 +126,20 @@ const FundsPage: React.FC = () => {
         setFundToDelete(fund);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (fundToDelete) {
-            setFunds(funds.filter(f => f.id !== fundToDelete.id));
-            setFundToDelete(null);
+            try {
+                await apiClient(`/ar/cash/api/cash/${fundToDelete.id}/`, { method: 'DELETE' });
+                fetchFunds();
+                setFundToDelete(null);
+            } catch (err) {
+                alert(`Error deleting fund: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            }
         }
     };
 
     const tableHeaders = [
-        { key: 'th_id', className: 'px-4 py-3' },
+        { key: 'th_id', className: 'px-4 py-3 hidden md:table-cell' },
         { key: 'th_name_en', className: 'px-4 py-3 text-start' },
         { key: 'th_name_ar', className: 'px-4 py-3 text-start' },
         { key: 'th_status', className: 'px-4 py-3' },
@@ -116,8 +165,7 @@ const FundsPage: React.FC = () => {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('fundsPage.searchInfo')}</h3>
                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                        <button onClick={fetchFunds} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
             </div>
@@ -131,6 +179,8 @@ const FundsPage: React.FC = () => {
                         className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
                     >
                         <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
                     </select>
                     <span>{t('units.entries')}</span>
                 </div>
@@ -145,18 +195,20 @@ const FundsPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedData.map(fund => (
+                            {loading ? (
+                                <tr><td colSpan={7} className="py-8 text-center">Loading...</td></tr>
+                            ) : funds.map(fund => (
                                 <tr key={fund.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                    <td className="px-4 py-2">{fund.id}</td>
+                                    <td className="px-4 py-2 hidden md:table-cell">{fund.id}</td>
                                     <td className="px-4 py-2 text-start">{fund.name_en}</td>
                                     <td className="px-4 py-2 text-start">{fund.name_ar}</td>
                                     <td className="px-4 py-2">
-                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${fund.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                            {t(`fundsPage.status_${fund.status}`)}
+                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${fund.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
+                                            {t(`fundsPage.status_${fund.is_active ? 'active' : 'inactive'}`)}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-2 whitespace-nowrap hidden md:table-cell">{fund.createdAt}</td>
-                                    <td className="px-4 py-2 whitespace-nowrap hidden lg:table-cell">{fund.updatedAt}</td>
+                                    <td className="px-4 py-2 whitespace-nowrap hidden md:table-cell">{new Date(fund.created_at).toLocaleDateString()}</td>
+                                    <td className="px-4 py-2 whitespace-nowrap hidden lg:table-cell">{new Date(fund.updated_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center justify-center gap-1">
                                             <button onClick={() => handleDeleteClick(fund)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5"/></button>
@@ -166,21 +218,23 @@ const FundsPage: React.FC = () => {
                                     </td>
                                 </tr>
                             ))}
+                            {!loading && funds.length === 0 && (
+                                <tr><td colSpan={7} className="py-8 text-center">{t('orders.noData')}</td></tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                  <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} ${paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(currentPage * itemsPerPage, paginatedData.length)} ${t('usersPage.of')} ${funds.length} ${t('usersPage.entries')}`}
+                         {/* Simple pagination display for now */}
+                        Page {currentPage}
                     </div>
-                    {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
-                        </nav>
-                    )}
+                    <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
+                        <span className="text-sm font-semibold px-2">{currentPage}</span>
+                        <button onClick={() => setCurrentPage(p => p + 1)} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
+                    </nav>
                 </div>
             </div>
             

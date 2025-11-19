@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Bank } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AddBankPanel from './AddBankPanel';
 import BankDetailsModal from './BankDetailsModal';
+import { apiClient } from '../apiClient';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -16,21 +17,21 @@ import XMarkIcon from './icons-redesign/XMarkIcon';
 import PlusIcon from './icons-redesign/PlusIcon';
 import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
 
-const mockBanks: Bank[] = [
-    { id: 1, name_en: 'Abc', name_ar: 'ابت', status: 'active', createdAt: '14:22:19 2025-10-07', updatedAt: '14:22:19 2025-10-07' },
-];
 
-const newBankTemplate: Omit<Bank, 'id' | 'createdAt' | 'updatedAt'> = {
+const newBankTemplate: Omit<Bank, 'id' | 'created_at' | 'updated_at'> = {
     name_en: '',
     name_ar: '',
+    description: '',
     status: 'active',
+    is_active: true,
 };
 
 const BanksPage: React.FC = () => {
     const { t } = useContext(LanguageContext);
-    const [banks, setBanks] = useState<Bank[]>(mockBanks);
+    const [banks, setBanks] = useState<Bank[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [loading, setLoading] = useState(true);
     
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
@@ -38,12 +39,31 @@ const BanksPage: React.FC = () => {
     const [bankToDelete, setBankToDelete] = useState<Bank | null>(null);
     const [viewingBank, setViewingBank] = useState<Bank | null>(null);
 
-    const paginatedData = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return banks.slice(startIndex, startIndex + itemsPerPage);
-    }, [banks, currentPage, itemsPerPage]);
+    const fetchBanks = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.append('start', ((currentPage - 1) * itemsPerPage).toString());
+            params.append('length', itemsPerPage.toString());
+            
+            const response = await apiClient<{ data: Bank[], recordsFiltered: number }>(`/ar/bank/api/banks/?${params.toString()}`);
+             // Normalize API response
+            const mappedData = response.data.map(item => ({
+                ...item,
+                status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
+            }));
+            setBanks(mappedData);
 
-    const totalPages = Math.ceil(banks.length / itemsPerPage);
+        } catch (err) {
+            console.error("Error fetching banks:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [currentPage, itemsPerPage]);
+
+    useEffect(() => {
+        fetchBanks();
+    }, [fetchBanks]);
 
     // Handlers
     const handleClosePanel = () => {
@@ -51,20 +71,40 @@ const BanksPage: React.FC = () => {
         setEditingBank(null);
     };
 
-    const handleSaveBank = (bankData: Omit<Bank, 'id' | 'createdAt' | 'updatedAt'>) => {
-        if (editingBank) {
-            const updatedBank = { ...editingBank, ...bankData, updatedAt: new Date().toISOString() };
-            setBanks(banks.map(b => b.id === updatedBank.id ? updatedBank : b));
-        } else {
-            const newBank: Bank = {
-                ...bankData,
-                id: Math.max(...banks.map(b => b.id), 0) + 1,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setBanks(prev => [newBank, ...prev]);
+    const handleSaveBank = async (bankData: Omit<Bank, 'id' | 'created_at' | 'updated_at'>) => {
+         try {
+            const formData = new FormData();
+            formData.append('name_en', bankData.name_en);
+            formData.append('name_ar', bankData.name_ar);
+            formData.append('description', bankData.description || '');
+
+            let savedBank: Bank;
+
+            if (editingBank) {
+                 savedBank = await apiClient<Bank>(`/ar/bank/api/banks/${editingBank.id}/`, {
+                    method: 'PUT',
+                    body: formData
+                });
+            } else {
+                 savedBank = await apiClient<Bank>(`/ar/bank/api/banks/`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            // Handle Activation/Deactivation separately
+            if (bankData.is_active !== undefined) {
+                 const action = bankData.is_active ? 'active' : 'disable';
+                 if (!editingBank || editingBank.is_active !== bankData.is_active) {
+                     await apiClient(`/ar/bank/api/banks/${savedBank.id}/${action}/`, { method: 'POST' });
+                 }
+            }
+
+            fetchBanks();
+            handleClosePanel();
+        } catch (err) {
+             alert(`Error saving bank: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
-        handleClosePanel();
     };
 
     const handleAddNewClick = () => {
@@ -81,15 +121,20 @@ const BanksPage: React.FC = () => {
         setBankToDelete(bank);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (bankToDelete) {
-            setBanks(banks.filter(b => b.id !== bankToDelete.id));
-            setBankToDelete(null);
+            try {
+                await apiClient(`/ar/bank/api/banks/${bankToDelete.id}/`, { method: 'DELETE' });
+                fetchBanks();
+                setBankToDelete(null);
+            } catch (err) {
+                 alert(`Error deleting bank: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            }
         }
     };
 
     const tableHeaders = [
-        { key: 'th_id', className: 'px-4 py-3' },
+        { key: 'th_id', className: 'px-4 py-3 hidden md:table-cell' },
         { key: 'th_name_en', className: 'px-4 py-3 text-start' },
         { key: 'th_name_ar', className: 'px-4 py-3 text-start' },
         { key: 'th_status', className: 'px-4 py-3' },
@@ -115,8 +160,7 @@ const BanksPage: React.FC = () => {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('banksPage.searchInfo')}</h3>
                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                        <button onClick={fetchBanks} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
             </div>
@@ -130,6 +174,8 @@ const BanksPage: React.FC = () => {
                         className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
                     >
                         <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
                     </select>
                     <span>{t('units.entries')}</span>
                 </div>
@@ -144,18 +190,20 @@ const BanksPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedData.map(bank => (
+                            {loading ? (
+                                <tr><td colSpan={7} className="py-8 text-center">Loading...</td></tr>
+                            ) : banks.map(bank => (
                                 <tr key={bank.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                    <td className="px-4 py-2">{bank.id}</td>
+                                    <td className="px-4 py-2 hidden md:table-cell">{bank.id}</td>
                                     <td className="px-4 py-2 text-start">{bank.name_en}</td>
                                     <td className="px-4 py-2 text-start">{bank.name_ar}</td>
                                     <td className="px-4 py-2">
-                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${bank.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                            {t(`banksPage.status_${bank.status}`)}
+                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${bank.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
+                                            {t(`banksPage.status_${bank.is_active ? 'active' : 'inactive'}`)}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-2 whitespace-nowrap hidden md:table-cell">{bank.createdAt}</td>
-                                    <td className="px-4 py-2 whitespace-nowrap hidden lg:table-cell">{bank.updatedAt}</td>
+                                    <td className="px-4 py-2 whitespace-nowrap hidden md:table-cell">{new Date(bank.created_at).toLocaleDateString()}</td>
+                                    <td className="px-4 py-2 whitespace-nowrap hidden lg:table-cell">{new Date(bank.updated_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center justify-center gap-1">
                                             <button onClick={() => handleDeleteClick(bank)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5"/></button>
@@ -165,21 +213,22 @@ const BanksPage: React.FC = () => {
                                     </td>
                                 </tr>
                             ))}
+                             {!loading && banks.length === 0 && (
+                                <tr><td colSpan={7} className="py-8 text-center">{t('orders.noData')}</td></tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                  <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
-                    <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} ${paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(currentPage * itemsPerPage, paginatedData.length)} ${t('usersPage.of')} ${banks.length} ${t('usersPage.entries')}`}
+                     <div className="text-sm text-slate-600 dark:text-slate-300">
+                         Page {currentPage}
                     </div>
-                    {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
-                        </nav>
-                    )}
+                    <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
+                        <span className="text-sm font-semibold px-2">{currentPage}</span>
+                        <button onClick={() => setCurrentPage(p => p + 1)} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
+                    </nav>
                 </div>
             </div>
             

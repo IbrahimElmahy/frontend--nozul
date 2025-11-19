@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Item } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AddItemPanel from './AddItemPanel';
 import ItemDetailsModal from './ItemDetailsModal';
+import { apiClient } from '../apiClient';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -19,26 +20,23 @@ import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
 import DocumentDuplicateIcon from './icons-redesign/DocumentDuplicateIcon';
 
 
-const mockItems: Item[] = [
-    { id: 1, name_en: 'coffe', name_ar: 'كافي', services: 3, status: 'active', createdAt: '09:55:32 2025-06-28', updatedAt: '09:55:32 2025-06-28' },
-    { id: 2, name_en: 'store', name_ar: 'المتجر', services: 0, status: 'active', createdAt: '12:16:38 2025-02-26', updatedAt: '12:16:38 2025-02-26' },
-    { id: 3, name_en: 'test', name_ar: 'بوفية الفندق', services: 1, status: 'active', createdAt: '20:32:10 2024-11-18', updatedAt: '20:32:10 2024-11-18' },
-    { id: 4, name_en: 'Room service', name_ar: 'خدمة الغرف', services: 3, status: 'active', createdAt: '14:13:06 2024-03-31', updatedAt: '14:13:06 2024-03-31' },
-];
-
 const newItemTemplate: Omit<Item, 'id' | 'createdAt' | 'updatedAt'> = {
     name_en: '',
     name_ar: '',
-    services: 0,
+    description: '',
     status: 'active',
+    is_active: true,
+    services: 0,
+    created_at: '',
+    updated_at: '',
 };
 
 const ItemsPage: React.FC = () => {
     const { t } = useContext(LanguageContext);
-    const [items, setItems] = useState<Item[]>(mockItems);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [items, setItems] = useState<Item[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [loading, setLoading] = useState(true);
     
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
@@ -47,38 +45,77 @@ const ItemsPage: React.FC = () => {
     const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
     const [viewingItem, setViewingItem] = useState<Item | null>(null);
 
-    const filteredData = useMemo(() => {
-        return items.filter(item =>
-            item.name_ar.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.name_en.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [items, searchTerm]);
 
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-    const paginatedData = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return filteredData.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredData, currentPage, itemsPerPage]);
+    const fetchItems = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.append('start', ((currentPage - 1) * itemsPerPage).toString());
+            params.append('length', itemsPerPage.toString());
+            
+            const response = await apiClient<{ data: Item[], recordsFiltered: number }>(`/ar/category/api/categories/?${params.toString()}`);
+            
+            // Normalize API response
+            const mappedData = response.data.map(item => ({
+                ...item,
+                // Default services count to 0 if not present
+                services: item.services || 0,
+                status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
+            }));
+            setItems(mappedData);
 
+        } catch (err) {
+            console.error("Error fetching items (categories):", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [currentPage, itemsPerPage]);
+
+    useEffect(() => {
+        fetchItems();
+    }, [fetchItems]);
+
+
+    // Handlers
     const handleClosePanel = () => {
         setIsAddPanelOpen(false);
         setEditingItem(null);
     };
 
-    const handleSaveItem = (itemData: Omit<Item, 'id' | 'createdAt' | 'updatedAt'>) => {
-        if (panelMode === 'edit' && editingItem) {
-            const updatedItem = { ...editingItem, ...itemData, updatedAt: new Date().toISOString() };
-            setItems(items.map(i => i.id === updatedItem.id ? updatedItem : i));
-        } else { // add or copy
-            const newItem: Item = {
-                ...itemData,
-                id: Math.max(...items.map(i => i.id), 0) + 1,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setItems(prev => [newItem, ...prev]);
+    const handleSaveItem = async (itemData: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
+        try {
+            const formData = new FormData();
+            formData.append('name_en', itemData.name_en);
+            formData.append('name_ar', itemData.name_ar);
+            formData.append('description', itemData.description || '');
+
+            let savedItem: Item;
+
+            if (panelMode === 'edit' && editingItem) {
+                 savedItem = await apiClient<Item>(`/ar/category/api/categories/${editingItem.id}/`, {
+                    method: 'PUT',
+                    body: formData
+                });
+            } else {
+                 savedItem = await apiClient<Item>(`/ar/category/api/categories/`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            // Handle Activation/Deactivation separately
+            if (itemData.is_active !== undefined) {
+                 const action = itemData.is_active ? 'active' : 'disable';
+                 if (!editingItem || editingItem.is_active !== itemData.is_active || panelMode !== 'edit') {
+                     await apiClient(`/ar/category/api/categories/${savedItem.id}/${action}/`, { method: 'POST' });
+                 }
+            }
+
+            fetchItems();
+            handleClosePanel();
+        } catch (err) {
+             alert(`Error saving item: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
-        handleClosePanel();
     };
 
     const handleAddNewClick = () => {
@@ -103,10 +140,15 @@ const ItemsPage: React.FC = () => {
         setItemToDelete(item);
     };
 
-    const handleConfirmDelete = () => {
-        if (itemToDelete) {
-            setItems(items.filter(i => i.id !== itemToDelete.id));
-            setItemToDelete(null);
+    const handleConfirmDelete = async () => {
+         if (itemToDelete) {
+            try {
+                await apiClient(`/ar/category/api/categories/${itemToDelete.id}/`, { method: 'DELETE' });
+                fetchItems();
+                setItemToDelete(null);
+            } catch (err) {
+                 alert(`Error deleting item: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            }
         }
     };
 
@@ -125,8 +167,7 @@ const ItemsPage: React.FC = () => {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('itemsPage.searchInfo')}</h3>
                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                        <button onClick={fetchItems} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
             </div>
@@ -140,6 +181,8 @@ const ItemsPage: React.FC = () => {
                         className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
                     >
                         <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
                     </select>
                     <span>{t('units.entries')}</span>
                 </div>
@@ -159,19 +202,21 @@ const ItemsPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedData.map(item => (
+                            {loading ? (
+                                <tr><td colSpan={8} className="py-8 text-center">Loading...</td></tr>
+                            ) : items.map(item => (
                                 <tr key={item.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                    <td className="px-4 py-2">{item.id}</td>
+                                    <td className="px-4 py-2 hidden md:table-cell">{item.id}</td>
                                     <td className="px-4 py-2 text-start">{item.name_en}</td>
                                     <td className="px-4 py-2 text-start">{item.name_ar}</td>
                                     <td className="px-4 py-2"><span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300">{item.services}</span></td>
                                     <td className="px-4 py-2">
-                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${item.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                            {t(`itemsPage.status_${item.status}`)}
+                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${item.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
+                                            {t(`itemsPage.status_${item.is_active ? 'active' : 'inactive'}`)}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-2 whitespace-nowrap">{item.createdAt}</td>
-                                    <td className="px-4 py-2 whitespace-nowrap">{item.updatedAt}</td>
+                                    <td className="px-4 py-2 whitespace-nowrap">{new Date(item.created_at).toLocaleDateString()}</td>
+                                    <td className="px-4 py-2 whitespace-nowrap">{new Date(item.updated_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center justify-center gap-1">
                                             <button onClick={() => handleDeleteClick(item)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5"/></button>
@@ -182,21 +227,22 @@ const ItemsPage: React.FC = () => {
                                     </td>
                                 </tr>
                             ))}
+                            {!loading && items.length === 0 && (
+                                <tr><td colSpan={8} className="py-8 text-center">{t('orders.noData')}</td></tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                  <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} ${paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(currentPage * itemsPerPage, paginatedData.length)} ${t('usersPage.of')} ${filteredData.length} ${t('usersPage.entries')}`}
+                        Page {currentPage}
                     </div>
-                    {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
-                        </nav>
-                    )}
+                    <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
+                        <span className="text-sm font-semibold px-2">{currentPage}</span>
+                        <button onClick={() => setCurrentPage(p => p + 1)} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
+                    </nav>
                 </div>
             </div>
 

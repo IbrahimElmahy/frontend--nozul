@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Expense } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AddExpensePanel from './AddExpensePanel';
 import ExpenseDetailsModal from './ExpenseDetailsModal';
+import { apiClient } from '../apiClient';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -16,32 +17,21 @@ import XMarkIcon from './icons-redesign/XMarkIcon';
 import PlusIcon from './icons-redesign/PlusIcon';
 import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
 
-const mockExpenses: Expense[] = [
-    { id: 1, name_en: 'Wages and Salaries', name_ar: 'رواتب واجور العماله', status: 'active', createdAt: '18:03:12 2023-07-16', updatedAt: '18:03:12 2023-07-16' },
-    { id: 2, name_en: 'Cleaning expenses', name_ar: 'مصاريف مهمات النظافة', status: 'active', createdAt: '18:03:26 2023-07-16', updatedAt: '18:03:26 2023-07-16' },
-    { id: 3, name_en: 'Laundry and ironing expenses', name_ar: 'مصاريف غسيل وكوي', status: 'active', createdAt: '18:04:14 2023-07-16', updatedAt: '11:53:26 2024-01-25' },
-    { id: 4, name_en: 'Guest Supplies', name_ar: 'مصاريف لوازم النزلاء', status: 'active', createdAt: '18:05:09 2023-07-16', updatedAt: '18:05:09 2023-07-16' },
-    { id: 5, name_en: 'Workers\' Meals', name_ar: 'مصاريف وجبات العاملين', status: 'active', createdAt: '18:06:18 2023-07-16', updatedAt: '18:06:18 2023-07-16' },
-    { id: 6, name_en: 'Water and Lighting expense', name_ar: 'مصاريف المياه والأنارة', status: 'active', createdAt: '18:06:37 2023-07-16', updatedAt: '18:06:37 2023-07-16' },
-    { id: 7, name_en: 'Telecom and Internet expenses', name_ar: 'مصاريف الاتصالات والانترنت', status: 'active', createdAt: '18:07:21 2023-07-16', updatedAt: '18:07:21 2023-07-16' },
-    { id: 8, name_en: 'Maintenance Expenses', name_ar: 'مصاريف الصيانة', status: 'active', createdAt: '18:07:40 2023-07-16', updatedAt: '18:07:40 2023-07-16' },
-    { id: 9, name_en: 'Cash liquidation', name_ar: 'تصفية الصندوق', status: 'active', createdAt: '15:41:18 2024-03-02', updatedAt: '15:41:18 2024-03-02' },
-    { id: 10, name_en: 'mas', name_ar: 'مصروفات 14', status: 'active', createdAt: '03:17:19 2025-03-18', updatedAt: '03:17:32 2025-03-18' },
-    { id: 11, name_en: 'Expense 11', name_ar: 'مصروف 11', status: 'active', createdAt: '10:10:10 2023-01-01', updatedAt: '10:10:10 2023-01-01' },
-    { id: 12, name_en: 'Expense 12', name_ar: 'مصروف 12', status: 'active', createdAt: '11:11:11 2023-02-02', updatedAt: '11:11:11 2023-02-02' },
-];
 
-const newExpenseTemplate: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'> = {
+const newExpenseTemplate: Omit<Expense, 'id' | 'created_at' | 'updated_at'> = {
     name_en: '',
     name_ar: '',
+    description: '',
     status: 'active',
+    is_active: true,
 };
 
 const ExpensesPage: React.FC = () => {
     const { t } = useContext(LanguageContext);
-    const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
+    const [expenses, setExpenses] = useState<Expense[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [loading, setLoading] = useState(true);
     
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
@@ -49,12 +39,32 @@ const ExpensesPage: React.FC = () => {
     const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
     const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
 
-    const paginatedData = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return expenses.slice(startIndex, startIndex + itemsPerPage);
-    }, [expenses, currentPage, itemsPerPage]);
+    const fetchExpenses = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.append('start', ((currentPage - 1) * itemsPerPage).toString());
+            params.append('length', itemsPerPage.toString());
+            
+            const response = await apiClient<{ data: Expense[], recordsFiltered: number }>(`/ar/expense/api/expenses/?${params.toString()}`);
+             // Normalize API response
+            const mappedData = response.data.map(item => ({
+                ...item,
+                status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
+            }));
+            setExpenses(mappedData);
 
-    const totalPages = Math.ceil(expenses.length / itemsPerPage);
+        } catch (err) {
+            console.error("Error fetching expenses:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [currentPage, itemsPerPage]);
+
+    useEffect(() => {
+        fetchExpenses();
+    }, [fetchExpenses]);
+
 
     // Handlers
     const handleClosePanel = () => {
@@ -62,20 +72,40 @@ const ExpensesPage: React.FC = () => {
         setEditingExpense(null);
     };
 
-    const handleSaveExpense = (expenseData: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
-        if (editingExpense) {
-            const updatedExpense = { ...editingExpense, ...expenseData, updatedAt: new Date().toISOString() };
-            setExpenses(expenses.map(f => f.id === updatedExpense.id ? updatedExpense : f));
-        } else {
-            const newExpense: Expense = {
-                ...expenseData,
-                id: Math.max(...expenses.map(f => f.id), 0) + 1,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setExpenses(prev => [newExpense, ...prev]);
+    const handleSaveExpense = async (expenseData: Omit<Expense, 'id' | 'created_at' | 'updated_at'>) => {
+        try {
+            const formData = new FormData();
+            formData.append('name_en', expenseData.name_en);
+            formData.append('name_ar', expenseData.name_ar);
+            formData.append('description', expenseData.description || '');
+
+            let savedExpense: Expense;
+
+            if (editingExpense) {
+                 savedExpense = await apiClient<Expense>(`/ar/expense/api/expenses/${editingExpense.id}/`, {
+                    method: 'PUT',
+                    body: formData
+                });
+            } else {
+                 savedExpense = await apiClient<Expense>(`/ar/expense/api/expenses/`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            // Handle Activation/Deactivation separately
+            if (expenseData.is_active !== undefined) {
+                 const action = expenseData.is_active ? 'active' : 'disable';
+                 if (!editingExpense || editingExpense.is_active !== expenseData.is_active) {
+                     await apiClient(`/ar/expense/api/expenses/${savedExpense.id}/${action}/`, { method: 'POST' });
+                 }
+            }
+
+            fetchExpenses();
+            handleClosePanel();
+        } catch (err) {
+             alert(`Error saving expense: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
-        handleClosePanel();
     };
 
     const handleAddNewClick = () => {
@@ -92,15 +122,20 @@ const ExpensesPage: React.FC = () => {
         setExpenseToDelete(expense);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (expenseToDelete) {
-            setExpenses(expenses.filter(f => f.id !== expenseToDelete.id));
-            setExpenseToDelete(null);
+             try {
+                await apiClient(`/ar/expense/api/expenses/${expenseToDelete.id}/`, { method: 'DELETE' });
+                fetchExpenses();
+                setExpenseToDelete(null);
+            } catch (err) {
+                 alert(`Error deleting expense: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            }
         }
     };
 
     const tableHeaders = [
-        { key: 'th_id', className: 'px-4 py-3' },
+        { key: 'th_id', className: 'px-4 py-3 hidden md:table-cell' },
         { key: 'th_name_en', className: 'px-4 py-3 text-start' },
         { key: 'th_name_ar', className: 'px-4 py-3 text-start' },
         { key: 'th_status', className: 'px-4 py-3' },
@@ -126,8 +161,7 @@ const ExpensesPage: React.FC = () => {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('expensesPage.searchInfo')}</h3>
                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                        <button onClick={fetchExpenses} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
             </div>
@@ -141,6 +175,8 @@ const ExpensesPage: React.FC = () => {
                         className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
                     >
                         <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
                     </select>
                     <span>{t('units.entries')}</span>
                 </div>
@@ -155,18 +191,20 @@ const ExpensesPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedData.map(expense => (
+                            {loading ? (
+                                <tr><td colSpan={7} className="py-8 text-center">Loading...</td></tr>
+                            ) : expenses.map(expense => (
                                 <tr key={expense.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                    <td className="px-4 py-2">{expense.id}</td>
+                                    <td className="px-4 py-2 hidden md:table-cell">{expense.id}</td>
                                     <td className="px-4 py-2 text-start">{expense.name_en}</td>
                                     <td className="px-4 py-2 text-start">{expense.name_ar}</td>
                                     <td className="px-4 py-2">
-                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${expense.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                            {t(`expensesPage.status_${expense.status}`)}
+                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${expense.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
+                                            {t(`expensesPage.status_${expense.is_active ? 'active' : 'inactive'}`)}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-2 whitespace-nowrap hidden md:table-cell">{expense.createdAt}</td>
-                                    <td className="px-4 py-2 whitespace-nowrap hidden lg:table-cell">{expense.updatedAt}</td>
+                                    <td className="px-4 py-2 whitespace-nowrap hidden md:table-cell">{new Date(expense.created_at).toLocaleDateString()}</td>
+                                    <td className="px-4 py-2 whitespace-nowrap hidden lg:table-cell">{new Date(expense.updated_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center justify-center gap-1">
                                             <button onClick={() => handleDeleteClick(expense)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5"/></button>
@@ -176,21 +214,22 @@ const ExpensesPage: React.FC = () => {
                                     </td>
                                 </tr>
                             ))}
+                             {!loading && expenses.length === 0 && (
+                                <tr><td colSpan={7} className="py-8 text-center">{t('orders.noData')}</td></tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                  <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} ${paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(currentPage * itemsPerPage, paginatedData.length)} ${t('usersPage.of')} ${expenses.length} ${t('usersPage.entries')}`}
+                        Page {currentPage}
                     </div>
-                    {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
-                        </nav>
-                    )}
+                    <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
+                        <span className="text-sm font-semibold px-2">{currentPage}</span>
+                        <button onClick={() => setCurrentPage(p => p + 1)} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
+                    </nav>
                 </div>
             </div>
             

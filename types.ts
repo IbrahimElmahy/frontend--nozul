@@ -292,13 +292,15 @@ export interface Tax {
 }
 
 export interface Item {
-    id: number;
+    id: string; // Changed to string for UUID
     name_en: string;
     name_ar: string;
-    services: number;
-    status: 'active' | 'inactive';
-    createdAt: string;
-    updatedAt: string;
+    services?: number; // Optional as API might not return count directly in all views
+    description?: string;
+    status?: 'active' | 'inactive'; // API might return boolean or string, normalized in component
+    is_active?: boolean; // API returns this
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Currency {
@@ -317,28 +319,34 @@ export interface Currency {
 }
 
 export interface Fund {
-    id: number;
+    id: string; // Changed to string for UUID
     name_en: string;
     name_ar: string;
-    status: 'active' | 'inactive';
-    createdAt: string;
-    updatedAt: string;
+    description?: string;
+    status?: 'active' | 'inactive'; // Normalized in component
+    is_active?: boolean; // API field
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Bank {
-    id: number;
+    id: string; // Changed to string for UUID
     name_en: string;
     name_ar: string;
-    status: 'active' | 'inactive';
-    createdAt: string;
-    updatedAt: string;
+    description?: string;
+    status?: 'active' | 'inactive'; // Normalized
+    is_active?: boolean; // API field
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Expense {
-    id: number;
+    id: string; // Changed to string for UUID
     name_en: string;
     name_ar: string;
-    status: 'active' | 'inactive';
-    createdAt: string;
-    updatedAt: string;
+    description?: string;
+    status?: 'active' | 'inactive'; // Normalized
+    is_active?: boolean; // API field
+    created_at: string;
+    updated_at: string;
 }

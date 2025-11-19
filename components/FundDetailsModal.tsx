@@ -51,8 +51,8 @@ const FundDetailsModal: React.FC<FundDetailsModalProps> = ({ fund, onClose }) =>
                          } />
                     </Section>
                     <Section title={t('bookings.details.timestamps')}>
-                        <DetailItem label={t('fundsPage.th_createdAt')} value={formatDate(fund.createdAt)} />
-                        <DetailItem label={t('fundsPage.th_updatedAt')} value={formatDate(fund.updatedAt)} />
+                        <DetailItem label={t('fundsPage.th_createdAt')} value={formatDate(fund.created_at)} />
+                        <DetailItem label={t('fundsPage.th_updatedAt')} value={formatDate(fund.updated_at)} />
                     </Section>
                 </div>
             </div>

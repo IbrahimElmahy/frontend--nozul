@@ -23,7 +23,7 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, isOpen, 
         }
     }, [isOpen, initialData]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (!formData) return;
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev!, [name]: value }));
@@ -64,9 +64,13 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, isOpen, 
                             <label htmlFor="name_ar" className={labelBaseClass}>{t('itemsPage.th_name_ar')}</label>
                             <input type="text" name="name_ar" id="name_ar" value={formData.name_ar} onChange={handleInputChange} className={inputBaseClass} />
                         </div>
+                         <div>
+                            <label htmlFor="description" className={labelBaseClass}>{"الوصف"}</label>
+                            <textarea name="description" id="description" value={formData.description || ''} onChange={handleInputChange} className={inputBaseClass} rows={3}></textarea>
+                        </div>
                         <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                             <label htmlFor="status" className="font-semibold text-slate-800 dark:text-slate-200">{t('itemsPage.th_status')}</label>
-                            <Switch id="status" checked={formData.status === 'active'} onChange={c => setFormData(p => ({ ...p!, status: c ? 'active' : 'inactive' }))} />
+                            <Switch id="status" checked={formData.is_active !== false} onChange={c => setFormData(p => ({ ...p!, is_active: c, status: c ? 'active' : 'inactive' }))} />
                         </div>
                     </form>
                 </div>

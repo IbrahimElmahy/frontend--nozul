@@ -52,8 +52,8 @@ const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ item, onClose }) =>
                          } />
                     </Section>
                     <Section title={t('bookings.details.timestamps')}>
-                        <DetailItem label={t('itemsPage.th_createdAt')} value={formatDate(item.createdAt)} />
-                        <DetailItem label={t('itemsPage.th_updatedAt')} value={formatDate(item.updatedAt)} />
+                        <DetailItem label={t('itemsPage.th_createdAt')} value={formatDate(item.created_at)} />
+                        <DetailItem label={t('itemsPage.th_updatedAt')} value={formatDate(item.updated_at)} />
                     </Section>
                 </div>
             </div>

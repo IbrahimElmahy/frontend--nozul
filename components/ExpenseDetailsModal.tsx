@@ -51,8 +51,8 @@ const ExpenseDetailsModal: React.FC<ExpenseDetailsModalProps> = ({ expense, onCl
                          } />
                     </Section>
                     <Section title={t('bookings.details.timestamps')}>
-                        <DetailItem label={t('expensesPage.th_createdAt')} value={formatDate(expense.createdAt)} />
-                        <DetailItem label={t('expensesPage.th_updatedAt')} value={formatDate(expense.updatedAt)} />
+                        <DetailItem label={t('expensesPage.th_createdAt')} value={formatDate(expense.created_at)} />
+                        <DetailItem label={t('expensesPage.th_updatedAt')} value={formatDate(expense.updated_at)} />
                     </Section>
                 </div>
             </div>
