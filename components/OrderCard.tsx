@@ -1,3 +1,4 @@
+
 import React, { useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Order } from '../types';
@@ -44,11 +45,11 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewClick, onEditClick, 
             <div className="px-4 pb-4 space-y-3 text-sm flex-grow">
                  <div className="flex items-center gap-2">
                     <BriefcaseIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 truncate">{order.bookingNumber}</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 truncate">{order.bookingNumber || 'No Reservation'}</span>
                 </div>
                  <div className="flex items-center gap-2">
                     <BuildingOfficeIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                    <span className="text-slate-600 dark:text-slate-400">{order.apartmentName}</span>
+                    <span className="text-slate-600 dark:text-slate-400">{order.apartmentName || '-'}</span>
                 </div>
                 <div className="flex items-center gap-2 border-t dark:border-slate-700 pt-3">
                      <CalendarDaysIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />

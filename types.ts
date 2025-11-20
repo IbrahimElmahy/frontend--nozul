@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 // FIX: Remove circular import and define ChartData.
@@ -27,6 +28,7 @@ export interface Unit {
     checkOut?: string;
     price?: number;
     remaining?: number;
+    reservationId?: string; // Added for Order creation
 
     // Details
     unitType: string;
@@ -176,14 +178,16 @@ export interface BookingAgency {
 
 export interface OrderItem {
   id: string;
-  service: string;
-  category: string;
+  service: string; // Service ID or Name depending on context
+  service_name?: string; // Display name
+  category: string; // Category ID or Name
+  category_name?: string; // Display name
   quantity: number;
   price: number;
 }
 
 export interface Order {
-  id: number;
+  id: string; // Changed to string to match API UUIDs
   orderNumber: string;
   bookingNumber: string;
   apartmentName: string;
@@ -292,15 +296,28 @@ export interface Tax {
 }
 
 export interface Item {
-    id: string; // Changed to string for UUID
+    id: string;
     name_en: string;
     name_ar: string;
-    services?: number; // Optional as API might not return count directly in all views
+    services?: number; 
     description?: string;
-    status?: 'active' | 'inactive'; // API might return boolean or string, normalized in component
-    is_active?: boolean; // API returns this
+    status?: 'active' | 'inactive';
+    is_active?: boolean;
     created_at: string;
     updated_at: string;
+    // Service specific fields
+    price?: number;
+    category?: string; // UUID of category
+    category_name?: string; 
+}
+
+export interface Service extends Item {
+    price: number;
+    category: string;
+}
+
+export interface Category extends Item {
+    // Category specific fields if any beyond Item
 }
 
 export interface Currency {

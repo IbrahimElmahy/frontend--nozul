@@ -1,3 +1,4 @@
+
 import React, { useState, useContext } from 'react';
 import { ThemeSettings, Page } from '../App';
 import DashboardIcon from './icons-redesign/DashboardIcon';
@@ -48,10 +49,11 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificati
             chevron: 'text-slate-400'
         },
         brand: {
-            base: 'text-blue-100 hover:bg-[#3a82ab]',
-            active: 'bg-white text-[#4395c6] shadow-sm',
-            notificationBase: 'bg-[#5badd9] text-white',
-            notificationActive: 'bg-blue-100 text-[#4395c6]',
+            // Updated to use dynamic blue-* classes which map to --color-primary-*
+            base: 'text-blue-100 hover:bg-blue-700',
+            active: 'bg-white text-blue-600 shadow-sm',
+            notificationBase: 'bg-blue-800 text-white',
+            notificationActive: 'bg-blue-100 text-blue-600',
             chevron: 'text-blue-200'
         },
         gradient: {
@@ -97,7 +99,7 @@ const NavHeader: React.FC<{ collapsed: boolean; sidebarColor: ThemeSettings['sid
     const headerColors = {
         light: 'text-slate-400',
         dark: 'text-slate-500',
-        brand: 'text-[#a4d3ed]',
+        brand: 'text-blue-200',
         gradient: 'text-purple-200'
     }
 
@@ -121,7 +123,7 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurre
     const colorStyles = {
         light: { base: 'text-slate-600 hover:bg-slate-100' },
         dark: { base: 'text-slate-300 hover:bg-slate-700' },
-        brand: { base: 'text-blue-100 hover:bg-[#3a82ab]' },
+        brand: { base: 'text-blue-100 hover:bg-blue-700' },
         gradient: { base: 'text-purple-100 hover:bg-white/10' }
     };
 
@@ -235,13 +237,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         const targetPage = pageMapping[itemId];
         if (targetPage) {
             setCurrentPage(targetPage);
-        } else {
-            // For now, all other links can go to dashboard or do nothing
-            // For example:
-            // if (itemId === 'bookings') { /* navigate to bookings */ }
-            // else { setCurrentPage('dashboard'); }
         }
-
 
         if (isMobileMenuOpen) {
             setMobileMenuOpen(false);
@@ -258,14 +254,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
     const { sidebarColor, sidebarSize, showUserInfo, colorScheme } = settings;
 
     // When the global theme is dark, force light/brand sidebars to become dark for consistency.
-    const effectiveSidebarColor = colorScheme === 'dark' && (sidebarColor === 'light' || sidebarColor === 'brand')
+    const effectiveSidebarColor = colorScheme === 'dark' && (sidebarColor === 'light')
         ? 'dark'
         : sidebarColor;
 
     const colorClasses = {
         light: 'bg-white text-slate-700 border-r dark:bg-slate-900/70 dark:border-slate-700',
         dark: 'bg-slate-800 text-white',
-        brand: 'bg-[#4395c6] text-white',
+        // Using dynamic blue classes - assuming 'blue' is remapped to --color-primary-*
+        brand: 'bg-blue-600 text-white',
         gradient: 'bg-gradient-to-b from-blue-600 to-indigo-700 text-white'
     };
 
@@ -278,7 +275,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
     const borderColor = {
         light: 'border-slate-200 dark:border-slate-700',
         dark: 'border-slate-700',
-        brand: 'border-[#3a82ab]',
+        brand: 'border-blue-500',
         gradient: 'border-white/10'
     }
 
@@ -288,9 +285,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
     const mobileMenuPosition = language === 'ar' 
         ? `right-0 ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}` 
         : `left-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`;
-    const borderClass = language === 'ar' ? 'border-l' : 'border-r';
-
-  return (
+    
+    return (
     <aside 
         className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-transform duration-300 ease-in-out lg:transition-all lg:duration-300 h-screen fixed lg:relative z-50 w-72 ${mobileMenuPosition} lg:translate-x-0 ${widthClass}`}
         onMouseEnter={() => setIsDesktopCollapsed(false)}
@@ -320,7 +316,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
 
       <div className={`p-3 border-t ${borderColor[effectiveSidebarColor]}`}>
         {showUserInfo && <UserInfoBlock collapsed={isEffectivelyCollapsed} user={user} setCurrentPage={setCurrentPage} sidebarColor={effectiveSidebarColor}/>}
-        {/* FIX: Use namespaced translation key 'userMenu.logout' to resolve TypeScript error and improve maintainability. */}
         <NavItem label={t('userMenu.logout')} icon={ArrowLeftOnRectangleIcon} collapsed={isEffectivelyCollapsed} onClick={handleLogoutAndMenuClose} sidebarColor={effectiveSidebarColor} />
       </div>
     </aside>

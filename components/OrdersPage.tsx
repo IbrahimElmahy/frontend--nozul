@@ -1,10 +1,12 @@
-import React, { useState, useMemo, useContext } from 'react';
+
+import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Order } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import OrderCard from './OrderCard';
 import AddOrderPanel from './AddOrderPanel';
 import OrderDetailsModal from './OrderDetailsModal';
+import { apiClient } from '../apiClient';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -20,56 +22,6 @@ import TrashIcon from './icons-redesign/TrashIcon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 
-
-const mockOrders: Order[] = [
-    { 
-        id: 1, 
-        orderNumber: '0000000016', 
-        bookingNumber: '0000000180', 
-        apartmentName: '2', 
-        value: 58, 
-        discount: 0, 
-        subtotal: 58, 
-        tax: 8.7, 
-        total: 66.7, 
-        createdAt: '2025-06-26 19:10:56', 
-        updatedAt: '2025-06-26 19:10:56', 
-        items: [
-            { id: 'item-1', service: 'قهوه اليوم', category: 'بوفية الفندق', quantity: 2, price: 15 },
-            { id: 'item-2', service: 'ماء', category: 'المتجر', quantity: 4, price: 2 },
-            { id: 'item-3', service: 'كابتشينو', category: 'خدمة الغرف', quantity: 1, price: 20 },
-        ], 
-        notes: 'Please deliver to the room quickly.' 
-    },
-    { 
-        id: 2, 
-        orderNumber: '0000000015', 
-        bookingNumber: '0000000182', 
-        apartmentName: 'ذوى الهمم', 
-        value: 25, 
-        discount: 0, 
-        subtotal: 25, 
-        tax: 3.75, 
-        total: 28.75, 
-        createdAt: '2025-06-26 19:00:06', 
-        updatedAt: '2025-06-26 19:00:07', 
-        items: [
-            { id: 'item-4', service: 'سباحة', category: 'خدمة الغرف', quantity: 1, price: 25 },
-        ], 
-        notes: '' 
-    },
-    { id: 3, orderNumber: '0000000014', bookingNumber: '0000000173', apartmentName: 'A213', value: 30, discount: 0, subtotal: 30, tax: 0, total: 30, createdAt: '2025-06-01 11:10:46', updatedAt: '2025-06-01 11:10:46', items: [], notes: '' },
-    { id: 4, orderNumber: '0000000013', bookingNumber: '0000000165', apartmentName: 'testroom_123', value: 24, discount: 0, subtotal: 24, tax: 0, total: 24, createdAt: '2025-05-19 12:13:11', updatedAt: '2025-05-19 12:13:11', items: [], notes: '' },
-    { id: 5, orderNumber: '0000000012', bookingNumber: '0000000160', apartmentName: 'testing room', value: 2, discount: 0, subtotal: 2, tax: 0, total: 2, createdAt: '2025-05-14 23:02:38', updatedAt: '2025-05-14 23:02:38', items: [], notes: '' },
-    { id: 6, orderNumber: '0000000011', bookingNumber: '0000000138', apartmentName: 'A213', value: 2, discount: 0, subtotal: 2, tax: 0, total: 2, createdAt: '2025-05-13 10:43:31', updatedAt: '2025-05-13 10:43:32', items: [], notes: '' },
-    { id: 7, orderNumber: '0000000010', bookingNumber: '0000000129', apartmentName: '001', value: 24, discount: 0, subtotal: 24, tax: 0, total: 24, createdAt: '2025-05-08 18:26:12', updatedAt: '2025-05-08 18:26:12', items: [], notes: '' },
-    { id: 8, orderNumber: '0000000009', bookingNumber: '0000000069', apartmentName: '204', value: 12, discount: 0, subtotal: 12, tax: 0, total: 12, createdAt: '2024-12-17 22:28:57', updatedAt: '2024-12-17 22:28:57', items: [], notes: '' },
-    { id: 9, orderNumber: '0000000008', bookingNumber: '0000000067', apartmentName: '206', value: 12, discount: 0, subtotal: 12, tax: 0, total: 12, createdAt: '2024-12-05 10:04:32', updatedAt: '2024-12-05 10:04:32', items: [], notes: '' },
-    { id: 10, orderNumber: '0000000007', bookingNumber: '0000000034', apartmentName: '306', value: 30, discount: 0, subtotal: 30, tax: 0, total: 30, createdAt: '2024-11-18 20:30:25', updatedAt: '2024-11-18 20:30:25', items: [], notes: '' },
-    { id: 11, orderNumber: '0000000006', bookingNumber: '0000000033', apartmentName: '305', value: 50, discount: 0, subtotal: 50, tax: 5, total: 55, createdAt: '2024-11-17 20:30:25', updatedAt: '2024-11-17 20:30:25', items: [], notes: '' },
-    { id: 12, orderNumber: '0000000005', bookingNumber: '0000000032', apartmentName: '304', value: 60, discount: 0, subtotal: 60, tax: 6, total: 66, createdAt: '2024-11-16 20:30:25', updatedAt: '2024-11-16 20:30:25', items: [], notes: '' },
-    { id: 13, orderNumber: '0000000004', bookingNumber: '0000000031', apartmentName: '303', value: 70, discount: 0, subtotal: 70, tax: 7, total: 77, createdAt: '2024-11-15 20:30:25', updatedAt: '2024-11-15 20:30:25', items: [], notes: '' },
-];
 
 const newOrderTemplate: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
     orderNumber: '',
@@ -87,71 +39,107 @@ const newOrderTemplate: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
 
 const OrdersPage: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
-    const [orders, setOrders] = useState<Order[]>(mockOrders);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [loading, setLoading] = useState(true);
+    const [totalRecords, setTotalRecords] = useState(0);
+    
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingOrder, setEditingOrder] = useState<Order | null>(null);
-    const [orderToDeleteId, setOrderToDeleteId] = useState<number | null>(null);
-    const [sortConfig, setSortConfig] = useState<{ key: keyof Order | null; direction: 'ascending' | 'descending' }>({ key: 'id', direction: 'ascending' });
+    const [orderToDeleteId, setOrderToDeleteId] = useState<string | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof Order | null; direction: 'ascending' | 'descending' }>({ key: 'createdAt', direction: 'descending' });
     const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
-    const filteredOrders = useMemo(() => {
-        return orders.filter(order => 
-            order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.bookingNumber.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [orders, searchTerm]);
 
-    const sortedOrders = useMemo(() => {
-        let sortableItems = [...filteredOrders];
-        if (sortConfig.key) {
-            sortableItems.sort((a, b) => {
-                const key = sortConfig.key as keyof Order;
-                if (a[key] === null || a[key] === undefined) return 1;
-                if (b[key] === null || b[key] === undefined) return -1;
-                
-                let comparison = 0;
-                if (typeof a[key] === 'number' && typeof b[key] === 'number') {
-                    comparison = (a[key] as number) - (b[key] as number);
-                } else {
-                    comparison = String(a[key]).localeCompare(String(b[key]));
-                }
-                
-                return sortConfig.direction === 'ascending' ? comparison : -comparison;
-            });
+    const fetchOrders = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.append('start', ((currentPage - 1) * itemsPerPage).toString());
+            params.append('length', itemsPerPage.toString());
+            if (searchTerm) params.append('search', searchTerm);
+
+            const response = await apiClient<{ data: any[], recordsFiltered: number }>(`/ar/order/api/orders/?${params.toString()}`);
+            
+            const mappedOrders: Order[] = response.data.map((o: any) => ({
+                id: o.id,
+                orderNumber: o.number, // API field is 'number'
+                bookingNumber: o.reservation ? o.reservation.id : '', // Use ID or a displayable number if available
+                apartmentName: o.reservation && o.reservation.apartment ? o.reservation.apartment : '',
+                value: parseFloat(o.amount),
+                discount: parseFloat(o.discount || 0),
+                subtotal: parseFloat(o.subtotal),
+                tax: parseFloat(o.tax),
+                total: parseFloat(o.total),
+                createdAt: o.created_at,
+                updatedAt: o.updated_at,
+                notes: o.note,
+                items: o.order_items ? o.order_items.map((item: any) => ({
+                    id: item.id,
+                    service: item.service?.name_ar ?? item.service?.name_en ?? '', 
+                    category: item.category?.name_ar ?? item.category?.name_en ?? '',
+                    quantity: item.quantity,
+                    price: parseFloat(item.price)
+                })) : []
+            }));
+
+            setOrders(mappedOrders);
+            setTotalRecords(response.recordsFiltered);
+
+        } catch (error) {
+            console.error("Failed to fetch orders", error);
+        } finally {
+            setLoading(false);
         }
-        return sortableItems;
-    }, [filteredOrders, sortConfig]);
-    
-    const totalPages = Math.ceil(sortedOrders.length / itemsPerPage);
-    const paginatedOrders = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return sortedOrders.slice(startIndex, startIndex + itemsPerPage);
-    }, [sortedOrders, currentPage, itemsPerPage]);
+    }, [currentPage, itemsPerPage, searchTerm]);
+
+    useEffect(() => {
+        fetchOrders();
+    }, [fetchOrders]);
+
 
     const handleClosePanel = () => {
         setIsAddPanelOpen(false);
         setEditingOrder(null);
     };
 
-    const handleSaveOrder = (orderData: Order | Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) => {
-        if (editingOrder) {
-            const updatedOrder = { ...orderData, id: editingOrder.id, updatedAt: new Date().toISOString() } as Order;
-            setOrders(orders.map(b => b.id === updatedOrder.id ? updatedOrder : b));
-        } else {
-            const newOrder: Order = {
-                ...(orderData as Omit<Order, 'id' | 'createdAt' | 'updatedAt'>),
-                id: Math.max(...orders.map(b => b.id), 0) + 1,
-                orderNumber: `00000000${Math.max(...orders.map(o => o.id), 0) + 1}`,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setOrders(prev => [newOrder, ...prev]);
+    const handleSaveOrder = async (orderData: any) => {
+        // orderData comes from AddOrderPanel state. 
+        // It contains 'items', 'reservation' ID (passed in bookingNumber field temporarily), 'notes'
+        
+        try {
+            const formData = new FormData();
+            // Use the reservation ID stored in bookingNumber field from the panel
+            formData.append('reservation', orderData.bookingNumber); 
+            formData.append('note', orderData.notes);
+
+            if (orderData.items) {
+                orderData.items.forEach((item: any, index: number) => {
+                    formData.append(`order_items[${index}]service`, item.service);
+                    formData.append(`order_items[${index}]category`, item.category);
+                    formData.append(`order_items[${index}]quantity`, item.quantity.toString());
+                });
+            }
+
+            if (editingOrder) {
+                await apiClient(`/ar/order/api/orders/${editingOrder.id}/`, {
+                    method: 'PUT',
+                    body: formData
+                });
+            } else {
+                await apiClient('/ar/order/api/orders/', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+            fetchOrders();
+            handleClosePanel();
+        } catch (err) {
+            alert(`Error saving order: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
-        handleClosePanel();
     };
 
     const handleAddNewClick = () => {
@@ -164,14 +152,19 @@ const OrdersPage: React.FC = () => {
         setIsAddPanelOpen(true);
     };
 
-    const handleDeleteClick = (orderId: number) => {
+    const handleDeleteClick = (orderId: string) => {
         setOrderToDeleteId(orderId);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (orderToDeleteId) {
-            setOrders(orders.filter(b => b.id !== orderToDeleteId));
-            setOrderToDeleteId(null);
+            try {
+                await apiClient(`/ar/order/api/orders/${orderToDeleteId}/`, { method: 'DELETE' });
+                fetchOrders();
+                setOrderToDeleteId(null);
+            } catch (err) {
+                alert(`Error deleting order: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            }
         }
     };
     
@@ -186,15 +179,12 @@ const OrdersPage: React.FC = () => {
     const tableHeaders: { key: keyof Order | 'actions', labelKey: string }[] = [
         { key: 'id', labelKey: 'orders.th_id' },
         { key: 'orderNumber', labelKey: 'orders.th_orderNumber' },
-        { key: 'bookingNumber', labelKey: 'orders.th_bookingNumber' },
         { key: 'apartmentName', labelKey: 'orders.th_apartmentName' },
         { key: 'value', labelKey: 'orders.th_value' },
-        { key: 'discount', labelKey: 'orders.th_discount' },
         { key: 'subtotal', labelKey: 'orders.th_subtotal' },
         { key: 'tax', labelKey: 'orders.th_tax' },
         { key: 'total', labelKey: 'orders.th_total' },
         { key: 'createdAt', labelKey: 'orders.th_createdAt' },
-        { key: 'updatedAt', labelKey: 'orders.th_updatedAt' },
         { key: 'actions', labelKey: 'orders.th_actions' },
     ];
     
@@ -236,7 +226,8 @@ const OrdersPage: React.FC = () => {
             </div>
         </div>
     );
-
+    
+    const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     return (
         <div className="space-y-6">
@@ -268,9 +259,11 @@ const OrdersPage: React.FC = () => {
                     )}
                 </div>
 
-                {viewMode === 'grid' ? (
+                {loading ? (
+                    <div className="text-center py-10">Loading...</div>
+                ) : viewMode === 'grid' ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {paginatedOrders.map(order => (
+                        {orders.map(order => (
                             <OrderCard
                                 key={order.id}
                                 order={order}
@@ -287,25 +280,29 @@ const OrdersPage: React.FC = () => {
                                 <tr>
                                     {tableHeaders.map(header => (
                                         <th key={header.key} scope="col" className="px-6 py-3">
-                                             <button 
-                                                className="flex items-center gap-1.5 group" 
-                                                onClick={() => requestSort(header.key as keyof Order)}
-                                            >
-                                                <span>{t(header.labelKey as any)}</span>
-                                                <span className="flex-shrink-0">
-                                                    {sortConfig.key === header.key ? (
-                                                        sortConfig.direction === 'ascending' ? <ArrowUpIcon className="w-3.5 h-3.5" /> : <ArrowDownIcon className="w-3.5 h-3.5" />
-                                                    ) : (
-                                                        <ChevronUpDownIcon className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    )}
-                                                </span>
-                                            </button>
+                                             {header.key !== 'actions' ? (
+                                                <button 
+                                                    className="flex items-center gap-1.5 group" 
+                                                    onClick={() => requestSort(header.key as keyof Order)}
+                                                >
+                                                    <span>{t(header.labelKey as any)}</span>
+                                                    <span className="flex-shrink-0">
+                                                        {sortConfig.key === header.key ? (
+                                                            sortConfig.direction === 'ascending' ? <ArrowUpIcon className="w-3.5 h-3.5" /> : <ArrowDownIcon className="w-3.5 h-3.5" />
+                                                        ) : (
+                                                            <ChevronUpDownIcon className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        )}
+                                                    </span>
+                                                </button>
+                                             ) : (
+                                                 <span>{t(header.labelKey as any)}</span>
+                                             )}
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedOrders.map(order => (
+                                {orders.map(order => (
                                     <tr key={order.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                        {tableHeaders.map(header => (
                                             <td key={`${order.id}-${header.key}`} className="px-6 py-4 whitespace-nowrap">
@@ -315,8 +312,8 @@ const OrdersPage: React.FC = () => {
                                                         <button onClick={() => handleEditClick(order)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
                                                         <button onClick={() => handleDeleteClick(order.id)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
                                                     </div>
-                                                ) : header.key === 'discount' ? (
-                                                    `${order.discount.toFixed(1)}%`
+                                                ) : header.key === 'createdAt' ? (
+                                                    new Date(order.createdAt).toLocaleDateString()
                                                 ) : (
                                                     (order[header.key as keyof Order] as string | number) || '-'
                                                 )}
@@ -324,6 +321,9 @@ const OrdersPage: React.FC = () => {
                                        ))}
                                     </tr>
                                 ))}
+                                {orders.length === 0 && (
+                                     <tr><td colSpan={tableHeaders.length} className="text-center py-8">{t('orders.noData')}</td></tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -331,7 +331,7 @@ const OrdersPage: React.FC = () => {
                 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('units.showing')} ${sortedOrders.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, sortedOrders.length)} ${t('units.of')} ${sortedOrders.length} ${t('units.entries')}`}
+                        {`${t('units.showing')} ${orders.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, totalRecords)} ${t('units.of')} ${totalRecords} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
                          <nav className="flex items-center gap-1" aria-label="Pagination">

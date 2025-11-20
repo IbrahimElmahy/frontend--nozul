@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Receipt, User, Invoice } from '../types';
@@ -14,48 +15,34 @@ import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
 import PrinterIcon from './icons-redesign/PrinterIcon';
 import InvoiceDetailsModal from './InvoiceDetailsModal';
 import InvoicePrintPreview from './InvoicePrintPreview';
+import TableCellsIcon from './icons-redesign/TableCellsIcon';
+import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
+import ArrowUpIcon from './icons-redesign/ArrowUpIcon';
+import ArrowDownIcon from './icons-redesign/ArrowDownIcon';
+import ChevronUpDownIcon from './icons-redesign/ChevronUpDownIcon';
 
 const mockReceipts: Receipt[] = [
-  // FIX: Converted numeric `id` to string to match the Receipt type definition.
-  { id: '1', receiptNumber: '0000000018', currency: 'SAR', value: 152.0, date: '2025-10-07', time: '16:57:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: null, createdAt: '2025-10-07 13:58:41', updatedAt: '2025-10-07 13:58:41' },
-  // FIX: Converted numeric `id` to string to match the Receipt type definition.
-  { id: '2', receiptNumber: '0000000017', currency: 'SAR', value: 8000.0, date: '2025-08-23', time: '22:33:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000196', createdAt: '2025-08-23 19:34:23', updatedAt: '2025-08-23 19:34:23' },
-  // FIX: Converted numeric `id` to string to match the Receipt type definition.
-  { id: '3', receiptNumber: '0000000016', currency: 'SAR', value: 100.0, date: '2025-08-23', time: '21:53:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000195', createdAt: '2025-08-23 18:54:24', updatedAt: '2025-08-23 18:54:24' },
-  // FIX: Converted numeric `id` to string to match the Receipt type definition.
-  { id: '4', receiptNumber: '0000000015', currency: 'SAR', value: 100.0, date: '2025-08-23', time: '19:30:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000192', createdAt: '2025-08-23 16:31:45', updatedAt: '2025-08-23 16:31:45' },
-  // FIX: Converted numeric `id` to string to match the Receipt type definition.
-  { id: '5', receiptNumber: '0000000014', currency: 'SAR', value: 250.0, date: '2025-06-26', time: '12:57:00', paymentMethod: 'بطاقة ائتمانية', paymentType: null, transactionNumber: null, bookingNumber: '0000000182', createdAt: '2025-06-28 10:26:17', updatedAt: '2025-06-28 10:26:17' },
-  // FIX: Converted numeric `id` to string to match the Receipt type definition.
-  { id: '6', receiptNumber: '0000000013', currency: 'SAR', value: 150.0, date: '2025-06-07', time: '07:51:00', paymentMethod: 'التحويل البنكي', paymentType: null, transactionNumber: null, bookingNumber: '0000000177', createdAt: '2025-06-07 13:51:37', updatedAt: '2025-07-30 02:10:11' },
-  // FIX: Converted numeric `id` to string to match the Receipt type definition.
-  { id: '7', receiptNumber: '0000000012', currency: 'SAR', value: 2750.0, date: '2025-06-07', time: '13:59:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000176', createdAt: '2025-06-07 10:59:39', updatedAt: '2025-06-07 10:59:39' },
-  // FIX: Converted numeric `id` to string to match the Receipt type definition.
-  { id: '8', receiptNumber: '0000000011', currency: 'SAR', value: 2750.0, date: '2025-06-07', time: '13:58:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000176', createdAt: '2025-06-07 10:59:01', updatedAt: '2025-06-07 10:59:01' },
-  // FIX: Converted numeric `id` to string to match the Receipt type definition.
-  { id: '9', receiptNumber: '0000000010', currency: 'SAR', value: 1400.0, date: '2025-05-22', time: '01:43:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: '0000000154', createdAt: '2025-05-22 22:46:17', updatedAt: '2025-05-22 22:46:17' },
-  // FIX: Converted numeric `id` to string to match the Receipt type definition.
-  { id: '10', receiptNumber: '0000000009', currency: 'SAR', value: 200.0, date: '2025-05-10', time: '03:33:00', paymentMethod: 'نقدي', paymentType: null, transactionNumber: null, bookingNumber: null, createdAt: '2025-05-10 00:34:20', updatedAt: '2025-05-10 00:34:20' },
+  { id: '1', receiptNumber: '0000000018', currency: 'SAR', value: 152.0, date: '2025-10-07', time: '16:57:00', paymentMethod: 'نقدي', paymentType: '-', transactionNumber: '-', bookingNumber: '-', createdAt: '2025-10-07 13:58:41', updatedAt: '2025-10-07 13:58:41' },
+  { id: '2', receiptNumber: '0000000017', currency: 'SAR', value: 8000.0, date: '2025-08-23', time: '22:33:00', paymentMethod: 'نقدي', paymentType: '-', transactionNumber: '-', bookingNumber: '0000000196', createdAt: '2025-08-23 19:34:23', updatedAt: '2025-08-23 19:34:23' },
+  { id: '3', receiptNumber: '0000000016', currency: 'SAR', value: 100.0, date: '2025-08-23', time: '21:53:00', paymentMethod: 'نقدي', paymentType: '-', transactionNumber: '-', bookingNumber: '0000000195', createdAt: '2025-08-23 18:54:24', updatedAt: '2025-08-23 18:54:24' },
+  { id: '4', receiptNumber: '0000000015', currency: 'SAR', value: 100.0, date: '2025-08-23', time: '19:30:00', paymentMethod: 'نقدي', paymentType: '-', transactionNumber: '-', bookingNumber: '0000000192', createdAt: '2025-08-23 16:31:45', updatedAt: '2025-08-23 16:31:45' },
+  { id: '5', receiptNumber: '0000000014', currency: 'SAR', value: 250.0, date: '2025-06-26', time: '12:57:00', paymentMethod: 'بطاقة ائتمانية', paymentType: '-', transactionNumber: '-', bookingNumber: '0000000182', createdAt: '2025-06-28 10:26:17', updatedAt: '2025-06-28 10:26:17' },
+  { id: '6', receiptNumber: '0000000013', currency: 'SAR', value: 150.0, date: '2025-06-07', time: '07:51:00', paymentMethod: 'التحويل البنكي', paymentType: '-', transactionNumber: '-', bookingNumber: '0000000177', createdAt: '2025-06-07 13:51:37', updatedAt: '2025-07-30 02:10:11' },
+  { id: '7', receiptNumber: '0000000012', currency: 'SAR', value: 2750.0, date: '2025-06-07', time: '13:59:00', paymentMethod: 'نقدي', paymentType: '-', transactionNumber: '-', bookingNumber: '0000000176', createdAt: '2025-06-07 10:59:39', updatedAt: '2025-06-07 10:59:39' },
+  { id: '8', receiptNumber: '0000000011', currency: 'SAR', value: 2750.0, date: '2025-06-07', time: '13:58:00', paymentMethod: 'نقدي', paymentType: '-', transactionNumber: '-', bookingNumber: '0000000176', createdAt: '2025-06-07 10:59:01', updatedAt: '2025-06-07 10:59:01' },
+  { id: '9', receiptNumber: '0000000010', currency: 'SAR', value: 1400.0, date: '2025-05-22', time: '01:43:00', paymentMethod: 'نقدي', paymentType: '-', transactionNumber: '-', bookingNumber: '0000000154', createdAt: '2025-05-22 22:46:17', updatedAt: '2025-05-22 22:46:17' },
+  { id: '10', receiptNumber: '0000000009', currency: 'SAR', value: 200.0, date: '2025-05-10', time: '03:33:00', paymentMethod: 'نقدي', paymentType: '-', transactionNumber: '-', bookingNumber: '-', createdAt: '2025-05-10 00:34:20', updatedAt: '2025-05-10 00:34:20' },
 ];
 
 const mockInvoices: Invoice[] = [
-  // FIX: Updated property names to match the Invoice type definition.
   { id: '1', number: '0000000009', reservation: '0000000009', amount: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, created_at: '2025-10-24 21:38:37', updated_at: '2025-10-24 21:38:37' },
-  // FIX: Updated property names to match the Invoice type definition.
   { id: '2', number: '0000000008', reservation: '0000000009', amount: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, created_at: '2025-10-22 16:05:14', updated_at: '2025-10-22 16:05:14' },
-  // FIX: Updated property names to match the Invoice type definition.
   { id: '3', number: '0000000007', reservation: '0000000009', amount: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, created_at: '2025-10-22 14:51:59', updated_at: '2025-10-22 14:51:59' },
-  // FIX: Updated property names to match the Invoice type definition.
   { id: '4', number: '0000000006', reservation: '0000000009', amount: 2000, discount: 0.0, subtotal: 2000, tax: 0, total: 2000, created_at: '2025-10-22 14:45:30', updated_at: '2025-10-22 14:45:30' },
-  // FIX: Updated property names to match the Invoice type definition.
   { id: '5', number: '0000000005', reservation: '0000000008', amount: 223, discount: 0.0, subtotal: 223, tax: 0, total: 223, created_at: '2025-10-04 18:24:12', updated_at: '2025-10-04 18:24:12' },
-  // FIX: Updated property names to match the Invoice type definition.
   { id: '6', number: '0000000004', reservation: '0000000008', amount: 222, discount: 0.0, subtotal: 222, tax: 0, total: 222, created_at: '2025-09-29 20:34:50', updated_at: '2025-09-29 20:34:50' },
-  // FIX: Updated property names to match the Invoice type definition.
   { id: '7', number: '0000000003', reservation: '0000000002', amount: 120, discount: 0.0, subtotal: 120, tax: 0, total: 120, created_at: '2025-07-27 12:27:54', updated_at: '2025-07-27 12:27:54' },
-  // FIX: Updated property names to match the Invoice type definition.
   { id: '8', number: '0000000002', reservation: '0000000001', amount: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, created_at: '2025-07-22 18:46:30', updated_at: '2025-07-22 18:46:30' },
-  // FIX: Updated property names to match the Invoice type definition.
   { id: '9', number: '0000000001', reservation: '0000000001', amount: 100, discount: 0.0, subtotal: 100, tax: 0, total: 100, created_at: '2025-07-22 18:32:55', updated_at: '2025-07-22 18:32:55' },
 ];
 
@@ -73,7 +60,6 @@ const newReceiptTemplate: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt'> = {
 
 type VoucherType = 'receipt' | 'payment' | 'invoice';
 
-// FIX: Add user prop to component props
 interface ReceiptsPageProps {
     user: User | null;
 }
@@ -86,7 +72,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
     
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [voucherType, setVoucherType] = useState<VoucherType>('invoice');
+    const [voucherType, setVoucherType] = useState<VoucherType>('receipt'); // Default to receipt
     const [searchTerm, setSearchTerm] = useState('');
     const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
 
@@ -136,7 +122,6 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                         (item.bookingNumber && item.bookingNumber.toLowerCase().includes(lowerSearchTerm))
                     );
                 }
-                // FIX: Use correct property names for Invoice and ensure type safety
                 if ('number' in item) { // Invoice
                     return (
                         item.number.toLowerCase().includes(lowerSearchTerm) ||
@@ -202,11 +187,9 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
             };
             setDataSource(dataSource.map(v => v.id === updatedVoucher.id ? updatedVoucher : v));
         } else {
-            // FIX: Correctly calculate the next ID by converting string IDs to numbers for Math.max.
             const maxId = Math.max(0, ...receipts.map(r => Number(r.id)), ...paymentVouchers.map(p => Number(p.id)));
             const newVoucher: Receipt = {
                 ...voucherData,
-                // FIX: Converted the new numeric ID back to a string to match the Receipt type.
                 id: (maxId + 1).toString(),
                 receiptNumber: `00000000${maxId + 1}`,
                 createdAt: new Date().toISOString(),
@@ -230,19 +213,39 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
         }
     };
 
+    // Updated table headers with hidden classes for responsiveness
+    // Key changes: Hidden classes added to prioritize ID, Receipt#, Value, PaymentMethod, Actions
     const receiptTableHeaders = [
-        'th_id', isPaymentView ? 'th_paymentVoucherNumber' : 'th_receiptNumber', 'th_currency', 'th_value', 'th_date', 'th_time',
-        'th_paymentMethod', 'th_paymentType', 'th_transactionNumber', 'th_bookingNumber',
-        'th_createdAt', 'th_updatedAt', 'th_actions'
+        { key: 'th_id', className: 'hidden sm:table-cell' },
+        { key: isPaymentView ? 'th_paymentVoucherNumber' : 'th_receiptNumber', className: '' },
+        { key: 'th_currency', className: 'hidden xl:table-cell' },
+        { key: 'th_value', className: '' },
+        { key: 'th_date', className: 'hidden md:table-cell' },
+        { key: 'th_time', className: 'hidden lg:table-cell' },
+        { key: 'th_paymentMethod', className: '' },
+        { key: 'th_paymentType', className: 'hidden 2xl:table-cell' },
+        { key: 'th_transactionNumber', className: 'hidden 2xl:table-cell' },
+        { key: 'th_bookingNumber', className: 'hidden md:table-cell' },
+        { key: 'th_createdAt', className: 'hidden 2xl:table-cell' },
+        { key: 'th_updatedAt', className: 'hidden 2xl:table-cell' },
+        { key: 'th_actions', className: '' }
     ];
     
-    // FIX: Updated invoice table headers to use correct keys from the Invoice type.
     const invoiceTableHeaders = [
-        'th_id', 'th_invoiceNumber', 'th_bookingNumber', 'th_value', 'th_discount', 
-        'th_subtotal', 'th_tax', 'th_total', 'th_createdAt', 'th_updatedAt', 'th_actions'
+        { key: 'th_id', className: 'hidden sm:table-cell' },
+        { key: 'th_invoiceNumber', className: '' },
+        { key: 'th_bookingNumber', className: 'hidden md:table-cell' },
+        { key: 'th_value', className: '' },
+        { key: 'th_discount', className: 'hidden lg:table-cell' },
+        { key: 'th_subtotal', className: 'hidden xl:table-cell' },
+        { key: 'th_tax', className: 'hidden xl:table-cell' },
+        { key: 'th_total', className: 'hidden sm:table-cell' },
+        { key: 'th_createdAt', className: 'hidden 2xl:table-cell' },
+        { key: 'th_updatedAt', className: 'hidden 2xl:table-cell' },
+        { key: 'th_actions', className: '' }
     ];
     
-    const tableHeaders = isInvoiceView ? invoiceTableHeaders : receiptTableHeaders;
+    const currentTableHeaders = isInvoiceView ? invoiceTableHeaders : receiptTableHeaders;
 
     const filterButtons = [
         { key: 'receipt', label: 'receipts.receiptVouchers' },
@@ -266,7 +269,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2">
                 {filterButtons.map(btn => (
                      <button 
                         key={btn.key}
@@ -276,7 +279,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                             setSearchTerm('');
                             setPaymentMethodFilter('all');
                         }}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${voucherType === btn.key ? 'bg-blue-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${voucherType === btn.key ? 'bg-blue-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                     >
                          {t(btn.label as any)}
                      </button>
@@ -296,13 +299,13 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                         />
                     </div>
                     {!isInvoiceView && (
-                        <div className="flex items-center gap-2">
-                            <label htmlFor="paymentMethodFilter" className="text-sm font-medium text-slate-600 dark:text-slate-300">{t('receipts.th_paymentMethod')}:</label>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <label htmlFor="paymentMethodFilter" className="text-sm font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">{t('receipts.th_paymentMethod')}:</label>
                             <select
                                 id="paymentMethodFilter"
                                 value={paymentMethodFilter}
                                 onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                                className="py-2 px-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 text-sm"
+                                className="py-2 px-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 text-sm w-full sm:w-auto"
                             >
                                 <option value="all">{t('units.all')}</option>
                                 {paymentMethodsForFilter.map(method => <option key={method} value={method}>{method}</option>)}
@@ -331,7 +334,11 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                     <table className="w-full text-sm text-start text-slate-500 dark:text-slate-400 whitespace-nowrap">
                         <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                             <tr>
-                                {tableHeaders.map(headerKey => <th key={headerKey} scope="col" className="px-6 py-3">{t(`receipts.${headerKey}` as any)}</th>)}
+                                {currentTableHeaders.map(header => (
+                                    <th key={header.key} scope="col" className={`px-6 py-3 ${header.className}`}>
+                                        {t(`receipts.${header.key}` as any)}
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
                         <tbody>
@@ -339,17 +346,16 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                                 isInvoiceView ? (
                                     (paginatedData as Invoice[]).map(invoice => (
                                         <tr key={invoice.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                            {/* FIX: Use correct property names for Invoice */}
-                                            <td className="px-6 py-4">{invoice.id}</td>
+                                            <td className="px-6 py-4 hidden sm:table-cell">{invoice.id}</td>
                                             <td className="px-6 py-4">{invoice.number}</td>
-                                            <td className="px-6 py-4">{invoice.reservation}</td>
+                                            <td className="px-6 py-4 hidden md:table-cell">{invoice.reservation}</td>
                                             <td className="px-6 py-4">{invoice.amount.toFixed(2)}</td>
-                                            <td className="px-6 py-4">{invoice.discount?.toFixed(2) ?? 'N/A'}</td>
-                                            <td className="px-6 py-4">{invoice.subtotal?.toFixed(2) ?? 'N/A'}</td>
-                                            <td className="px-6 py-4">{invoice.tax?.toFixed(2) ?? 'N/A'}</td>
-                                            <td className="px-6 py-4">{invoice.total.toFixed(2)}</td>
-                                            <td className="px-6 py-4">{invoice.created_at}</td>
-                                            <td className="px-6 py-4">{invoice.updated_at}</td>
+                                            <td className="px-6 py-4 hidden lg:table-cell">{invoice.discount?.toFixed(2) ?? 'N/A'}</td>
+                                            <td className="px-6 py-4 hidden xl:table-cell">{invoice.subtotal?.toFixed(2) ?? 'N/A'}</td>
+                                            <td className="px-6 py-4 hidden xl:table-cell">{invoice.tax?.toFixed(2) ?? 'N/A'}</td>
+                                            <td className="px-6 py-4 hidden sm:table-cell">{invoice.total.toFixed(2)}</td>
+                                            <td className="px-6 py-4 hidden 2xl:table-cell">{invoice.created_at}</td>
+                                            <td className="px-6 py-4 hidden 2xl:table-cell">{invoice.updated_at}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1">
                                                     <button onClick={() => setViewingInvoice(invoice)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5"/></button>
@@ -362,18 +368,18 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                                 ) : (
                                     (paginatedData as Receipt[]).map(voucher => (
                                         <tr key={voucher.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                            <td className="px-6 py-4">{voucher.id}</td>
+                                            <td className="px-6 py-4 hidden sm:table-cell">{voucher.id}</td>
                                             <td className="px-6 py-4">{voucher.receiptNumber}</td>
-                                            <td className="px-6 py-4"><span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300">{t('receipts.currency_sar')}</span></td>
+                                            <td className="px-6 py-4 hidden xl:table-cell"><span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300">{t('receipts.currency_sar')}</span></td>
                                             <td className="px-6 py-4"><span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-red-900 dark:text-red-300">{voucher.value.toFixed(1)}</span></td>
-                                            <td className="px-6 py-4">{voucher.date}</td>
-                                            <td className="px-6 py-4">{voucher.time}</td>
+                                            <td className="px-6 py-4 hidden md:table-cell">{voucher.date}</td>
+                                            <td className="px-6 py-4 hidden lg:table-cell">{voucher.time}</td>
                                             <td className="px-6 py-4">{voucher.paymentMethod}</td>
-                                            <td className="px-6 py-4">{voucher.paymentType || '-'}</td>
-                                            <td className="px-6 py-4">{voucher.transactionNumber || '-'}</td>
-                                            <td className="px-6 py-4">{voucher.bookingNumber || '-'}</td>
-                                            <td className="px-6 py-4">{voucher.createdAt}</td>
-                                            <td className="px-6 py-4">{voucher.updatedAt}</td>
+                                            <td className="px-6 py-4 hidden 2xl:table-cell">{voucher.paymentType || '-'}</td>
+                                            <td className="px-6 py-4 hidden 2xl:table-cell">{voucher.transactionNumber || '-'}</td>
+                                            <td className="px-6 py-4 hidden md:table-cell">{voucher.bookingNumber || '-'}</td>
+                                            <td className="px-6 py-4 hidden 2xl:table-cell">{voucher.createdAt}</td>
+                                            <td className="px-6 py-4 hidden 2xl:table-cell">{voucher.updatedAt}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1">
                                                     <button onClick={() => setViewingVoucher(voucher)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5"/></button>
@@ -386,7 +392,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                                 )
                             ) : (
                                 <tr>
-                                    <td colSpan={tableHeaders.length} className="text-center py-10 text-slate-500 dark:text-slate-400">
+                                    <td colSpan={currentTableHeaders.length} className="text-center py-10 text-slate-500 dark:text-slate-400">
                                         {t('orders.noData')}
                                     </td>
                                 </tr>

@@ -1,147 +1,311 @@
-import React, { useState, useRef, useEffect, ChangeEvent, useContext } from 'react';
+
+import React, { useState, useRef, useContext } from 'react';
 import CogIcon from './icons-redesign/CogIcon';
-import { ThemeSettings } from '../App';
+import { ThemeSettings, ColorSchemeName } from '../App';
 import { LanguageContext } from '../contexts/LanguageContext';
+import XMarkIcon from './icons-redesign/XMarkIcon';
+import CheckIcon from './icons-redesign/CheckIcon';
+import Switch from './Switch';
 
 interface SettingsCogProps {
     settings: ThemeSettings;
     setSettings: (settings: ThemeSettings | ((prev: ThemeSettings) => ThemeSettings)) => void;
 }
 
-interface SettingsRadioOptionProps {
-    name: string;
-    value: string;
-    label: string;
-    checked: boolean;
-    onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-}
-
-const SettingsRadioOption: React.FC<SettingsRadioOptionProps> = ({ name, value, label, checked, onChange }) => (
-    <div className="flex-1">
-        <input type="radio" id={`${name}-${value}`} name={name} value={value} checked={checked} onChange={onChange} className="sr-only peer" />
-        <label
-            htmlFor={`${name}-${value}`}
-            className={`flex items-center justify-center cursor-pointer min-h-[3.25rem] w-full p-2 text-center text-sm rounded-lg border-2 transition-colors duration-200
-            peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-500/10 peer-checked:text-blue-600 dark:peer-checked:text-blue-400 font-semibold
-            bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-800 dark:hover:text-slate-200
-            `}
-        >
-           <span>{label}</span>
-        </label>
-    </div>
-);
-
-
 const SettingsSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
     const { language } = useContext(LanguageContext);
     return (
-        <div>
-            <h5 className={`font-medium text-sm text-slate-500 dark:text-slate-400 mb-3 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{title}</h5>
+        <div className="mb-8">
+            <h5 className={`font-bold text-sm text-slate-900 dark:text-slate-100 mb-4 uppercase tracking-wider ${language === 'ar' ? 'text-right' : 'text-left'}`}>{title}</h5>
             {children}
         </div>
     );
 };
 
+const ToggleGroup: React.FC<{ options: { value: string; label: string }[]; value: string; onChange: (val: any) => void }> = ({ options, value, onChange }) => {
+    return (
+        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-full">
+            {options.map((option) => (
+                <button
+                    key={option.value}
+                    onClick={() => onChange(option.value)}
+                    className={`flex-1 py-2 px-2 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
+                        value === option.value
+                            ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 ring-1 ring-black/5 dark:ring-white/5'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                    }`}
+                >
+                    {option.label}
+                </button>
+            ))}
+        </div>
+    );
+};
 
 const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
     const [isOpen, setIsOpen] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
-    const buttonRef = useRef<HTMLButtonElement>(null);
     const { t, language } = useContext(LanguageContext);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                panelRef.current &&
-                !panelRef.current.contains(event.target as Node) &&
-                buttonRef.current &&
-                !buttonRef.current.contains(event.target as Node)
-            ) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    const handleSettingChange = (key: keyof ThemeSettings) => (e: ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-        setSettings(prev => ({...prev, [key]: value}));
-    };
-
-    const handleBooleanSettingChange = (key: keyof ThemeSettings) => (e: ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value === 'true';
+    const updateSetting = <K extends keyof ThemeSettings>(key: K, value: ThemeSettings[K]) => {
         setSettings(prev => ({ ...prev, [key]: value }));
     };
-    
-    const panelPositionClass = language === 'ar' ? 'left-4 sm:left-6' : 'right-4 sm:right-6';
-    const panelOriginClass = language === 'ar' ? 'origin-bottom-left' : 'origin-bottom-right';
+
+    const colors: { id: ColorSchemeName; color: string; pair: string }[] = [
+        { id: 'teal', color: '#14b8a6', pair: '#0f766e' },
+        { id: 'rose', color: '#f43f5e', pair: '#881337' },
+        { id: 'violet', color: '#8b5cf6', pair: '#4c1d95' },
+        { id: 'blue', color: '#3b82f6', pair: '#1e3a8a' },
+        { id: 'sky', color: '#0ea5e9', pair: '#0c4a6e' },
+        { id: 'emerald', color: '#10b981', pair: '#064e3b' },
+        { id: 'cyan', color: '#06b6d4', pair: '#164e63' },
+        { id: 'indigo', color: '#6366f1', pair: '#312e81' },
+        { id: 'amber', color: '#f59e0b', pair: '#78350f' },
+        { id: 'fuchsia', color: '#d946ef', pair: '#701a75' },
+        { id: 'lime', color: '#84cc16', pair: '#3f6212' },
+        { id: 'slate', color: '#64748b', pair: '#0f172a' },
+        { id: 'orange', color: '#f97316', pair: '#7c2d12' },
+        { id: 'pink', color: '#ec4899', pair: '#831843' },
+    ];
+
+    const packages = [
+        { id: 'seaBreeze', color: 'teal', mode: 'light', gradient: 'from-teal-400 to-cyan-300' },
+        { id: 'citySunset', color: 'orange', mode: 'light', gradient: 'from-orange-400 to-rose-400' },
+        { id: 'mistyForests', color: 'emerald', mode: 'light', gradient: 'from-emerald-500 to-teal-600' },
+        { id: 'purpleCity', color: 'violet', mode: 'light', gradient: 'from-violet-500 to-fuchsia-500' },
+        { id: 'cityNights', color: 'blue', mode: 'dark', gradient: 'from-blue-800 to-indigo-900' },
+        { id: 'royalTurquoise', color: 'teal', mode: 'dark', gradient: 'from-teal-800 to-emerald-900' },
+        { id: 'modernDesert', color: 'amber', mode: 'light', gradient: 'from-amber-200 to-orange-100' },
+    ];
+
+    const applyPackage = (pkg: typeof packages[0]) => {
+        setSettings(prev => ({
+            ...prev,
+            themeColor: pkg.color as ColorSchemeName,
+            colorScheme: pkg.mode as 'light' | 'dark',
+            sidebarColor: pkg.mode === 'dark' ? 'dark' : 'light',
+            topbarColor: pkg.mode === 'dark' ? 'dark' : 'light'
+        }));
+    };
 
     return (
-        <div className={`fixed bottom-4 sm:bottom-6 z-50 ${panelPositionClass}`}>
+        <>
+            <button
+                onClick={() => setIsOpen(true)}
+                className={`fixed bottom-6 z-50 w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all duration-300 hover:rotate-90 ${language === 'ar' ? 'left-6' : 'right-6'}`}
+                aria-label="Open settings"
+            >
+                <CogIcon className="w-6 h-6" />
+            </button>
+
+            {isOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]"
+                    onClick={() => setIsOpen(false)}
+                ></div>
+            )}
+
             <div
                 ref={panelRef}
-                className={`transform transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 visible scale-100 translate-y-0' : 'opacity-0 invisible scale-95 -translate-y-2'} ${panelOriginClass}`}
+                className={`fixed top-0 h-full w-80 sm:w-96 bg-white dark:bg-slate-900 shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out overflow-y-auto ${
+                    isOpen ? 'translate-x-0' : (language === 'ar' ? '-translate-x-full' : 'translate-x-full')
+                } ${language === 'ar' ? 'left-0' : 'right-0'}`}
             >
-                <div className={`absolute bottom-full mb-3 w-[calc(100vw-2rem)] max-w-xs sm:w-72 bg-white dark:bg-slate-800 rounded-lg shadow-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-700 flex flex-col max-h-[80vh] ${language === 'ar' ? 'left-0' : 'right-0'}`}>
-                    <div className={`p-4 border-b dark:border-slate-700 flex-shrink-0 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                        <h4 className="font-bold text-slate-800 dark:text-slate-200">{t('settings.title')}</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('settings.subtitle')}</p>
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-10">
+                    <div>
+                        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">{t('themeCustomizer.title')}</h2>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('themeCustomizer.subtitle')}</p>
                     </div>
+                    <button 
+                        onClick={() => setIsOpen(false)} 
+                        className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
+                    >
+                        <XMarkIcon className="w-5 h-5" />
+                    </button>
+                </div>
 
-                    <div className="p-4 space-y-6 overflow-y-auto">
-                        <SettingsSection title={t('settings.colorScheme')}>
-                            <div className="flex gap-2">
-                                <SettingsRadioOption name="colorScheme" value="light" label={t('settings.lightScheme')} checked={settings.colorScheme === 'light'} onChange={handleSettingChange('colorScheme')} />
-                                <SettingsRadioOption name="colorScheme" value="dark" label={t('settings.darkScheme')} checked={settings.colorScheme === 'dark'} onChange={handleSettingChange('colorScheme')} />
-                            </div>
-                        </SettingsSection>
+                <div className="p-6 space-y-8">
+                    {/* Packages */}
+                    <SettingsSection title={t('themeCustomizer.packagesTitle')}>
+                        <div className="grid grid-cols-1 gap-3">
+                            {packages.map((pkg) => (
+                                <button
+                                    key={pkg.id}
+                                    onClick={() => applyPackage(pkg)}
+                                    className={`relative group overflow-hidden rounded-xl border transition-all duration-200 text-right ${settings.themeColor === pkg.color && settings.colorScheme === pkg.mode ? 'border-blue-500 ring-1 ring-blue-500' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                >
+                                    <div className={`h-16 bg-gradient-to-r ${pkg.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
+                                    <div className="p-3 bg-white dark:bg-slate-800">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">{t(`themeCustomizer.packages.${pkg.id}` as any)}</h3>
+                                            {settings.themeColor === pkg.color && settings.colorScheme === pkg.mode && (
+                                                <CheckIcon className="w-4 h-4 text-blue-500" />
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{t(`themeCustomizer.packages.${pkg.id}Desc` as any)}</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </SettingsSection>
+                    
+                    {/* Dashboard View */}
+                    <SettingsSection title={t('themeCustomizer.dashboardView')}>
+                        <ToggleGroup
+                            options={[
+                                { value: 'full', label: t('themeCustomizer.fullWidth') },
+                                { value: 'boxed', label: t('themeCustomizer.boxed') },
+                            ]}
+                            value={settings.layoutWidth}
+                            onChange={(val) => updateSetting('layoutWidth', val)}
+                        />
+                    </SettingsSection>
 
-                        <SettingsSection title={t('settings.layoutWidth')}>
-                            <div className="flex gap-2">
-                                <SettingsRadioOption name="layoutWidth" value="full" label={t('settings.fullWidth')} checked={settings.layoutWidth === 'full'} onChange={handleSettingChange('layoutWidth')} />
-                                <SettingsRadioOption name="layoutWidth" value="boxed" label={t('settings.boxedWidth')} checked={settings.layoutWidth === 'boxed'} onChange={handleSettingChange('layoutWidth')} />
-                            </div>
-                        </SettingsSection>
-                        
-                        <SettingsSection title={t('settings.sidebarColor')}>
-                            <div className="grid grid-cols-2 gap-2">
-                                <SettingsRadioOption name="sidebarColor" value="light" label={t('settings.light')} checked={settings.sidebarColor === 'light'} onChange={handleSettingChange('sidebarColor')} />
-                                <SettingsRadioOption name="sidebarColor" value="dark" label={t('settings.dark')} checked={settings.sidebarColor === 'dark'} onChange={handleSettingChange('sidebarColor')} />
-                                <SettingsRadioOption name="sidebarColor" value="brand" label={t('settings.brand')} checked={settings.sidebarColor === 'brand'} onChange={handleSettingChange('sidebarColor')} />
-                                <SettingsRadioOption name="sidebarColor" value="gradient" label={t('settings.gradient')} checked={settings.sidebarColor === 'gradient'} onChange={handleSettingChange('sidebarColor')} />
-                            </div>
-                        </SettingsSection>
+                     {/* Color Mode */}
+                     <SettingsSection title={t('themeCustomizer.colorMode')}>
+                        <ToggleGroup
+                            options={[
+                                { value: 'light', label: t('themeCustomizer.lightMode') },
+                                { value: 'dark', label: t('themeCustomizer.darkMode') },
+                            ]}
+                            value={settings.colorScheme}
+                            onChange={(val) => updateSetting('colorScheme', val)}
+                        />
+                    </SettingsSection>
 
-                        <SettingsSection title={t('settings.topbar')}>
-                            <div className="flex gap-2">
-                                <SettingsRadioOption name="topbarColor" value="light" label={t('settings.light')} checked={settings.topbarColor === 'light'} onChange={handleSettingChange('topbarColor')} />
-                                <SettingsRadioOption name="topbarColor" value="dark" label={t('settings.dark')} checked={settings.topbarColor === 'dark'} onChange={handleSettingChange('topbarColor')} />
-                            </div>
-                        </SettingsSection>
+                    {/* Header Color */}
+                    <SettingsSection title={t('themeCustomizer.headerColor')}>
+                         <div className="grid grid-cols-2 gap-2">
+                            {[
+                                { value: 'light', label: t('themeCustomizer.light'), class: 'bg-white border-slate-200 text-slate-800' },
+                                { value: 'dark', label: t('themeCustomizer.dark'), class: 'bg-slate-800 border-slate-700 text-white' },
+                                { value: 'brand', label: t('themeCustomizer.brandColors'), class: 'bg-blue-600 border-blue-600 text-white' },
+                            ].map(opt => (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => updateSetting('topbarColor', opt.value as any)}
+                                    className={`py-2 px-3 rounded-lg border text-xs font-bold transition-all ${opt.class} ${settings.topbarColor === opt.value ? 'ring-2 ring-offset-1 ring-blue-500 dark:ring-offset-slate-900' : 'opacity-80 hover:opacity-100'}`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                         </div>
+                    </SettingsSection>
 
-                        <SettingsSection title={t('settings.userInfo')}>
-                             <div className="flex gap-2">
-                                <SettingsRadioOption name="showUserInfo" value="true" label={t('settings.enable')} checked={settings.showUserInfo === true} onChange={handleBooleanSettingChange('showUserInfo')} />
-                                <SettingsRadioOption name="showUserInfo" value="false" label={t('settings.disable')} checked={settings.showUserInfo === false} onChange={handleBooleanSettingChange('showUserInfo')} />
+                    {/* Sidebar Color */}
+                    <SettingsSection title={t('themeCustomizer.sidebarColors')}>
+                         <div className="grid grid-cols-2 gap-2">
+                            {[
+                                { value: 'light', label: t('themeCustomizer.neutralLight'), class: 'bg-white border-slate-200 text-slate-800' },
+                                { value: 'dark', label: t('themeCustomizer.contrastDark'), class: 'bg-slate-800 border-slate-700 text-white' },
+                                { value: 'brand', label: t('themeCustomizer.brandColors'), class: 'bg-blue-600 border-blue-600 text-white' },
+                                { value: 'gradient', label: t('themeCustomizer.vividGradient'), class: 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-transparent' },
+                            ].map(opt => (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => updateSetting('sidebarColor', opt.value as any)}
+                                    className={`py-2 px-3 rounded-lg border text-xs font-bold transition-all ${opt.class} ${settings.sidebarColor === opt.value ? 'ring-2 ring-offset-1 ring-blue-500 dark:ring-offset-slate-900' : 'opacity-80 hover:opacity-100'}`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                         </div>
+                    </SettingsSection>
+                    
+                    {/* Sidebar Density */}
+                     <SettingsSection title={t('themeCustomizer.sidebarDensity')}>
+                        <ToggleGroup
+                            options={[
+                                { value: 'default', label: t('themeCustomizer.standard') },
+                                { value: 'compact', label: t('themeCustomizer.balanced') },
+                                { value: 'condensed', label: t('themeCustomizer.compact') },
+                            ]}
+                            value={settings.sidebarSize}
+                            onChange={(val) => updateSetting('sidebarSize', val)}
+                        />
+                    </SettingsSection>
+
+                    {/* Quick Options */}
+                    <SettingsSection title={t('themeCustomizer.quickOptions')}>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-700 dark:text-slate-300">{t('themeCustomizer.autoCollapse')}</span>
+                                <Switch id="autoCollapse" checked={settings.sidebarSize === 'condensed'} onChange={(c) => updateSetting('sidebarSize', c ? 'condensed' : 'default')} />
                             </div>
-                        </SettingsSection>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-700 dark:text-slate-300">{t('themeCustomizer.showUserCard')}</span>
+                                <Switch id="userInfo" checked={settings.showUserInfo} onChange={(c) => updateSetting('showUserInfo', c)} />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-700 dark:text-slate-300">{t('themeCustomizer.animatedBackground')}</span>
+                                <Switch id="animBg" checked={!!settings.animatedBackground} onChange={(c) => updateSetting('animatedBackground', c)} />
+                            </div>
+                             {/* Card Style */}
+                            <div className="pt-2">
+                                <p className="text-xs text-slate-500 mb-2">{t('themeCustomizer.cardStyle')}</p>
+                                <ToggleGroup
+                                    options={[
+                                        { value: 'solid', label: t('themeCustomizer.solid') },
+                                        { value: 'soft', label: t('themeCustomizer.soft') },
+                                        { value: 'glass', label: t('themeCustomizer.glass') },
+                                    ]}
+                                    value={settings.cardStyle || 'soft'}
+                                    onChange={(val) => updateSetting('cardStyle', val)}
+                                />
+                            </div>
+                        </div>
+                    </SettingsSection>
+                    
+                     {/* Custom Colors */}
+                     <SettingsSection title={t('settings.colorScheme')}>
+                        <div className="grid grid-cols-4 gap-3">
+                            {colors.map(c => (
+                                <button
+                                    key={c.id}
+                                    onClick={() => updateSetting('themeColor', c.id)}
+                                    className={`relative w-full h-10 rounded-full overflow-hidden transition-transform shadow-sm ${settings.themeColor === c.id ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-500 dark:ring-offset-slate-900 scale-110' : 'hover:scale-105'}`}
+                                >
+                                    <div 
+                                        className="w-full h-full" 
+                                        style={{ 
+                                            background: `linear-gradient(135deg, ${c.color} 50%, ${c.pair} 50%)`
+                                        }}
+                                    ></div>
+                                    {settings.themeColor === c.id && (
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="bg-white/30 rounded-full p-0.5">
+                                                 <CheckIcon className="w-4 h-4 text-white drop-shadow-md" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </SettingsSection>
+
+                    {/* Reset */}
+                    <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
+                        <button
+                            onClick={() => setSettings({ 
+                                ...settings, 
+                                colorScheme: 'light', 
+                                sidebarColor: 'brand', 
+                                topbarColor: 'light', 
+                                themeColor: 'blue', 
+                                layoutWidth: 'full',
+                                sidebarSize: 'condensed',
+                                showUserInfo: false,
+                                cardStyle: 'soft',
+                                animatedBackground: false
+                            })}
+                            className="w-full py-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        >
+                            Reset Settings
+                        </button>
                     </div>
                 </div>
             </div>
-
-            <button
-                ref={buttonRef}
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-14 h-14 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 transition-all duration-200 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                aria-label="Open settings"
-                aria-expanded={isOpen}
-            >
-                <CogIcon className={`w-7 h-7 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} />
-            </button>
-        </div>
+        </>
     );
 };
 

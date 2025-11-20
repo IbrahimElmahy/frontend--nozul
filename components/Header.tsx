@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { ThemeSettings, Page } from '../App';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
@@ -45,7 +46,6 @@ interface HeaderProps {
   user: User | null;
 }
 
-// FIX: Completed the `pageDetails` object by adding missing page entries to satisfy the `Record<Page, ...>` type definition, resolving a TypeScript error.
 const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationKey, parent?: TranslationKey}> = {
     dashboard: { title: 'header.dashboard', breadcrumb: 'header.hotelName' },
     profile: { title: 'header.userInformation', breadcrumb: 'header.dashboard', parent: 'header.dashboard' },
@@ -63,14 +63,14 @@ const pageDetails: Record<Page, {title: TranslationKey, breadcrumb: TranslationK
     'hotel-users': { title: 'usersPage.pageTitle', breadcrumb: 'usersPage.breadcrumb', parent: 'sidebar.settings' },
     'apartment-prices': { title: 'apartmentPrices.pageTitle', breadcrumb: 'hotelSettings.manageApartmentPrices', parent: 'sidebar.settings' },
     'peak-times': { title: 'peakTimes.pageTitle', breadcrumb: 'hotelSettings.managePeakTimes', parent: 'sidebar.settings' },
-    'taxes': { title: 'taxes.pageTitle', breadcrumb: 'hotelSettings.manageTaxes', parent: 'sidebar.settings' },
-    'items': { title: 'itemsPage.pageTitle', breadcrumb: 'hotelSettings.manageItems', parent: 'sidebar.settings' },
-    'currencies': { title: 'currenciesPage.pageTitle', breadcrumb: 'hotelSettings.manageCurrency', parent: 'sidebar.settings' },
-    'funds': { title: 'fundsPage.pageTitle', breadcrumb: 'hotelSettings.manageFunds', parent: 'sidebar.settings' },
-    'banks': { title: 'banksPage.pageTitle', breadcrumb: 'hotelSettings.manageBanks', parent: 'sidebar.settings' },
-    'expenses': { title: 'expensesPage.pageTitle', breadcrumb: 'hotelSettings.manageExpenses', parent: 'sidebar.settings' },
+    taxes: { title: 'taxes.pageTitle', breadcrumb: 'hotelSettings.manageTaxes', parent: 'sidebar.settings' },
+    items: { title: 'itemsPage.pageTitle', breadcrumb: 'hotelSettings.manageItems', parent: 'sidebar.settings' },
+    currencies: { title: 'currenciesPage.pageTitle', breadcrumb: 'hotelSettings.manageCurrency', parent: 'sidebar.settings' },
+    funds: { title: 'fundsPage.pageTitle', breadcrumb: 'hotelSettings.manageFunds', parent: 'sidebar.settings' },
+    banks: { title: 'banksPage.pageTitle', breadcrumb: 'hotelSettings.manageBanks', parent: 'sidebar.settings' },
+    expenses: { title: 'expensesPage.pageTitle', breadcrumb: 'hotelSettings.manageExpenses', parent: 'sidebar.settings' },
     'hotel-conditions': { title: 'hotelConditions.pageTitle', breadcrumb: 'hotelSettings.manageConditions', parent: 'sidebar.settings' },
-};
+}
 
 const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, setCurrentPage, currentPage, user }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -153,32 +153,53 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
 
   const currentDetails = pageDetails[currentPage];
 
-  const headerColorClass = topbarColor === 'dark' 
-    ? 'bg-slate-800 text-slate-300 border-b border-slate-700' 
-    : 'bg-white dark:bg-slate-800 dark:border-b dark:border-slate-700';
+  let headerColorClass = '';
+  let textColorClass = '';
+  let iconColorClass = '';
+  let borderColorClass = '';
+
+  if (topbarColor === 'dark') {
+      headerColorClass = 'bg-slate-800 border-b border-slate-700';
+      textColorClass = 'text-slate-200';
+      iconColorClass = 'text-slate-400 hover:text-slate-200';
+      borderColorClass = 'border-slate-700';
+  } else if (topbarColor === 'brand') {
+      // Use dynamic blue classes which map to CSS variables
+      headerColorClass = 'bg-blue-600 shadow-md';
+      textColorClass = 'text-white';
+      iconColorClass = 'text-blue-100 hover:text-white';
+      borderColorClass = 'border-blue-500';
+  } else {
+      headerColorClass = 'bg-white dark:bg-slate-800 dark:border-b dark:border-slate-700 border-b border-gray-200';
+      textColorClass = 'text-slate-800 dark:text-slate-200';
+      iconColorClass = 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200';
+      borderColorClass = 'border-gray-200 dark:border-slate-700';
+  }
+
 
   const dropdownPosition = language === 'ar' ? 'left-0' : 'right-0';
+  const breadcrumbColor = topbarColor === 'brand' ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400';
 
   return (
-    <header className={`${headerColorClass} shadow-sm p-4 flex justify-between items-center flex-shrink-0 h-20`}>
+    <header className={`${headerColorClass} p-4 flex justify-between items-center flex-shrink-0 h-20 z-30`}>
       <div className="flex items-center gap-2">
          <button 
             onClick={onMenuButtonClick} 
-            className="lg:hidden text-slate-500 dark:text-slate-400 p-1"
+            className={`lg:hidden p-1 ${iconColorClass}`}
             aria-label="Open menu"
           >
               <Bars3Icon className="w-6 h-6" />
           </button>
         <div className="flex flex-col items-start">
-            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+            <h1 className={`text-lg font-bold ${textColorClass}`}>
                 {t(currentDetails.title)}
             </h1>
             <div className="hidden md:flex items-center text-sm">
-                 <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                 <span className={`${breadcrumbColor} whitespace-nowrap`}>
                     {t(currentDetails.parent || 'sidebar.mainPage')}
                 </span>
-                <ChevronLeftIcon className={`w-4 h-4 text-gray-400 dark:text-gray-500 mx-1 transform ${language === 'en' ? 'rotate-180' : ''}`} />
-                <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                <ChevronLeftIcon className={`w-4 h-4 mx-1 transform ${language === 'en' ? 'rotate-180' : ''} ${breadcrumbColor}`} />
+                <span className={`${breadcrumbColor} whitespace-nowrap`}>
                     {t(currentDetails.breadcrumb)}
                 </span>
             </div>
@@ -190,7 +211,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
         <div className="relative" ref={langDropdownRef}>
             <button
                 onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                className={iconColorClass}
                 aria-label="Change language"
             >
                 <GlobeAltIcon className="w-6 h-6" />
@@ -216,7 +237,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
         {/* Full Screen Button */}
         <button
             onClick={handleToggleFullScreen}
-            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+            className={iconColorClass}
             aria-label={isFullscreen ? "Exit full screen" : "Enter full screen"}
         >
             {isFullscreen ? (
@@ -230,7 +251,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
         <div className="relative" ref={notificationsRef}>
             <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="relative text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                className={`relative ${iconColorClass}`}
                 aria-haspopup="true"
                 aria-expanded={isNotificationsOpen}
                 aria-label={`You have ${unreadCount} unread notifications`}
@@ -243,7 +264,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                 )}
             </button>
             {isNotificationsOpen && (
-                 <div className={`absolute top-full mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-20 ${dropdownPosition}`}>
+                 <div className={`absolute top-full mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-20 ${dropdownPosition} text-slate-800`}>
                     <div className="flex justify-between items-center p-3 border-b dark:border-slate-700">
                         <h6 className="font-semibold text-slate-700 dark:text-slate-200">{t('notifications')}</h6>
                         <a href="#" onClick={handleMarkAllAsRead} className="text-xs text-blue-500 hover:underline">{t('clear_all')}</a>
@@ -287,10 +308,10 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                 className="w-10 h-10 rounded-full"
             />
             <div className="hidden sm:block">
-                <div className={`font-semibold text-sm text-slate-700 dark:text-slate-300 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.name || t('walid_ullah')}</div>
-                <div className={`text-xs text-gray-500 dark:text-gray-400 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.role_name || t('manager')}</div>
+                <div className={`font-semibold text-sm ${textColorClass} ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.name || t('walid_ullah')}</div>
+                <div className={`text-xs opacity-80 ${textColorClass} ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.role_name || t('manager')}</div>
             </div>
-            <ChevronDownIcon className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDownIcon className={`w-5 h-5 ${iconColorClass} transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {isUserDropdownOpen && (
             <div className={`absolute top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-20 ${dropdownPosition}`}>

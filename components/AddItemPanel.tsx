@@ -1,32 +1,59 @@
+
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Item } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import Switch from './Switch';
+import SearchableSelect from './SearchableSelect';
+import { apiClient } from '../apiClient';
 
 interface AddItemPanelProps {
-    initialData: Omit<Item, 'id' | 'createdAt' | 'updatedAt'> | Item | null;
+    initialData: Omit<Item, 'id' | 'created_at' | 'updated_at'> | Item | null;
     mode: 'add' | 'edit' | 'copy';
+    type: 'services' | 'categories';
     isOpen: boolean;
     onClose: () => void;
-    onSave: (itemData: Omit<Item, 'id' | 'createdAt' | 'updatedAt'>) => void;
+    onSave: (itemData: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => void;
 }
 
-const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, isOpen, onClose, onSave }) => {
-    const { t } = useContext(LanguageContext);
+const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, isOpen, onClose, onSave }) => {
+    const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState(initialData);
+    const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
 
     useEffect(() => {
         if (isOpen) {
             setFormData(initialData);
+            if (type === 'services') {
+                fetchCategories();
+            }
         }
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, type]);
+
+    const fetchCategories = async () => {
+        try {
+            const response = await apiClient<{ data: any[] }>('/ar/category/api/categories/');
+            const cats = response.data.map(c => ({
+                id: c.id,
+                name: language === 'ar' ? c.name_ar : c.name_en
+            }));
+            setCategories(cats);
+        } catch (error) {
+            console.error("Failed to fetch categories", error);
+        }
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (!formData) return;
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev!, [name]: value }));
+    };
+
+    const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!formData) return;
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev!, [name]: parseFloat(value) || 0 }));
     };
 
     const handleSaveClick = () => {
@@ -36,15 +63,17 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, isOpen, 
     };
     
     const titles = {
-        add: t('itemsPage.addItemTitle'),
-        edit: t('itemsPage.editItemTitle'),
-        copy: t('itemsPage.copyItemTitle'),
+        add: type === 'services' ? 'إضافة خدمة' : t('itemsPage.addItemTitle'),
+        edit: type === 'services' ? 'تعديل خدمة' : t('itemsPage.editItemTitle'),
+        copy: type === 'services' ? 'نسخ خدمة' : t('itemsPage.copyItemTitle'),
     }
 
     if (!isOpen || !formData) return null;
 
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
     const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
+    
+    const categoryOptions = categories.map(c => c.name);
 
     return (
         <div className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} role="dialog">
@@ -64,6 +93,29 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, isOpen, 
                             <label htmlFor="name_ar" className={labelBaseClass}>{t('itemsPage.th_name_ar')}</label>
                             <input type="text" name="name_ar" id="name_ar" value={formData.name_ar} onChange={handleInputChange} className={inputBaseClass} />
                         </div>
+                        
+                        {type === 'services' && (
+                            <>
+                                <div>
+                                    <label htmlFor="price" className={labelBaseClass}>{'السعر'}</label>
+                                    <input type="number" name="price" id="price" value={formData.price} onChange={handleNumberChange} className={inputBaseClass} />
+                                </div>
+                                <div>
+                                    <label htmlFor="category" className={labelBaseClass}>{'التصنيف'}</label>
+                                    <SearchableSelect 
+                                        id="category" 
+                                        options={categoryOptions} 
+                                        value={categories.find(c => c.id === formData.category)?.name || ''} 
+                                        onChange={name => {
+                                            const cat = categories.find(c => c.name === name);
+                                            if(cat) setFormData(prev => ({...prev!, category: cat.id}))
+                                        }} 
+                                        placeholder="اختر التصنيف"
+                                    />
+                                </div>
+                            </>
+                        )}
+
                          <div>
                             <label htmlFor="description" className={labelBaseClass}>{"الوصف"}</label>
                             <textarea name="description" id="description" value={formData.description || ''} onChange={handleInputChange} className={inputBaseClass} rows={3}></textarea>

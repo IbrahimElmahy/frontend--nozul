@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
+
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { Item } from '../types';
+import { Item, Service, Category } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AddItemPanel from './AddItemPanel';
 import ItemDetailsModal from './ItemDetailsModal';
@@ -18,25 +19,30 @@ import XMarkIcon from './icons-redesign/XMarkIcon';
 import PlusIcon from './icons-redesign/PlusIcon';
 import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
 import DocumentDuplicateIcon from './icons-redesign/DocumentDuplicateIcon';
+import TagIcon from './icons-redesign/TagIcon';
+import CubeIcon from './icons-redesign/CubeIcon';
 
 
-const newItemTemplate: Omit<Item, 'id' | 'createdAt' | 'updatedAt'> = {
+const newItemTemplate: Omit<Item, 'id' | 'created_at' | 'updated_at'> = {
     name_en: '',
     name_ar: '',
     description: '',
     status: 'active',
     is_active: true,
     services: 0,
-    created_at: '',
-    updated_at: '',
+    price: 0,
+    category: '',
 };
 
+type ViewType = 'services' | 'categories';
+
 const ItemsPage: React.FC = () => {
-    const { t } = useContext(LanguageContext);
+    const { t, language } = useContext(LanguageContext);
     const [items, setItems] = useState<Item[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
+    const [activeView, setActiveView] = useState<ViewType>('services');
     
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
@@ -53,27 +59,40 @@ const ItemsPage: React.FC = () => {
             params.append('start', ((currentPage - 1) * itemsPerPage).toString());
             params.append('length', itemsPerPage.toString());
             
-            const response = await apiClient<{ data: Item[], recordsFiltered: number }>(`/ar/category/api/categories/?${params.toString()}`);
+            const endpoint = activeView === 'services' 
+                ? '/ar/service/api/services/' 
+                : '/ar/category/api/categories/';
+
+            const response = await apiClient<{ data: any[], recordsFiltered: number }>(`${endpoint}?${params.toString()}`);
             
             // Normalize API response
             const mappedData = response.data.map(item => ({
                 ...item,
-                // Default services count to 0 if not present
                 services: item.services || 0,
-                status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
+                status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive',
+                category_name: typeof item.category === 'object' ? item.category.name_ar : '' // Handle category object expansion if API returns it
             }));
             setItems(mappedData);
 
         } catch (err) {
-            console.error("Error fetching items (categories):", err);
+            console.error(`Error fetching ${activeView}:`, err);
         } finally {
             setLoading(false);
         }
-    }, [currentPage, itemsPerPage]);
+    }, [currentPage, itemsPerPage, activeView]);
 
     useEffect(() => {
         fetchItems();
     }, [fetchItems]);
+
+    useEffect(() => {
+        setPagination({ currentPage: 1 }); // Reset to page 1 on view switch
+    }, [activeView]);
+
+    const setPagination = (updates: Partial<{ currentPage: number, itemsPerPage: number }>) => {
+        if (updates.currentPage) setCurrentPage(updates.currentPage);
+        if (updates.itemsPerPage) setItemsPerPage(updates.itemsPerPage);
+    }
 
 
     // Handlers
@@ -89,15 +108,23 @@ const ItemsPage: React.FC = () => {
             formData.append('name_ar', itemData.name_ar);
             formData.append('description', itemData.description || '');
 
+            if (activeView === 'services') {
+                formData.append('price', (itemData.price || 0).toString());
+                if (itemData.category) {
+                    formData.append('category', itemData.category);
+                }
+            }
+
             let savedItem: Item;
+            const endpointBase = activeView === 'services' ? '/ar/service/api/services/' : '/ar/category/api/categories/';
 
             if (panelMode === 'edit' && editingItem) {
-                 savedItem = await apiClient<Item>(`/ar/category/api/categories/${editingItem.id}/`, {
+                 savedItem = await apiClient<Item>(`${endpointBase}${editingItem.id}/`, {
                     method: 'PUT',
                     body: formData
                 });
             } else {
-                 savedItem = await apiClient<Item>(`/ar/category/api/categories/`, {
+                 savedItem = await apiClient<Item>(endpointBase, {
                     method: 'POST',
                     body: formData
                 });
@@ -107,14 +134,14 @@ const ItemsPage: React.FC = () => {
             if (itemData.is_active !== undefined) {
                  const action = itemData.is_active ? 'active' : 'disable';
                  if (!editingItem || editingItem.is_active !== itemData.is_active || panelMode !== 'edit') {
-                     await apiClient(`/ar/category/api/categories/${savedItem.id}/${action}/`, { method: 'POST' });
+                     await apiClient(`${endpointBase}${savedItem.id}/${action}/`, { method: 'POST' });
                  }
             }
 
             fetchItems();
             handleClosePanel();
         } catch (err) {
-             alert(`Error saving item: ${err instanceof Error ? err.message : 'Unknown error'}`);
+             alert(`Error saving ${activeView === 'services' ? 'service' : 'category'}: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
     };
 
@@ -143,7 +170,8 @@ const ItemsPage: React.FC = () => {
     const handleConfirmDelete = async () => {
          if (itemToDelete) {
             try {
-                await apiClient(`/ar/category/api/categories/${itemToDelete.id}/`, { method: 'DELETE' });
+                const endpointBase = activeView === 'services' ? '/ar/service/api/services/' : '/ar/category/api/categories/';
+                await apiClient(`${endpointBase}${itemToDelete.id}/`, { method: 'DELETE' });
                 fetchItems();
                 setItemToDelete(null);
             } catch (err) {
@@ -155,10 +183,30 @@ const ItemsPage: React.FC = () => {
     return (
         <div className="space-y-6">
              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('itemsPage.pageTitle')}</h2>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
+                    {activeView === 'services' ? 'إدارة الخدمات' : 'إدارة التصنيفات'}
+                </h2>
                  <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                     <PlusCircleIcon className="w-5 h-5" />
-                    <span>{t('itemsPage.addNewItem')}</span>
+                    <span>{activeView === 'services' ? 'إضافة خدمة' : t('itemsPage.addNewItem')}</span>
+                </button>
+            </div>
+
+            {/* Toggle View */}
+            <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-fit">
+                <button 
+                    onClick={() => setActiveView('services')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeView === 'services' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                >
+                    <CubeIcon className="w-4 h-4" />
+                    <span>الخدمات</span>
+                </button>
+                <button 
+                    onClick={() => setActiveView('categories')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeView === 'categories' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                >
+                    <TagIcon className="w-4 h-4" />
+                    <span>التصنيفات</span>
                 </button>
             </div>
             
@@ -194,7 +242,14 @@ const ItemsPage: React.FC = () => {
                                 <th className="px-4 py-3">{t('itemsPage.th_id')}</th>
                                 <th className="px-4 py-3 text-start">{t('itemsPage.th_name_en')}</th>
                                 <th className="px-4 py-3 text-start">{t('itemsPage.th_name_ar')}</th>
-                                <th className="px-4 py-3">{t('itemsPage.th_services')}</th>
+                                {activeView === 'services' ? (
+                                    <>
+                                        <th className="px-4 py-3">{'السعر'}</th>
+                                        <th className="px-4 py-3">{'التصنيف'}</th>
+                                    </>
+                                ) : (
+                                    <th className="px-4 py-3">{t('itemsPage.th_services')}</th>
+                                )}
                                 <th className="px-4 py-3">{t('itemsPage.th_status')}</th>
                                 <th className="px-4 py-3">{t('itemsPage.th_createdAt')}</th>
                                 <th className="px-4 py-3">{t('itemsPage.th_updatedAt')}</th>
@@ -203,13 +258,22 @@ const ItemsPage: React.FC = () => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={8} className="py-8 text-center">Loading...</td></tr>
+                                <tr><td colSpan={activeView === 'services' ? 9 : 8} className="py-8 text-center">Loading...</td></tr>
                             ) : items.map(item => (
                                 <tr key={item.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                    <td className="px-4 py-2 hidden md:table-cell">{item.id}</td>
+                                    <td className="px-4 py-2 hidden md:table-cell"><span className="font-mono text-xs">{item.id.split('-')[0]}</span></td>
                                     <td className="px-4 py-2 text-start">{item.name_en}</td>
                                     <td className="px-4 py-2 text-start">{item.name_ar}</td>
-                                    <td className="px-4 py-2"><span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300">{item.services}</span></td>
+                                    
+                                    {activeView === 'services' ? (
+                                        <>
+                                            <td className="px-4 py-2 font-medium">{item.price}</td>
+                                            <td className="px-4 py-2 text-xs text-slate-500">{item.category_name || '-'}</td>
+                                        </>
+                                    ) : (
+                                        <td className="px-4 py-2"><span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300">{item.services}</span></td>
+                                    )}
+
                                     <td className="px-4 py-2">
                                         <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${item.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
                                             {t(`itemsPage.status_${item.is_active ? 'active' : 'inactive'}`)}
@@ -228,7 +292,7 @@ const ItemsPage: React.FC = () => {
                                 </tr>
                             ))}
                             {!loading && items.length === 0 && (
-                                <tr><td colSpan={8} className="py-8 text-center">{t('orders.noData')}</td></tr>
+                                <tr><td colSpan={activeView === 'services' ? 9 : 8} className="py-8 text-center">{t('orders.noData')}</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -251,6 +315,7 @@ const ItemsPage: React.FC = () => {
                 onClose={handleClosePanel}
                 onSave={handleSaveItem}
                 mode={panelMode}
+                type={activeView}
                 initialData={panelMode === 'add' ? newItemTemplate : editingItem}
             />
 
