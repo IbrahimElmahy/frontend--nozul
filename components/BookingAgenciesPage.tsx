@@ -1,10 +1,12 @@
-import React, { useState, useMemo, useContext } from 'react';
+
+import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { BookingAgency } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AgencyCard from './AgencyCard';
 import AddAgencyPanel from './AddAgencyPanel';
 import AgencyDetailsModal from './AgencyDetailsModal';
+import { apiClient } from '../apiClient';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -19,110 +21,128 @@ import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
-
-// FIX: Define local types as they are not exported from types.ts
-type AgencyStatus = 'active' | 'inactive';
-type AgencyType = 'company' | 'individual';
-type AgencyIdType = 'tax_id' | 'unified_establishment_number' | 'other';
-
-
-const mockAgencies: BookingAgency[] = [
-  // FIX: Converted `id` to string and updated property names to match the BookingAgency type.
-  { id: '1', name: 'صالح محمد', phone_number: '+966556170543', country: 'SA', country_display: 'السعودية', guest_type: 'شركة', ids: 'رقم السجل الضريبي', id_number: '11', created_at: '2025-02-08 16:31:47', updated_at: '2025-02-08 16:31:47', is_active: true },
-  // FIX: Converted `id` to string and updated property names to match the BookingAgency type.
-  { id: '2', name: 'TEST2', phone_number: '+966505000084', country: 'SA', country_display: 'السعودية', guest_type: 'شركة', ids: 'رقم المنشأة الموحد', id_number: '2056012202', created_at: '2024-10-17 09:55:45', updated_at: '2025-02-03 10:33:12', is_active: true },
-  // FIX: Converted `id` to string and updated property names to match the BookingAgency type.
-  { id: '3', name: 'test', phone_number: '+966568765432', country: 'SA', country_display: 'السعودية', guest_type: 'شركة', ids: 'رقم المنشأة الموحد', id_number: '654321', created_at: '2024-10-17 09:44:08', updated_at: '2024-10-17 09:44:08', is_active: true },
-];
+import Switch from './Switch';
 
 const newAgencyTemplate: Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'> = {
     name: '',
     phone_number: '',
     country: 'SA',
     country_display: 'السعودية',
-    guest_type: 'شركة',
-    ids: 'رقم السجل الضريبي',
+    guest_type: '',
+    ids: '',
     id_number: '',
     is_active: true,
+    email: '',
+    discount_type: '',
+    discount_value: 0,
+    city: '',
+    neighborhood: '',
+    street: '',
+    postal_code: '',
 };
-
 
 const BookingAgenciesPage: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
-    const [agencies, setAgencies] = useState<BookingAgency[]>(mockAgencies);
+    const [agencies, setAgencies] = useState<BookingAgency[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [loading, setLoading] = useState(true);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const [error, setError] = useState<string | null>(null);
+
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingAgency, setEditingAgency] = useState<BookingAgency | null>(null);
-    // FIX: Changed state type from `number` to `string` to match the `id` type of BookingAgency.
     const [agencyToDeleteId, setAgencyToDeleteId] = useState<string | null>(null);
-    const [sortConfig, setSortConfig] = useState<{ key: keyof BookingAgency | null; direction: 'ascending' | 'descending' }>({ key: 'id', direction: 'ascending' });
+    const [sortConfig, setSortConfig] = useState<{ key: keyof BookingAgency | null; direction: 'ascending' | 'descending' }>({ key: 'created_at', direction: 'descending' });
     const [viewingAgency, setViewingAgency] = useState<BookingAgency | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
-    const filteredAgencies = useMemo(() => {
-        return agencies.filter(agency => 
-            agency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            // FIX: Use correct property 'phone_number'
-            agency.phone_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            // FIX: Use correct property 'id_number'
-            agency.id_number.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [agencies, searchTerm]);
+    const fetchAgencies = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const params = new URLSearchParams();
+            params.append('category', 'agent');
+            params.append('start', ((currentPage - 1) * itemsPerPage).toString());
+            params.append('length', itemsPerPage.toString());
+            if (searchTerm) params.append('search', searchTerm);
+
+            const response = await apiClient<{ data: BookingAgency[], recordsFiltered: number }>(`/ar/guest/api/guests/?${params.toString()}`);
+            setAgencies(response.data);
+            setTotalRecords(response.recordsFiltered);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        } finally {
+            setLoading(false);
+        }
+    }, [currentPage, itemsPerPage, searchTerm]);
+
+    useEffect(() => {
+        fetchAgencies();
+    }, [fetchAgencies]);
 
     const sortedAgencies = useMemo(() => {
-        let sortableItems = [...filteredAgencies];
+        let sortableItems = [...agencies];
         if (sortConfig.key) {
             sortableItems.sort((a, b) => {
                 const key = sortConfig.key as keyof BookingAgency;
-                if (a[key] === null || a[key] === undefined) return 1;
-                if (b[key] === null || b[key] === undefined) return -1;
+                const aVal = a[key];
+                const bVal = b[key];
+
+                if (aVal === null || aVal === undefined) return 1;
+                if (bVal === null || bVal === undefined) return -1;
                 
                 let comparison = 0;
-                // FIX: Corrected comparison for string IDs which could be numbers.
-                if (key === 'id') {
-                    comparison = Number(a[key]) - Number(b[key]);
-                } else if (typeof a[key] === 'number' && typeof b[key] === 'number') {
-                    comparison = (a[key] as number) - (b[key] as number);
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    comparison = aVal - bVal;
                 } else {
-                    comparison = String(a[key]).localeCompare(String(b[key]));
+                    comparison = String(aVal).localeCompare(String(bVal));
                 }
                 
                 return sortConfig.direction === 'ascending' ? comparison : -comparison;
             });
         }
         return sortableItems;
-    }, [filteredAgencies, sortConfig]);
+    }, [agencies, sortConfig]);
     
-    const totalPages = Math.ceil(sortedAgencies.length / itemsPerPage);
-    const paginatedAgencies = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return sortedAgencies.slice(startIndex, startIndex + itemsPerPage);
-    }, [sortedAgencies, currentPage, itemsPerPage]);
+    const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     const handleClosePanel = () => {
         setIsAddPanelOpen(false);
         setEditingAgency(null);
     };
 
-    const handleSaveAgency = (agencyData: BookingAgency | Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'>) => {
-        if (editingAgency) {
-            // FIX: Use correct property 'updated_at'
-            const updatedAgency = { ...agencyData, id: editingAgency.id, updated_at: new Date().toISOString() } as BookingAgency;
-            setAgencies(agencies.map(b => b.id === updatedAgency.id ? updatedAgency : b));
-        } else {
-            const newAgency: BookingAgency = {
-                ...(agencyData as Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'>),
-                // FIX: Converted string IDs to numbers for Math.max and converted the result back to a string for the new ID.
-                id: (Math.max(0, ...agencies.map(b => Number(b.id))) + 1).toString(),
-                // FIX: Use correct property 'created_at' and 'updated_at'
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            };
-            setAgencies(prev => [newAgency, ...prev]);
+    const handleSaveAgency = async (formData: FormData) => {
+        try {
+            if (editingAgency) {
+                await apiClient(`/ar/guest/api/guests/${editingAgency.id}/`, {
+                    method: 'PUT',
+                    body: formData
+                });
+            } else {
+                await apiClient('/ar/guest/api/guests/', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+            fetchAgencies();
+            handleClosePanel();
+        } catch (err) {
+            alert(`Error saving agency: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
-        handleClosePanel();
+    };
+
+    const handleToggleStatus = async (agency: BookingAgency, newStatus: boolean) => {
+        try {
+            const action = newStatus ? 'active' : 'disable';
+            await apiClient(`/ar/guest/api/guests/${agency.id}/${action}/`, { method: 'POST' });
+            // Optimistically update
+            setAgencies(prev => prev.map(a => a.id === agency.id ? { ...a, is_active: newStatus } : a));
+        } catch (err) {
+            alert(`Error changing status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            fetchAgencies(); // Revert on error
+        }
     };
 
     const handleAddNewClick = () => {
@@ -135,15 +155,19 @@ const BookingAgenciesPage: React.FC = () => {
         setIsAddPanelOpen(true);
     };
 
-    // FIX: Changed parameter type from `number` to `string` to match the `id` type.
     const handleDeleteClick = (agencyId: string) => {
         setAgencyToDeleteId(agencyId);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (agencyToDeleteId) {
-            setAgencies(agencies.filter(b => b.id !== agencyToDeleteId));
-            setAgencyToDeleteId(null);
+            try {
+                await apiClient(`/ar/guest/api/guests/${agencyToDeleteId}/`, { method: 'DELETE' });
+                fetchAgencies();
+                setAgencyToDeleteId(null);
+            } catch (err) {
+                alert(`Error deleting agency: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            }
         }
     };
     
@@ -168,26 +192,6 @@ const BookingAgenciesPage: React.FC = () => {
         { key: 'actions', labelKey: 'agencies.th_actions' },
     ];
     
-    // FIX: Corrected rendering logic for cell content
-    const renderCellContent = (agency: BookingAgency, key: keyof BookingAgency) => {
-      const value = agency[key];
-      switch (key) {
-        case 'is_active':
-          const statusClass = value 
-            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
-            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-          return (
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusClass}`}>
-              {t(value ? 'agencies.status_active' : 'agencies.status_inactive' as any)}
-            </span>
-          );
-        case 'created_at':
-            return new Date(value as string).toLocaleDateString();
-        default:
-          return (value as string) || '-';
-      }
-    }
-    
     const searchAndViewsControls = (
         <div className="flex items-center gap-4 w-full sm:w-auto">
             <div className="relative flex-grow sm:flex-grow-0 sm:w-96">
@@ -195,7 +199,7 @@ const BookingAgenciesPage: React.FC = () => {
                 <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                     placeholder={t('agencies.searchPlaceholder')}
                     className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
                 />
@@ -211,6 +215,21 @@ const BookingAgenciesPage: React.FC = () => {
         </div>
     );
 
+    const showingEntriesControls = (
+        <div className="flex items-center gap-2">
+            <span>{t('units.showing')}</span>
+            <select
+                value={itemsPerPage}
+                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none text-sm"
+            >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+            </select>
+            <span>{t('units.entries')}</span>
+        </div>
+    );
 
     return (
         <div className="space-y-6">
@@ -228,13 +247,25 @@ const BookingAgenciesPage: React.FC = () => {
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex flex-col sm:flex-row justify-end items-center gap-4 mb-4">
-                    {searchAndViewsControls}
+                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                    {language === 'ar' ? (
+                        <>
+                            {searchAndViewsControls}
+                            {showingEntriesControls}
+                        </>
+                    ) : (
+                        <>
+                             {showingEntriesControls}
+                             {searchAndViewsControls}
+                        </>
+                    )}
                 </div>
 
-                {viewMode === 'grid' ? (
+                {loading ? (
+                    <div className="text-center py-10">Loading...</div>
+                ) : viewMode === 'grid' ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {paginatedAgencies.map(agency => (
+                        {sortedAgencies.map(agency => (
                             <AgencyCard
                                 key={agency.id}
                                 agency={agency}
@@ -250,65 +281,65 @@ const BookingAgenciesPage: React.FC = () => {
                             <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                                 <tr>
                                     {tableHeaders.map(header => (
-                                        <th key={header.key} scope="col" className={`px-2 py-2 ${header.className || ''}`}>
-                                             <button 
-                                                className="flex items-center gap-1.5 group" 
-                                                onClick={() => requestSort(header.key as keyof BookingAgency)}
-                                            >
+                                        <th key={header.key} scope="col" className={`px-6 py-3 ${header.className || ''}`}>
+                                             {header.key !== 'actions' ? (
+                                                <button 
+                                                    className="flex items-center gap-1.5 group" 
+                                                    onClick={() => requestSort(header.key as keyof BookingAgency)}
+                                                >
+                                                    <span>{t(header.labelKey as any)}</span>
+                                                    <span className="flex-shrink-0">
+                                                        {sortConfig.key === header.key ? (
+                                                            sortConfig.direction === 'ascending' ? <ArrowUpIcon className="w-3.5 h-3.5" /> : <ArrowDownIcon className="w-3.5 h-3.5" />
+                                                        ) : (
+                                                            <ChevronUpDownIcon className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        )}
+                                                    </span>
+                                                </button>
+                                            ) : (
                                                 <span>{t(header.labelKey as any)}</span>
-                                                <span className="flex-shrink-0">
-                                                    {sortConfig.key === header.key ? (
-                                                        sortConfig.direction === 'ascending' ? <ArrowUpIcon className="w-3.5 h-3.5" /> : <ArrowDownIcon className="w-3.5 h-3.5" />
-                                                    ) : (
-                                                        <ChevronUpDownIcon className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    )}
-                                                </span>
-                                            </button>
+                                            )}
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedAgencies.map(agency => (
+                                {sortedAgencies.map(agency => (
                                     <tr key={agency.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                        {tableHeaders.map(header => (
-                                            <td key={`${agency.id}-${header.key}`} className={`px-2 py-2 whitespace-nowrap ${header.className || ''}`}>
+                                            <td key={`${agency.id}-${header.key}`} className={`px-6 py-4 whitespace-nowrap ${header.className || ''}`}>
                                                 {header.key === 'actions' ? (
                                                     <div className="flex items-center gap-1">
                                                         <button onClick={() => setViewingAgency(agency)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
                                                         <button onClick={() => handleEditClick(agency)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
                                                         <button onClick={() => handleDeleteClick(agency.id)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
                                                     </div>
+                                                ) : header.key === 'is_active' ? (
+                                                     <Switch 
+                                                        id={`status-${agency.id}`} 
+                                                        checked={!!agency.is_active} 
+                                                        onChange={(c) => handleToggleStatus(agency, c)} 
+                                                    />
+                                                ) : header.key === 'created_at' ? (
+                                                    new Date(agency.created_at).toLocaleDateString()
                                                 ) : (
-                                                    renderCellContent(agency, header.key as keyof BookingAgency)
+                                                    (agency[header.key as keyof BookingAgency] as string) || '-'
                                                 )}
                                             </td>
                                        ))}
                                     </tr>
                                 ))}
+                                {sortedAgencies.length === 0 && (
+                                     <tr><td colSpan={tableHeaders.length} className="text-center py-8">{t('orders.noData')}</td></tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
                 )}
                 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
-                    <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
-                        <div className="flex items-center gap-2">
-                            <span>{t('units.showing')}</span>
-                            <select
-                                value={itemsPerPage}
-                                onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                                className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                            >
-                                <option value={10}>10</option>
-                                <option value={25}>25</option>
-                                <option value={50}>50</option>
-                            </select>
-                            <span>{t('units.entries')}</span>
-                        </div>
-                        <span>
-                            {`${t('units.showing')} ${sortedAgencies.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, sortedAgencies.length)} ${t('units.of')} ${sortedAgencies.length} ${t('units.entries')}`}
-                        </span>
+                    <div className="text-sm text-slate-600 dark:text-slate-300">
+                         {`${t('units.showing')} ${sortedAgencies.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, totalRecords)} ${t('units.of')} ${totalRecords} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
                          <nav className="flex items-center gap-1" aria-label="Pagination">
