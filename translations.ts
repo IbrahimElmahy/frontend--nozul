@@ -1,6 +1,8 @@
 
 
 
+
+
 export const translations = {
   ar: {
     buttons: {
@@ -936,6 +938,11 @@ export const translations = {
     peakTimes: {
         pageTitle: "أوقات الذروة",
         addPeakTime: "إضافة وقت ذروة",
+        addPeakTimeTitle: "إضافة وقت ذروة جديد",
+        editPeakTimeTitle: "تعديل وقت الذروة",
+        deletePeakTimeTitle: "حذف وقت الذروة",
+        confirmDeleteMessage: "هل أنت متأكد أنك تريد حذف هذا الوقت؟",
+        days: "الأيام",
         th_id: "#",
         th_item: "العنصر",
         th_startDate: "تاريخ البدء",

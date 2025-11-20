@@ -127,6 +127,7 @@ export interface Guest {
   postal_code: string;
   street: string;
   neighborhood: string;
+  account?: string; // UUID for financial account
 }
 
 export interface GuestTypeAPI {
@@ -200,21 +201,26 @@ export interface Order {
   updatedAt: string;
   items?: OrderItem[];
   notes?: string;
+  isActive?: boolean;
 }
 
 export interface Receipt {
-  id: string; // was number
-  receiptNumber: string;
+  id: string;
+  receiptNumber: string; // Maps to 'number' or 'id' for display
   currency: string;
-  value: number;
+  value: number; // Maps to 'amount'
   date: string;
   time: string;
   paymentMethod: string;
-  paymentType: string | null;
+  paymentType: string | null; // 'payment' or 'receipt'
   transactionNumber: string | null;
   bookingNumber: string | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string; // created_at
+  updatedAt: string; // updated_at
+  description?: string;
+  // Financial legs for reconstruction in edit (simplified)
+  debitAccount?: string; 
+  creditAccount?: string;
 }
 
 export interface Invoice {
@@ -344,6 +350,7 @@ export interface Fund {
     is_active?: boolean; // API field
     created_at: string;
     updated_at: string;
+    account?: string; // UUID for financial account
 }
 
 export interface Bank {
@@ -355,6 +362,7 @@ export interface Bank {
     is_active?: boolean; // API field
     created_at: string;
     updated_at: string;
+    account?: string; // UUID for financial account
 }
 
 export interface Expense {
@@ -366,4 +374,5 @@ export interface Expense {
     is_active?: boolean; // API field
     created_at: string;
     updated_at: string;
+    account?: string; // UUID for financial account
 }

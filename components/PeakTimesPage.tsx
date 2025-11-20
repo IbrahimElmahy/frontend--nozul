@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useContext } from 'react';
+
+import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
@@ -6,15 +7,45 @@ import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import PlusIcon from './icons-redesign/PlusIcon';
 import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
+import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
+import TrashIcon from './icons-redesign/TrashIcon';
+import CheckIcon from './icons-redesign/CheckIcon';
 import { PeakTime } from '../types';
-
-const mockPeakTimes: PeakTime[] = []; // Initially empty as per user request
+import { apiClient } from '../apiClient';
+import AddPeakTimePanel from './AddPeakTimePanel';
+import ConfirmationModal from './ConfirmationModal';
 
 const PeakTimesPage: React.FC = () => {
     const { t } = useContext(LanguageContext);
-    const [peakTimes] = useState<PeakTime[]>(mockPeakTimes);
+    const [peakTimes, setPeakTimes] = useState<PeakTime[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // UI State
+    const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
+    const [editingPeakTime, setEditingPeakTime] = useState<PeakTime | null>(null);
+    const [peakTimeToDelete, setPeakTimeToDelete] = useState<PeakTime | null>(null);
+
+    const fetchPeakTimes = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // Note: The API documentation doesn't explicitly mention pagination params for GET,
+            // but standard list endpoints usually support them. Using basic GET for now.
+            const response = await apiClient<{ data: PeakTime[], recordsFiltered: number }>('/ar/peak/api/peaks/');
+            setPeakTimes(response.data);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchPeakTimes();
+    }, [fetchPeakTimes]);
 
     const totalPages = Math.ceil(peakTimes.length / itemsPerPage);
     const paginatedData = useMemo(() => {
@@ -22,29 +53,81 @@ const PeakTimesPage: React.FC = () => {
         return peakTimes.slice(startIndex, startIndex + itemsPerPage);
     }, [peakTimes, currentPage, itemsPerPage]);
 
+    const handleAddNewClick = () => {
+        setEditingPeakTime(null);
+        setIsAddPanelOpen(true);
+    };
+
+    const handleEditClick = (item: PeakTime) => {
+        setEditingPeakTime(item);
+        setIsAddPanelOpen(true);
+    };
+
+    const handleDeleteClick = (item: PeakTime) => {
+        setPeakTimeToDelete(item);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (peakTimeToDelete) {
+            try {
+                await apiClient(`/ar/peak/api/peaks/${peakTimeToDelete.id}/`, { method: 'DELETE' });
+                setPeakTimes(prev => prev.filter(p => p.id !== peakTimeToDelete.id));
+                setPeakTimeToDelete(null);
+            } catch (err) {
+                alert(`Error deleting peak time: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            }
+        }
+    };
+
+    const handleClosePanel = () => {
+        setIsAddPanelOpen(false);
+        setEditingPeakTime(null);
+    };
+
+    const handleSavePeakTime = async (formData: FormData) => {
+        try {
+            if (editingPeakTime) {
+                await apiClient(`/ar/peak/api/peaks/${editingPeakTime.id}/`, {
+                    method: 'PUT',
+                    body: formData
+                });
+            } else {
+                await apiClient('/ar/peak/api/peaks/', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+            fetchPeakTimes();
+            handleClosePanel();
+        } catch (err) {
+            alert(`Error saving peak time: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
+    };
+
      const tableHeaders = [
-        { key: 'th_id', label: 'peakTimes.th_id', className: '' },
-        { key: 'th_item', label: 'peakTimes.th_item', className: '' },
-        { key: 'th_startDate', label: 'peakTimes.th_startDate', className: 'hidden sm:table-cell' },
-        { key: 'th_endDate', label: 'peakTimes.th_endDate', className: 'hidden sm:table-cell' },
-        { key: 'th_saturday', label: 'peakTimes.th_saturday', className: 'hidden md:table-cell' },
-        { key: 'th_sunday', label: 'peakTimes.th_sunday', className: 'hidden md:table-cell' },
-        { key: 'th_monday', label: 'peakTimes.th_monday', className: 'hidden lg:table-cell' },
-        { key: 'th_tuesday', label: 'peakTimes.th_tuesday', className: 'hidden lg:table-cell' },
-        { key: 'th_wednesday', label: 'peakTimes.th_wednesday', className: 'hidden xl:table-cell' },
-        { key: 'th_thursday', label: 'peakTimes.th_thursday', className: 'hidden xl:table-cell' },
-        { key: 'th_friday', label: 'peakTimes.th_friday', className: 'hidden xl:table-cell' },
-        { key: 'th_createdAt', label: 'peakTimes.th_createdAt', className: 'hidden 2xl:table-cell' },
-        { key: 'th_updatedAt', label: 'peakTimes.th_updatedAt', className: 'hidden 2xl:table-cell' },
-        { key: 'th_actions', label: 'peakTimes.th_actions', className: '' },
+        { key: 'id', label: 'peakTimes.th_id', className: 'hidden sm:table-cell' },
+        { key: 'start_date', label: 'peakTimes.th_startDate', className: '' },
+        { key: 'end_date', label: 'peakTimes.th_endDate', className: '' },
+        { key: 'sat', label: 'peakTimes.th_saturday', className: 'hidden md:table-cell text-center' },
+        { key: 'sun', label: 'peakTimes.th_sunday', className: 'hidden md:table-cell text-center' },
+        { key: 'mon', label: 'peakTimes.th_monday', className: 'hidden lg:table-cell text-center' },
+        { key: 'tue', label: 'peakTimes.th_tuesday', className: 'hidden lg:table-cell text-center' },
+        { key: 'wed', label: 'peakTimes.th_wednesday', className: 'hidden xl:table-cell text-center' },
+        { key: 'thu', label: 'peakTimes.th_thursday', className: 'hidden xl:table-cell text-center' },
+        { key: 'fri', label: 'peakTimes.th_friday', className: 'hidden xl:table-cell text-center' },
+        { key: 'created_at', label: 'peakTimes.th_createdAt', className: 'hidden 2xl:table-cell' },
+        { key: 'actions', label: 'peakTimes.th_actions', className: '' },
     ];
 
+    const renderCheckMark = (checked: boolean) => (
+        checked ? <CheckIcon className="w-5 h-5 text-green-500 inline-block" /> : <span className="text-slate-300">-</span>
+    );
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('peakTimes.pageTitle')}</h2>
-                 <button className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                 <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                     <PlusCircleIcon className="w-5 h-5" />
                     <span>{t('peakTimes.addPeakTime')}</span>
                 </button>
@@ -55,15 +138,10 @@ const PeakTimesPage: React.FC = () => {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('apartmentPrices.searchInfo')}</h3>
                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                        <button onClick={fetchPeakTimes} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
-                <div className="h-16"></div> 
-            </div>
-
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
                     <span>{t('units.showing')}</span>
                     <select
                         value={itemsPerPage}
@@ -87,9 +165,29 @@ const PeakTimesPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedData.length > 0 ? paginatedData.map(item => (
-                                <tr key={item.id} className="bg-white dark:bg-slate-800">
-                                    {/* Data cells will go here */}
+                            {loading ? (
+                                <tr><td colSpan={tableHeaders.length} className="text-center py-10">Loading...</td></tr>
+                            ) : error ? (
+                                <tr><td colSpan={tableHeaders.length} className="text-center py-10 text-red-500">{error}</td></tr>
+                            ) : paginatedData.length > 0 ? paginatedData.map(item => (
+                                <tr key={item.id} className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                    <td className="px-4 py-3 border dark:border-slate-700 hidden sm:table-cell">{item.id}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700">{item.start_date}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700">{item.end_date}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700 hidden md:table-cell">{renderCheckMark(item.sat)}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700 hidden md:table-cell">{renderCheckMark(item.sun)}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700 hidden lg:table-cell">{renderCheckMark(item.mon)}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700 hidden lg:table-cell">{renderCheckMark(item.tue)}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700 hidden xl:table-cell">{renderCheckMark(item.wed)}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700 hidden xl:table-cell">{renderCheckMark(item.thu)}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700 hidden xl:table-cell">{renderCheckMark(item.fri)}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700 hidden 2xl:table-cell">{new Date(item.created_at).toLocaleDateString()}</td>
+                                    <td className="px-4 py-3 border dark:border-slate-700">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <button onClick={() => handleEditClick(item)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => handleDeleteClick(item)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
+                                        </div>
+                                    </td>
                                 </tr>
                             )) : (
                                 <tr>
@@ -104,9 +202,9 @@ const PeakTimesPage: React.FC = () => {
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} 0 ${t('usersPage.to')} 0 ${t('usersPage.of')} 0 ${t('usersPage.entries')}`}
+                         {`${t('units.showing')} ${paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, peakTimes.length)} ${t('units.of')} ${peakTimes.length} ${t('units.entries')}`}
                     </div>
-                    {totalPages > 0 && (
+                    {totalPages > 1 && (
                          <nav className="flex items-center gap-1" aria-label="Pagination">
                             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
                              <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
@@ -115,6 +213,22 @@ const PeakTimesPage: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            <AddPeakTimePanel
+                isOpen={isAddPanelOpen}
+                onClose={handleClosePanel}
+                onSave={handleSavePeakTime}
+                initialData={editingPeakTime}
+                isEditing={!!editingPeakTime}
+            />
+
+            <ConfirmationModal
+                isOpen={!!peakTimeToDelete}
+                onClose={() => setPeakTimeToDelete(null)}
+                onConfirm={handleConfirmDelete}
+                title={t('peakTimes.deletePeakTimeTitle')}
+                message={t('peakTimes.confirmDeleteMessage')}
+            />
         </div>
     );
 };

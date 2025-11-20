@@ -21,6 +21,7 @@ import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
+import Switch from './Switch';
 
 
 const newOrderTemplate: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -34,6 +35,7 @@ const newOrderTemplate: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
     total: 0,
     items: [],
     notes: '',
+    isActive: true,
 };
 
 
@@ -77,6 +79,7 @@ const OrdersPage: React.FC = () => {
                 createdAt: o.created_at,
                 updatedAt: o.updated_at,
                 notes: o.note,
+                isActive: o.is_active,
                 items: o.order_items ? o.order_items.map((item: any) => ({
                     id: item.id,
                     service: item.service?.name_ar ?? item.service?.name_en ?? '', 
@@ -125,6 +128,8 @@ const OrdersPage: React.FC = () => {
             }
 
             if (editingOrder) {
+                // MUST append 'order' ID when updating as per API docs
+                formData.append('order', editingOrder.id);
                 await apiClient(`/ar/order/api/orders/${editingOrder.id}/`, {
                     method: 'PUT',
                     body: formData
@@ -139,6 +144,19 @@ const OrdersPage: React.FC = () => {
             handleClosePanel();
         } catch (err) {
             alert(`Error saving order: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
+    };
+
+    const handleToggleStatus = async (order: Order, newStatus: boolean) => {
+        try {
+            const action = newStatus ? 'active' : 'disable';
+            await apiClient(`/ar/order/api/orders/${order.id}/${action}/`, { method: 'POST' });
+            // Optimistically update UI or refetch
+            setOrders(prev => prev.map(o => o.id === order.id ? { ...o, isActive: newStatus } : o));
+        } catch (err) {
+            alert(`Error changing order status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            // Revert change on error
+            fetchOrders();
         }
     };
 
@@ -184,6 +202,7 @@ const OrdersPage: React.FC = () => {
         { key: 'subtotal', labelKey: 'orders.th_subtotal' },
         { key: 'tax', labelKey: 'orders.th_tax' },
         { key: 'total', labelKey: 'orders.th_total' },
+        { key: 'isActive', labelKey: 'itemsPage.th_status' },
         { key: 'createdAt', labelKey: 'orders.th_createdAt' },
         { key: 'actions', labelKey: 'orders.th_actions' },
     ];
@@ -312,6 +331,12 @@ const OrdersPage: React.FC = () => {
                                                         <button onClick={() => handleEditClick(order)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
                                                         <button onClick={() => handleDeleteClick(order.id)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
                                                     </div>
+                                                ) : header.key === 'isActive' ? (
+                                                    <Switch 
+                                                        id={`status-${order.id}`} 
+                                                        checked={!!order.isActive} 
+                                                        onChange={(c) => handleToggleStatus(order, c)} 
+                                                    />
                                                 ) : header.key === 'createdAt' ? (
                                                     new Date(order.createdAt).toLocaleDateString()
                                                 ) : (

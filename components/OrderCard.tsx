@@ -30,14 +30,19 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewClick, onEditClick, 
     return (
         <div 
             onClick={onViewClick}
-            className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-t-4 border-blue-500 flex flex-col h-full transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer`}>
+            className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-t-4 ${order.isActive !== false ? 'border-blue-500' : 'border-gray-400'} flex flex-col h-full transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer`}>
             {/* Header */}
             <div className="p-4 flex items-start justify-between">
                 <div>
                     <p className="font-bold text-lg text-slate-800 dark:text-slate-200 truncate">{order.orderNumber}</p>
-                    <span className="text-sm text-slate-500 dark:text-slate-400">
-                        {t('orders.th_total')}: <span className="font-bold text-blue-500">{order.total.toFixed(2)}</span>
-                    </span>
+                    <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                            {t('orders.th_total')}: <span className="font-bold text-blue-500">{order.total.toFixed(2)}</span>
+                        </span>
+                        <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${order.isActive !== false ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
+                            {order.isActive !== false ? t('guests.status_active') : t('guests.status_inactive')}
+                        </span>
+                    </div>
                 </div>
             </div>
 
