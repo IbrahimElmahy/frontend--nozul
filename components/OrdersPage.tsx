@@ -21,7 +21,6 @@ import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
-import Switch from './Switch';
 
 
 const newOrderTemplate: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -69,7 +68,8 @@ const OrdersPage: React.FC = () => {
             const mappedOrders: Order[] = response.data.map((o: any) => ({
                 id: o.id,
                 orderNumber: o.number, // API field is 'number'
-                bookingNumber: o.reservation ? o.reservation.id : '', // Use ID or a displayable number if available
+                // Try to get a readable booking number if available, otherwise ID
+                bookingNumber: o.reservation ? (o.reservation.booking_number || o.reservation.id) : '', 
                 apartmentName: o.reservation && o.reservation.apartment ? o.reservation.apartment : '',
                 value: parseFloat(o.amount),
                 discount: parseFloat(o.discount || 0),
@@ -147,19 +147,6 @@ const OrdersPage: React.FC = () => {
         }
     };
 
-    const handleToggleStatus = async (order: Order, newStatus: boolean) => {
-        try {
-            const action = newStatus ? 'active' : 'disable';
-            await apiClient(`/ar/order/api/orders/${order.id}/${action}/`, { method: 'POST' });
-            // Optimistically update UI or refetch
-            setOrders(prev => prev.map(o => o.id === order.id ? { ...o, isActive: newStatus } : o));
-        } catch (err) {
-            alert(`Error changing order status: ${err instanceof Error ? err.message : 'Unknown error'}`);
-            // Revert change on error
-            fetchOrders();
-        }
-    };
-
     const handleAddNewClick = () => {
         setEditingOrder(null);
         setIsAddPanelOpen(true);
@@ -194,16 +181,18 @@ const OrdersPage: React.FC = () => {
         setSortConfig({ key, direction });
     };
 
-    const tableHeaders: { key: keyof Order | 'actions', labelKey: string }[] = [
+    const tableHeaders: { key: keyof Order | 'actions', labelKey: string, className?: string }[] = [
         { key: 'id', labelKey: 'orders.th_id' },
         { key: 'orderNumber', labelKey: 'orders.th_orderNumber' },
+        { key: 'bookingNumber', labelKey: 'orders.th_bookingNumber' },
         { key: 'apartmentName', labelKey: 'orders.th_apartmentName' },
         { key: 'value', labelKey: 'orders.th_value' },
+        { key: 'discount', labelKey: 'orders.th_discount' },
         { key: 'subtotal', labelKey: 'orders.th_subtotal' },
         { key: 'tax', labelKey: 'orders.th_tax' },
         { key: 'total', labelKey: 'orders.th_total' },
-        { key: 'isActive', labelKey: 'itemsPage.th_status' },
         { key: 'createdAt', labelKey: 'orders.th_createdAt' },
+        { key: 'updatedAt', labelKey: 'orders.th_updatedAt' },
         { key: 'actions', labelKey: 'orders.th_actions' },
     ];
     
@@ -247,6 +236,14 @@ const OrdersPage: React.FC = () => {
     );
     
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
+    
+    const formatDateTime = (dateString: string) => {
+        if (!dateString) return '-';
+        const d = new Date(dateString);
+        const time = d.toLocaleTimeString('en-GB', { hour12: false }); // HH:mm:ss
+        const date = d.toISOString().split('T')[0]; // YYYY-MM-DD
+        return `${time} ${date}`;
+    };
 
     return (
         <div className="space-y-6">
@@ -298,7 +295,7 @@ const OrdersPage: React.FC = () => {
                             <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                                 <tr>
                                     {tableHeaders.map(header => (
-                                        <th key={header.key} scope="col" className="px-6 py-3">
+                                        <th key={header.key} scope="col" className={`px-4 py-3 whitespace-nowrap ${header.className || ''}`}>
                                              {header.key !== 'actions' ? (
                                                 <button 
                                                     className="flex items-center gap-1.5 group" 
@@ -321,24 +318,25 @@ const OrdersPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {orders.map(order => (
+                                {orders.map((order, index) => (
                                     <tr key={order.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                        {tableHeaders.map(header => (
-                                            <td key={`${order.id}-${header.key}`} className="px-6 py-4 whitespace-nowrap">
+                                            <td key={`${order.id}-${header.key}`} className={`px-4 py-3 whitespace-nowrap ${header.className || ''}`}>
                                                 {header.key === 'actions' ? (
                                                     <div className="flex items-center gap-1">
                                                         <button onClick={() => setViewingOrder(order)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
                                                         <button onClick={() => handleEditClick(order)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
                                                         <button onClick={() => handleDeleteClick(order.id)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
                                                     </div>
-                                                ) : header.key === 'isActive' ? (
-                                                    <Switch 
-                                                        id={`status-${order.id}`} 
-                                                        checked={!!order.isActive} 
-                                                        onChange={(c) => handleToggleStatus(order, c)} 
-                                                    />
-                                                ) : header.key === 'createdAt' ? (
-                                                    new Date(order.createdAt).toLocaleDateString()
+                                                ) : header.key === 'createdAt' || header.key === 'updatedAt' ? (
+                                                    <span dir="ltr">{formatDateTime(order[header.key])}</span>
+                                                ) : header.key === 'id' ? (
+                                                    // Simple numeric index for display
+                                                    (currentPage - 1) * itemsPerPage + index + 1
+                                                ) : header.key === 'discount' ? (
+                                                    <span className="bg-cyan-400 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+                                                        {(order.discount || 0).toFixed(1)}%
+                                                    </span>
                                                 ) : (
                                                     (order[header.key as keyof Order] as string | number) || '-'
                                                 )}

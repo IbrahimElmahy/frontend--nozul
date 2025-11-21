@@ -33,6 +33,8 @@ interface NavItemProps {
 const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificationCount, hasSubMenu, collapsed, sidebarColor, onClick }) => {
     const { language } = useContext(LanguageContext);
     
+    // Using 'blue' classes here because App.tsx maps the selected theme color to the Tailwind 'blue' palette.
+    // So 'text-blue-600' will actually render as Red, Green, Purple, etc. based on the settings.
     const colorStyles = {
         light: {
             base: 'text-slate-600 hover:bg-slate-100',
@@ -49,24 +51,23 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificati
             chevron: 'text-slate-400'
         },
         brand: {
-            // Updated to use dynamic blue-* classes which map to --color-primary-*
-            base: 'text-blue-100 hover:bg-blue-700',
+            base: 'text-blue-100 hover:bg-white/10',
             active: 'bg-white text-blue-600 shadow-sm',
             notificationBase: 'bg-blue-800 text-white',
             notificationActive: 'bg-blue-100 text-blue-600',
             chevron: 'text-blue-200'
         },
         gradient: {
-            base: 'text-purple-100 hover:bg-white/10',
-            active: 'bg-white/20 text-white shadow-sm',
+            base: 'text-white/80 hover:bg-white/10',
+            active: 'bg-white/20 text-white shadow-sm backdrop-blur-sm',
             notificationBase: 'bg-white/20 text-white',
-            notificationActive: 'bg-purple-100 text-purple-700',
-            chevron: 'text-purple-200'
+            notificationActive: 'bg-white text-blue-600',
+            chevron: 'text-white/60'
         }
     };
 
     const styles = colorStyles[sidebarColor] || colorStyles.brand;
-    const baseClasses = 'flex items-center w-full p-3 my-1 rounded-lg text-base font-medium transition-colors duration-200';
+    const baseClasses = 'flex items-center w-full p-3 my-1 rounded-lg text-base font-medium transition-all duration-200';
     
     return (
         <a
@@ -100,7 +101,7 @@ const NavHeader: React.FC<{ collapsed: boolean; sidebarColor: ThemeSettings['sid
         light: 'text-slate-400',
         dark: 'text-slate-500',
         brand: 'text-blue-200',
-        gradient: 'text-purple-200'
+        gradient: 'text-white/60'
     }
 
     return (
@@ -123,8 +124,8 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurre
     const colorStyles = {
         light: { base: 'text-slate-600 hover:bg-slate-100' },
         dark: { base: 'text-slate-300 hover:bg-slate-700' },
-        brand: { base: 'text-blue-100 hover:bg-blue-700' },
-        gradient: { base: 'text-purple-100 hover:bg-white/10' }
+        brand: { base: 'text-blue-100 hover:bg-white/10' },
+        gradient: { base: 'text-white/90 hover:bg-white/10' }
     };
 
     const styles = colorStyles[sidebarColor] || colorStyles.brand;
@@ -148,7 +149,7 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurre
             <img
                 src="https://picsum.photos/id/237/200/200"
                 alt="User Avatar"
-                className="w-10 h-10 rounded-md flex-shrink-0"
+                className="w-10 h-10 rounded-md flex-shrink-0 border-2 border-white/20"
             />
             {!collapsed && (
                 <div className={`${language === 'ar' ? 'mr-3 text-right' : 'ml-3 text-left'}`}>
@@ -253,17 +254,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
 
     const { sidebarColor, sidebarSize, showUserInfo, colorScheme } = settings;
 
-    // When the global theme is dark, force light/brand sidebars to become dark for consistency.
+    // When the global theme is dark, force light sidebars to become dark for consistency, unless explicitly brand/gradient.
     const effectiveSidebarColor = colorScheme === 'dark' && (sidebarColor === 'light')
         ? 'dark'
         : sidebarColor;
 
+    // Dynamic classes based on the "primary" color variable which maps to blue-* classes in Tailwind config.
     const colorClasses = {
         light: 'bg-white text-slate-700 border-r dark:bg-slate-900/70 dark:border-slate-700',
         dark: 'bg-slate-800 text-white',
-        // Using dynamic blue classes - assuming 'blue' is remapped to --color-primary-*
+        // Both brand and gradient now use the `blue-` scale which translates to var(--color-primary-*)
         brand: 'bg-blue-600 text-white',
-        gradient: 'bg-gradient-to-b from-blue-600 to-indigo-700 text-white'
+        // IMPORTANT: Changed 'to-indigo-700' to 'to-blue-900' so the gradient fully uses dynamic colors.
+        gradient: 'bg-gradient-to-br from-blue-600 to-blue-900 text-white'
     };
 
     const sizeClasses = {
@@ -293,10 +296,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         onMouseLeave={() => setIsDesktopCollapsed(true)}
     >
         <div className={`border-b ${borderColor[effectiveSidebarColor]} transition-all duration-300 flex items-center justify-center h-20 px-4`}>
-            <Logo className={`transition-all duration-300 ${isEffectivelyCollapsed ? 'h-8' : 'h-10'}`} />
+            <Logo className={`transition-all duration-300 ${isEffectivelyCollapsed ? 'h-8' : 'h-10'} ${effectiveSidebarColor !== 'light' ? 'brightness-0 invert' : ''}`} />
         </div>
 
-      <nav className="flex-grow p-3 overflow-y-auto">
+      <nav className="flex-grow p-3 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20">
         {navigationSections.map((section, index) => (
             <div key={index}>
                 <NavHeader collapsed={isEffectivelyCollapsed} sidebarColor={effectiveSidebarColor}>{section.header}</NavHeader>

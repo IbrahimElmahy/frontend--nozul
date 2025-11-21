@@ -131,11 +131,18 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
 
   const layoutWidthClass = settings.layoutWidth === 'boxed' ? 'max-w-screen-xl mx-auto shadow-2xl' : 'w-full';
-  const animatedBgClass = settings.animatedBackground ? 'animate-gradient-x bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900' : 'bg-slate-50 dark:bg-slate-900';
+  
+  // Updated: Use primary color (blue-*) for background gradient so it follows the theme.
+  // The 'blue' classes here are mapped to var(--color-primary-*) in index.html
+  // Increased opacity/strength of the gradient for better visibility.
+  // In dark mode, we add a slight tint of the primary color to the dark background.
+  const animatedBgClass = settings.animatedBackground 
+    ? 'animate-gradient-x bg-gradient-to-r from-blue-100 via-white to-blue-200 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/30' 
+    : 'bg-slate-50 dark:bg-slate-900';
 
   return (
     <div className={`${layoutWidthClass} h-screen overflow-hidden`}>
-        <div className={`relative flex h-full ${animatedBgClass} font-sans`}>
+        <div className={`relative flex h-full ${animatedBgClass} font-sans transition-colors duration-500`}>
             {/* Overlay for mobile sidebar */}
             {isMobileMenuOpen && (
               <div

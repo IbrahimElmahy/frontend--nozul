@@ -21,6 +21,7 @@ import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
 import DocumentDuplicateIcon from './icons-redesign/DocumentDuplicateIcon';
 import TagIcon from './icons-redesign/TagIcon';
 import CubeIcon from './icons-redesign/CubeIcon';
+import Switch from './Switch';
 
 
 const newItemTemplate: Omit<Item, 'id' | 'created_at' | 'updated_at'> = {
@@ -142,6 +143,20 @@ const ItemsPage: React.FC = () => {
             handleClosePanel();
         } catch (err) {
              alert(`Error saving ${activeView === 'services' ? 'service' : 'category'}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
+    };
+
+    const handleToggleStatus = async (item: Item, newStatus: boolean) => {
+        try {
+            const endpointBase = activeView === 'services' ? '/ar/service/api/services/' : '/ar/category/api/categories/';
+            const action = newStatus ? 'active' : 'disable';
+            await apiClient(`${endpointBase}${item.id}/${action}/`, { method: 'POST' });
+            
+            // Optimistically update
+            setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_active: newStatus, status: newStatus ? 'active' : 'inactive' } : i));
+        } catch (err) {
+             alert(`Error changing status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+             fetchItems(); // Revert on error
         }
     };
 
@@ -275,9 +290,11 @@ const ItemsPage: React.FC = () => {
                                     )}
 
                                     <td className="px-4 py-2">
-                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${item.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                            {t(`itemsPage.status_${item.is_active ? 'active' : 'inactive'}`)}
-                                        </span>
+                                         <Switch 
+                                            id={`status-${item.id}`} 
+                                            checked={!!item.is_active} 
+                                            onChange={(c) => handleToggleStatus(item, c)} 
+                                        />
                                     </td>
                                     <td className="px-4 py-2 whitespace-nowrap">{new Date(item.created_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2 whitespace-nowrap">{new Date(item.updated_at).toLocaleDateString()}</td>

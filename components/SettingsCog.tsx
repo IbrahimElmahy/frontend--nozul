@@ -69,13 +69,76 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
     ];
 
     const packages = [
-        { id: 'seaBreeze', color: 'teal', mode: 'light', gradient: 'from-teal-400 to-cyan-300' },
-        { id: 'citySunset', color: 'orange', mode: 'light', gradient: 'from-orange-400 to-rose-400' },
-        { id: 'mistyForests', color: 'emerald', mode: 'light', gradient: 'from-emerald-500 to-teal-600' },
-        { id: 'purpleCity', color: 'violet', mode: 'light', gradient: 'from-violet-500 to-fuchsia-500' },
-        { id: 'cityNights', color: 'blue', mode: 'dark', gradient: 'from-blue-800 to-indigo-900' },
-        { id: 'royalTurquoise', color: 'teal', mode: 'dark', gradient: 'from-teal-800 to-emerald-900' },
-        { id: 'modernDesert', color: 'amber', mode: 'light', gradient: 'from-amber-200 to-orange-100' },
+        { 
+            id: 'seaBreeze', 
+            color: 'cyan', 
+            mode: 'light', 
+            sidebar: 'gradient',
+            topbar: 'light',
+            card: 'soft',
+            bgAnim: true,
+            previewGradient: 'from-cyan-400 to-teal-300' 
+        },
+        { 
+            id: 'citySunset', 
+            color: 'orange', 
+            mode: 'light', 
+            sidebar: 'brand',
+            topbar: 'light',
+            card: 'solid',
+            bgAnim: true,
+            previewGradient: 'from-orange-400 to-rose-400' 
+        },
+        { 
+            id: 'mistyForests', 
+            color: 'emerald', 
+            mode: 'light', 
+            sidebar: 'dark',
+            topbar: 'light',
+            card: 'soft',
+            bgAnim: false,
+            previewGradient: 'from-emerald-500 to-teal-600' 
+        },
+        { 
+            id: 'purpleCity', 
+            color: 'fuchsia', 
+            mode: 'light', 
+            sidebar: 'gradient',
+            topbar: 'brand',
+            card: 'glass',
+            bgAnim: true,
+            previewGradient: 'from-violet-500 to-fuchsia-500' 
+        },
+        { 
+            id: 'cityNights', 
+            color: 'indigo', 
+            mode: 'dark', 
+            sidebar: 'dark',
+            topbar: 'dark',
+            card: 'soft',
+            bgAnim: true,
+            previewGradient: 'from-blue-800 to-indigo-900' 
+        },
+        { 
+            id: 'royalTurquoise', 
+            color: 'teal', 
+            mode: 'dark', 
+            sidebar: 'gradient',
+            topbar: 'dark',
+            card: 'glass',
+            bgAnim: true,
+            previewGradient: 'from-teal-800 to-emerald-900' 
+        },
+        { 
+            id: 'modernDesert', 
+            color: 'amber', 
+            mode: 'light', 
+            sidebar: 'light',
+            topbar: 'light',
+            card: 'solid',
+            bgAnim: true,
+            previewGradient: 'from-amber-200 to-orange-100' 
+        },
     ];
 
     const applyPackage = (pkg: typeof packages[0]) => {
@@ -83,8 +146,10 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
             ...prev,
             themeColor: pkg.color as ColorSchemeName,
             colorScheme: pkg.mode as 'light' | 'dark',
-            sidebarColor: pkg.mode === 'dark' ? 'dark' : 'light',
-            topbarColor: pkg.mode === 'dark' ? 'dark' : 'light'
+            sidebarColor: pkg.sidebar as any,
+            topbarColor: pkg.topbar as any,
+            cardStyle: pkg.card as any,
+            animatedBackground: pkg.bgAnim
         }));
     };
 
@@ -132,13 +197,13 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                                 <button
                                     key={pkg.id}
                                     onClick={() => applyPackage(pkg)}
-                                    className={`relative group overflow-hidden rounded-xl border transition-all duration-200 text-right ${settings.themeColor === pkg.color && settings.colorScheme === pkg.mode ? 'border-blue-500 ring-1 ring-blue-500' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                    className={`relative group overflow-hidden rounded-xl border transition-all duration-200 text-right ${settings.themeColor === pkg.color && settings.colorScheme === pkg.mode && settings.sidebarColor === pkg.sidebar ? 'border-blue-500 ring-1 ring-blue-500' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
                                 >
-                                    <div className={`h-16 bg-gradient-to-r ${pkg.gradient} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
+                                    <div className={`h-16 bg-gradient-to-r ${pkg.previewGradient} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
                                     <div className="p-3 bg-white dark:bg-slate-800">
                                         <div className="flex justify-between items-center">
                                             <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">{t(`themeCustomizer.packages.${pkg.id}` as any)}</h3>
-                                            {settings.themeColor === pkg.color && settings.colorScheme === pkg.mode && (
+                                            {settings.themeColor === pkg.color && settings.colorScheme === pkg.mode && settings.sidebarColor === pkg.sidebar && (
                                                 <CheckIcon className="w-4 h-4 text-blue-500" />
                                             )}
                                         </div>
@@ -149,6 +214,33 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                         </div>
                     </SettingsSection>
                     
+                    {/* Custom Colors (Moved up) */}
+                     <SettingsSection title={t('settings.colorScheme')}>
+                        <div className="grid grid-cols-4 gap-3">
+                            {colors.map(c => (
+                                <button
+                                    key={c.id}
+                                    onClick={() => updateSetting('themeColor', c.id)}
+                                    className={`relative w-full h-10 rounded-full overflow-hidden transition-transform shadow-sm ${settings.themeColor === c.id ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-500 dark:ring-offset-slate-900 scale-110' : 'hover:scale-105'}`}
+                                >
+                                    <div 
+                                        className="w-full h-full" 
+                                        style={{ 
+                                            background: `linear-gradient(135deg, ${c.color} 50%, ${c.pair} 50%)`
+                                        }}
+                                    ></div>
+                                    {settings.themeColor === c.id && (
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="bg-white/30 rounded-full p-0.5">
+                                                 <CheckIcon className="w-4 h-4 text-white drop-shadow-md" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </SettingsSection>
+
                     {/* Dashboard View */}
                     <SettingsSection title={t('themeCustomizer.dashboardView')}>
                         <ToggleGroup
@@ -199,7 +291,7 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                                 { value: 'light', label: t('themeCustomizer.neutralLight'), class: 'bg-white border-slate-200 text-slate-800' },
                                 { value: 'dark', label: t('themeCustomizer.contrastDark'), class: 'bg-slate-800 border-slate-700 text-white' },
                                 { value: 'brand', label: t('themeCustomizer.brandColors'), class: 'bg-blue-600 border-blue-600 text-white' },
-                                { value: 'gradient', label: t('themeCustomizer.vividGradient'), class: 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-transparent' },
+                                { value: 'gradient', label: t('themeCustomizer.vividGradient'), class: 'bg-gradient-to-br from-blue-600 to-blue-900 text-white border-transparent' },
                             ].map(opt => (
                                 <button
                                     key={opt.value}
@@ -253,33 +345,6 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                                     onChange={(val) => updateSetting('cardStyle', val)}
                                 />
                             </div>
-                        </div>
-                    </SettingsSection>
-                    
-                     {/* Custom Colors */}
-                     <SettingsSection title={t('settings.colorScheme')}>
-                        <div className="grid grid-cols-4 gap-3">
-                            {colors.map(c => (
-                                <button
-                                    key={c.id}
-                                    onClick={() => updateSetting('themeColor', c.id)}
-                                    className={`relative w-full h-10 rounded-full overflow-hidden transition-transform shadow-sm ${settings.themeColor === c.id ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-500 dark:ring-offset-slate-900 scale-110' : 'hover:scale-105'}`}
-                                >
-                                    <div 
-                                        className="w-full h-full" 
-                                        style={{ 
-                                            background: `linear-gradient(135deg, ${c.color} 50%, ${c.pair} 50%)`
-                                        }}
-                                    ></div>
-                                    {settings.themeColor === c.id && (
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="bg-white/30 rounded-full p-0.5">
-                                                 <CheckIcon className="w-4 h-4 text-white drop-shadow-md" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </button>
-                            ))}
                         </div>
                     </SettingsSection>
 
