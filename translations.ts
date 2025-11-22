@@ -3,6 +3,8 @@
 
 
 
+
+
 export const translations = {
   ar: {
     buttons: {
@@ -666,6 +668,18 @@ export const translations = {
         allArchives: "كل الأرشيفات",
         favorites: "المفضلة",
         sidebarTitle: "الأرشيفات",
+        th_actionType: "نوع الإجراء",
+        th_user: "المستخدم",
+        th_date: "التاريخ",
+        th_role: "الدور",
+        th_details: "التفاصيل",
+        viewDetails: "عرض التفاصيل",
+        jsonSnapshot: "لقطة البيانات",
+        backToArchives: "العودة للأرشيف",
+        showing: "عرض",
+        entries: "إدخالات",
+        of: "من",
+        to: "إلى",
         categories: {
             operational: "التشغيل",
             financial: "المالية",

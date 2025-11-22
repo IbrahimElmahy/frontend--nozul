@@ -376,3 +376,12 @@ export interface Expense {
     updated_at: string;
     account?: string; // UUID for financial account
 }
+
+export interface ArchiveLog {
+    content_type: string;
+    action_type: string;
+    action_time: string;
+    action_by: string;
+    role: string;
+    data: Record<string, any>;
+}
