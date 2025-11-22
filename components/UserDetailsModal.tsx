@@ -1,3 +1,4 @@
+
 import React, { useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { HotelUser } from '../types';
@@ -34,7 +35,7 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose }) =>
 
     const isOpen = !!user;
     const formatDate = (dateString: string | null | undefined) => dateString ? new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '---';
-    const formatDateTime = (dateString: string) => new Date(dateString).toLocaleString();
+    const formatDateTime = (dateString: string | null) => dateString ? new Date(dateString).toLocaleString() : '---';
 
     const permissionKeys = Object.keys(translations.ar.addUserPanel.permissionsList) as (keyof typeof translations.ar.addUserPanel.permissionsList)[];
 
@@ -58,27 +59,27 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose }) =>
                 <div className="flex-grow p-6 overflow-y-auto">
                     <Section title={t('addUserPanel.supervisorInfo')}>
                         <DetailItem label={t('addUserPanel.name')} value={user.name} />
-                        <DetailItem label={t('addUserPanel.gender')} value={user.gender !== '-' ? t(`addUserPanel.${user.gender}` as any) : '-'} />
-                        <DetailItem label={t('addUserPanel.dob')} value={formatDate(user.dob)} />
+                        <DetailItem label={t('addUserPanel.gender')} value={user.profile?.gender_display || user.profile?.gender || '-'} />
+                        <DetailItem label={t('addUserPanel.dob')} value={formatDate(user.profile?.birthdate)} />
                     </Section>
 
                     <Section title={t('addUserPanel.loginInfo')}>
                         <DetailItem label={t('addUserPanel.username')} value={user.username} />
                         <DetailItem label={t('addUserPanel.email')} value={user.email} />
-                        <DetailItem label={t('addUserPanel.mobile')} value={<span dir="ltr">{user.mobile}</span>} />
-                        <DetailItem label={t('usersPage.th_role')} value={user.role} />
+                        <DetailItem label={t('addUserPanel.mobile')} value={<span dir="ltr">{user.phone_number}</span>} />
+                        <DetailItem label={t('usersPage.th_role')} value={user.role_display} />
                         <DetailItem label={t('addUserPanel.isHotelManager')} value={user.isManager ? t('settings.enable') : t('settings.disable')} />
                          <DetailItem label={t('usersPage.th_status')} value={
-                             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${user.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                {t(`usersPage.status_${user.status}`)}
+                             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${user.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
+                                {t(`usersPage.status_${user.is_active ? 'active' : 'inactive'}`)}
                             </span>
                          } />
                     </Section>
 
                     <Section title={t('userDetailsModal.activity')}>
-                        <DetailItem label={t('usersPage.th_createdAt')} value={formatDateTime(user.createdAt)} />
-                        <DetailItem label={t('usersPage.th_lastLogin')} value={formatDateTime(user.lastLogin)} />
-                         <DetailItem label={t('usersPage.th_updatedAt')} value={formatDateTime(user.updatedAt)} />
+                        <DetailItem label={t('usersPage.th_createdAt')} value={formatDateTime(user.created_at)} />
+                        <DetailItem label={t('usersPage.th_lastLogin')} value={formatDateTime(user.last_login)} />
+                         <DetailItem label={t('usersPage.th_updatedAt')} value={formatDateTime(user.updated_at)} />
                     </Section>
 
                     {user.notes && (

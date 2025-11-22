@@ -12,29 +12,15 @@ import Bars3Icon from './icons-redesign/Bars3Icon';
 import GlobeAltIcon from './icons-redesign/GlobeAltIcon';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { TranslationKey } from '../translations';
-import { User } from '../types';
+import { User, Notification } from '../types';
+import { apiClient } from '../apiClient';
 
 
 // Icons for notifications
 import UserPlusIcon from './icons-redesign/UserPlusIcon';
 import CurrencyDollarIcon from './icons-redesign/CurrencyDollarIcon';
 import ServerIcon from './icons-redesign/ServerIcon';
-
-
-interface Notification {
-  id: number;
-  icon: React.ComponentType<{ className?: string }>;
-  titleKey: TranslationKey;
-  timestampKey: TranslationKey;
-  read: boolean;
-}
-
-const initialNotifications: Notification[] = [
-  { id: 1, icon: UserPlusIcon, titleKey: 'new_account_created', timestampKey: '5_minutes_ago', read: false },
-  { id: 2, icon: CurrencyDollarIcon, titleKey: 'new_payment_received', timestampKey: '25_minutes_ago', read: false },
-  { id: 3, icon: ServerIcon, titleKey: 'server_1_overloaded', timestampKey: '1_hour_ago', read: true },
-  { id: 4, icon: UserPlusIcon, titleKey: 'new_user_registered', timestampKey: '2_hours_ago', read: false },
-];
+import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
 
 
 interface HeaderProps {
@@ -76,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { language, setLanguage, t } = useContext(LanguageContext);
 
@@ -86,7 +72,21 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
   const langDropdownRef = useRef<HTMLDivElement>(null);
   
   const { topbarColor } = settings;
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => n.unread).length;
+
+  useEffect(() => {
+      const fetchNotifications = async () => {
+          try {
+              const response = await apiClient<{ data: Notification[] }>('/ar/notification/api/notifications/');
+              setNotifications(response.data);
+          } catch (error) {
+              console.error("Failed to fetch notifications", error);
+          }
+      }
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 60000); // Poll every minute
+      return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -124,13 +124,14 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
     onLogout();
   }
   
-  const handleMarkAsRead = (id: number) => {
-    setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+  const handleMarkAsRead = (id: string) => {
+    setNotifications(notifications.map(n => n.pk === id ? { ...n, unread: false } : n));
+    // API call to mark as read would go here if supported by the endpoint provided
   };
 
   const handleMarkAllAsRead = (e: React.MouseEvent) => {
     e.preventDefault();
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+    setNotifications(notifications.map(n => ({ ...n, unread: false })));
   };
 
   const handleToggleFullScreen = () => {
@@ -153,53 +154,45 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
 
   const currentDetails = pageDetails[currentPage];
 
-  let headerColorClass = '';
-  let textColorClass = '';
-  let iconColorClass = '';
-  let borderColorClass = '';
-
-  if (topbarColor === 'dark') {
-      headerColorClass = 'bg-slate-800 border-b border-slate-700';
-      textColorClass = 'text-slate-200';
-      iconColorClass = 'text-slate-400 hover:text-slate-200';
-      borderColorClass = 'border-slate-700';
-  } else if (topbarColor === 'brand') {
-      // Use dynamic blue classes which map to CSS variables
-      headerColorClass = 'bg-blue-600 shadow-md';
-      textColorClass = 'text-white';
-      iconColorClass = 'text-blue-100 hover:text-white';
-      borderColorClass = 'border-blue-500';
-  } else {
-      headerColorClass = 'bg-white dark:bg-slate-800 dark:border-b dark:border-slate-700 border-b border-gray-200';
-      textColorClass = 'text-slate-800 dark:text-slate-200';
-      iconColorClass = 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200';
-      borderColorClass = 'border-gray-200 dark:border-slate-700';
-  }
-
+  const headerColorClass = topbarColor === 'dark' 
+    ? 'bg-slate-800 text-slate-300 border-b border-slate-700' 
+    : 'bg-white dark:bg-slate-800 dark:border-b dark:border-slate-700';
 
   const dropdownPosition = language === 'ar' ? 'left-0' : 'right-0';
-  const breadcrumbColor = topbarColor === 'brand' ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400';
+  
+  const getTimeAgo = (isoDate: string) => {
+      const date = new Date(isoDate);
+      const now = new Date();
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
+      
+      if (diffInMinutes < 1) return t('time.justNow');
+      if (diffInMinutes < 60) return t('time.minutesAgo', diffInMinutes);
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      if (diffInHours < 24) return diffInHours === 1 ? t('time.hourAgo') : t('time.hoursAgo', diffInHours);
+      const diffInDays = Math.floor(diffInHours / 24);
+      return diffInDays === 1 ? t('time.dayAgo') : t('time.daysAgo', diffInDays);
+  }
 
   return (
-    <header className={`${headerColorClass} p-4 flex justify-between items-center flex-shrink-0 h-20 z-30`}>
+    <header className={`${headerColorClass} shadow-sm p-4 flex justify-between items-center flex-shrink-0 h-20`}>
       <div className="flex items-center gap-2">
          <button 
             onClick={onMenuButtonClick} 
-            className={`lg:hidden p-1 ${iconColorClass}`}
+            className="lg:hidden text-slate-500 dark:text-slate-400 p-1"
             aria-label="Open menu"
           >
               <Bars3Icon className="w-6 h-6" />
           </button>
         <div className="flex flex-col items-start">
-            <h1 className={`text-lg font-bold ${textColorClass}`}>
+            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-200">
                 {t(currentDetails.title)}
             </h1>
             <div className="hidden md:flex items-center text-sm">
-                 <span className={`${breadcrumbColor} whitespace-nowrap`}>
+                 <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {t(currentDetails.parent || 'sidebar.mainPage')}
                 </span>
-                <ChevronLeftIcon className={`w-4 h-4 mx-1 transform ${language === 'en' ? 'rotate-180' : ''} ${breadcrumbColor}`} />
-                <span className={`${breadcrumbColor} whitespace-nowrap`}>
+                <ChevronLeftIcon className={`w-4 h-4 text-gray-400 dark:text-gray-500 mx-1 transform ${language === 'en' ? 'rotate-180' : ''}`} />
+                <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {t(currentDetails.breadcrumb)}
                 </span>
             </div>
@@ -211,7 +204,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
         <div className="relative" ref={langDropdownRef}>
             <button
                 onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                className={iconColorClass}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 aria-label="Change language"
             >
                 <GlobeAltIcon className="w-6 h-6" />
@@ -237,7 +230,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
         {/* Full Screen Button */}
         <button
             onClick={handleToggleFullScreen}
-            className={iconColorClass}
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             aria-label={isFullscreen ? "Exit full screen" : "Enter full screen"}
         >
             {isFullscreen ? (
@@ -251,7 +244,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
         <div className="relative" ref={notificationsRef}>
             <button
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className={`relative ${iconColorClass}`}
+                className="relative text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 aria-haspopup="true"
                 aria-expanded={isNotificationsOpen}
                 aria-label={`You have ${unreadCount} unread notifications`}
@@ -264,28 +257,32 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                 )}
             </button>
             {isNotificationsOpen && (
-                 <div className={`absolute top-full mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-20 ${dropdownPosition} text-slate-800`}>
+                 <div className={`absolute top-full mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-20 ${dropdownPosition}`}>
                     <div className="flex justify-between items-center p-3 border-b dark:border-slate-700">
                         <h6 className="font-semibold text-slate-700 dark:text-slate-200">{t('notifications')}</h6>
                         <a href="#" onClick={handleMarkAllAsRead} className="text-xs text-blue-500 hover:underline">{t('clear_all')}</a>
                     </div>
                     <div className="max-h-80 overflow-y-auto">
-                        {notifications.map(notification => (
-                             <a 
-                                href="#" 
-                                key={notification.id}
-                                onClick={(e) => { e.preventDefault(); handleMarkAsRead(notification.id); }}
-                                className={`flex items-start p-3 text-sm transition-colors duration-150 ${notification.read ? 'text-gray-600 dark:text-gray-400' : 'bg-blue-50/50 dark:bg-blue-500/10 text-gray-800 dark:text-gray-200'} hover:bg-gray-100 dark:hover:bg-slate-700`}
-                             >
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${language === 'ar' ? 'ml-3' : 'mr-3'} ${notification.read ? 'bg-slate-200 dark:bg-slate-600' : 'bg-blue-100 dark:bg-blue-500/20'}`}>
-                                    <notification.icon className={`w-5 h-5 ${notification.read ? 'text-slate-500' : 'text-blue-500'}`} />
-                                </div>
-                                <div className={`flex-grow ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                                    <p className="font-medium">{t(notification.titleKey)}</p>
-                                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t(notification.timestampKey)}</p>
-                                </div>
-                             </a>
-                        ))}
+                        {notifications.length === 0 ? (
+                            <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">{t('notificationsPage.noNotifications')}</div>
+                        ) : (
+                            notifications.map(notification => (
+                                 <a 
+                                    href="#" 
+                                    key={notification.pk}
+                                    onClick={(e) => { e.preventDefault(); handleMarkAsRead(notification.pk); }}
+                                    className={`flex items-start p-3 text-sm transition-colors duration-150 ${!notification.unread ? 'text-gray-600 dark:text-gray-400' : 'bg-blue-50/50 dark:bg-blue-500/10 text-gray-800 dark:text-gray-200'} hover:bg-gray-100 dark:hover:bg-slate-700`}
+                                 >
+                                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${language === 'ar' ? 'ml-3' : 'mr-3'} ${!notification.unread ? 'bg-slate-200 dark:bg-slate-600' : 'bg-blue-100 dark:bg-blue-500/20'}`}>
+                                        <InformationCircleIcon className={`w-5 h-5 ${!notification.unread ? 'text-slate-500' : 'text-blue-500'}`} />
+                                    </div>
+                                    <div className={`flex-grow ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                                        <p className="font-medium">{notification.verb}</p>
+                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{getTimeAgo(notification.timestamp)}</p>
+                                    </div>
+                                 </a>
+                            ))
+                        )}
                     </div>
                     <div className="p-2 border-t dark:border-slate-700 text-center">
                         <a href="#" onClick={(e) => { e.preventDefault(); setCurrentPage('notifications'); setIsNotificationsOpen(false); }} className="text-sm font-medium text-blue-500 hover:underline">{t('view_all_notifications')}</a>
@@ -308,10 +305,10 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                 className="w-10 h-10 rounded-full"
             />
             <div className="hidden sm:block">
-                <div className={`font-semibold text-sm ${textColorClass} ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.name || t('walid_ullah')}</div>
-                <div className={`text-xs opacity-80 ${textColorClass} ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.role_name || t('manager')}</div>
+                <div className={`font-semibold text-sm text-slate-700 dark:text-slate-300 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.name || t('walid_ullah')}</div>
+                <div className={`text-xs text-gray-500 dark:text-gray-400 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.role_name || t('manager')}</div>
             </div>
-            <ChevronDownIcon className={`w-5 h-5 ${iconColorClass} transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDownIcon className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             {isUserDropdownOpen && (
             <div className={`absolute top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-20 ${dropdownPosition}`}>

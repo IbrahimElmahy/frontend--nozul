@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { translations } from '../translations';
@@ -17,7 +18,7 @@ interface AddUserPanelProps {
     isEditing: boolean;
     isOpen: boolean;
     onClose: () => void;
-    onSave: (userData: Omit<HotelUser, 'id' | 'lastLogin' | 'createdAt' | 'updatedAt'>) => void;
+    onSave: (formData: FormData) => void;
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -61,13 +62,19 @@ const permissionKeys: (keyof typeof translations.ar.addUserPanel.permissionsList
 
 const AddUserPanel: React.FC<AddUserPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave }) => {
     const { t } = useContext(LanguageContext);
-    const [formData, setFormData] = useState(initialData);
+    const [formData, setFormData] = useState<any>(initialData);
     const [isPasswordVisible, setPasswordVisible] = useState(false);
     const [isConfirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [photo, setPhoto] = useState<File | null>(null);
 
     useEffect(() => {
         if (isOpen) {
             setFormData(JSON.parse(JSON.stringify(initialData)));
+            setPassword('');
+            setConfirmPassword('');
+            setPhoto(null);
         }
     }, [isOpen, initialData]);
 
@@ -85,9 +92,50 @@ const AddUserPanel: React.FC<AddUserPanelProps> = ({ initialData, isEditing, isO
             }
         }));
     };
+    
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setPhoto(e.target.files[0]);
+        }
+    };
 
     const handleSaveClick = () => {
-        onSave(formData);
+        if (password && password !== confirmPassword) {
+            alert("Passwords do not match");
+            return;
+        }
+
+        const data = new FormData();
+        data.append('username', formData.username || '');
+        data.append('name', formData.name || '');
+        data.append('email', formData.email || '');
+        data.append('phone_number', formData.mobile || formData.phone_number || ''); // Handle both fields
+        data.append('role', 'hotel'); // Fixed role
+        data.append('gender', formData.gender || '');
+        data.append('birthdate', formData.dob || formData.profile?.birthdate || '');
+        data.append('is_active', formData.is_active ? 'true' : 'false');
+        data.append('login_allowed', formData.isManager ? 'true' : 'false'); // Assuming 'isManager' maps to login_allowed
+        data.append('notes', formData.notes || '');
+
+        if (password) {
+            data.append('password', password);
+        }
+
+        if (photo) {
+            data.append('image', photo);
+        }
+
+        // Permissions
+        // Assuming backend expects list of permission keys or similar
+        const activePermissions = Object.entries(formData.permissions || {})
+            .filter(([_, value]) => value)
+            .map(([key]) => key);
+            
+        activePermissions.forEach(perm => {
+            data.append('user_permissions', perm);
+        });
+
+        onSave(data);
     };
 
     const inputClass = "w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-slate-200 text-sm";
@@ -109,8 +157,8 @@ const AddUserPanel: React.FC<AddUserPanelProps> = ({ initialData, isEditing, isO
                     <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
                         <Section title={t('addUserPanel.supervisorInfo')}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                                <FormField label={t('addUserPanel.name')}><input name="name" value={formData.name} onChange={handleInputChange} className={inputClass} /></FormField>
-                                <FormField label={t('addUserPanel.photo')}><input type="file" className={fileInputClass} /></FormField>
+                                <FormField label={t('addUserPanel.name')}><input name="name" value={formData.name || ''} onChange={handleInputChange} className={inputClass} /></FormField>
+                                <FormField label={t('addUserPanel.photo')}><input type="file" onChange={handleFileChange} className={fileInputClass} /></FormField>
                                 <FormField label={t('addUserPanel.gender')}><SearchableSelect id="gender" options={[t('addUserPanel.male'), t('addUserPanel.female')]} value={formData.gender === 'male' ? t('addUserPanel.male') : t('addUserPanel.female')} onChange={val => setFormData(p => ({...p, gender: val === t('addUserPanel.male') ? 'male' : 'female'}))} placeholder={t('addUserPanel.selectGender')} /></FormField>
                                 <FormField label={t('addUserPanel.dob')}><DatePicker value={formData.dob || ''} onChange={date => setFormData(p => ({...p, dob: date}))} /></FormField>
                             </div>
@@ -118,9 +166,9 @@ const AddUserPanel: React.FC<AddUserPanelProps> = ({ initialData, isEditing, isO
                         
                         <Section title={t('addUserPanel.loginInfo')}>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                                <FormField label={t('addUserPanel.username')}><input name="username" value={formData.username} onChange={handleInputChange} className={inputClass} /></FormField>
-                                <FormField label={t('addUserPanel.email')}><input name="email" type="email" value={formData.email} onChange={handleInputChange} className={inputClass} /></FormField>
-                                <FormField label={t('addUserPanel.mobile')}><PhoneNumberInput value={formData.mobile} onChange={val => setFormData(p => ({...p, mobile: val}))} /></FormField>
+                                <FormField label={t('addUserPanel.username')}><input name="username" value={formData.username || ''} onChange={handleInputChange} className={inputClass} /></FormField>
+                                <FormField label={t('addUserPanel.email')}><input name="email" type="email" value={formData.email || ''} onChange={handleInputChange} className={inputClass} /></FormField>
+                                <FormField label={t('addUserPanel.mobile')}><PhoneNumberInput value={formData.mobile || formData.phone_number || ''} onChange={val => setFormData(p => ({...p, mobile: val}))} /></FormField>
                                 <FormField label={t('addUserPanel.isHotelManager')}><div className="h-10 flex items-center"><Switch id="isManager" checked={!!formData.isManager} onChange={c => setFormData(p => ({...p, isManager: c}))} /></div></FormField>
                              </div>
                         </Section>
@@ -129,13 +177,13 @@ const AddUserPanel: React.FC<AddUserPanelProps> = ({ initialData, isEditing, isO
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                                 <FormField label={t('addUserPanel.password')}>
                                     <div className={passwordInputContainerClass}>
-                                        <input type={isPasswordVisible ? 'text' : 'password'} placeholder={t('addUserPanel.passwordPlaceholder')} className={inputClass} />
+                                        <input type={isPasswordVisible ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('addUserPanel.passwordPlaceholder')} className={inputClass} />
                                         <button type="button" onClick={() => setPasswordVisible(!isPasswordVisible)} className={passwordToggleClass}><span className="sr-only">Toggle password visibility</span>{isPasswordVisible ? <EyeOffIcon className="w-5 h-5"/> : <EyeIcon className="w-5 h-5"/>}</button>
                                     </div>
                                 </FormField>
                                 <FormField label={t('addUserPanel.confirmPassword')}>
                                     <div className={passwordInputContainerClass}>
-                                        <input type={isConfirmPasswordVisible ? 'text' : 'password'} placeholder={t('addUserPanel.confirmPasswordPlaceholder')} className={inputClass} />
+                                        <input type={isConfirmPasswordVisible ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder={t('addUserPanel.confirmPasswordPlaceholder')} className={inputClass} />
                                         <button type="button" onClick={() => setConfirmPasswordVisible(!isConfirmPasswordVisible)} className={passwordToggleClass}><span className="sr-only">Toggle confirm password visibility</span>{isConfirmPasswordVisible ? <EyeOffIcon className="w-5 h-5"/> : <EyeIcon className="w-5 h-5"/>}</button>
                                     </div>
                                 </FormField>
@@ -151,7 +199,7 @@ const AddUserPanel: React.FC<AddUserPanelProps> = ({ initialData, isEditing, isO
                         </Section>
 
                          <Section title={t('addUserPanel.notes')}>
-                            <textarea name="notes" value={formData.notes} onChange={handleInputChange} rows={4} placeholder={t('addUserPanel.notesPlaceholder')} className={inputClass}></textarea>
+                            <textarea name="notes" value={formData.notes || ''} onChange={handleInputChange} rows={4} placeholder={t('addUserPanel.notesPlaceholder')} className={inputClass}></textarea>
                         </Section>
 
                     </form>

@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useContext } from 'react';
+
+import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { HotelUser } from '../types';
 import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
@@ -11,24 +12,19 @@ import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
 import AddUserPanel from './AddUserPanel';
 import ConfirmationModal from './ConfirmationModal';
 import UserDetailsModal from './UserDetailsModal';
+import Switch from './Switch';
 import { Page } from '../App';
+import { apiClient } from '../apiClient';
 
 
-const mockUsers: HotelUser[] = [
-    { id: 1, username: 'demo_hotel', name: 'table-userdemo', mobile: '+966567289647', email: 'demo@gmail.com', role: 'مدير', status: 'active', gender: '-', lastLogin: '2025-11-02 14:55:28', createdAt: '2025-06-16 14:41:54', updatedAt: '2025-06-16 14:41:54', dob: '1995-03-14', isManager: true, permissions: {} },
-    { id: 2, username: 'receptionist_1', name: 'Sara Ahmed', mobile: '+966551234567', email: 'sara.a@example.com', role: 'موظف استقبال', status: 'active', gender: 'female', lastLogin: '2025-11-03 09:12:45', createdAt: '2025-01-10 10:00:00', updatedAt: '2025-05-20 11:30:00' },
-    { id: 3, username: 'housekeeper_5', name: 'Fatima Khan', mobile: '+966509876543', email: 'fatima.k@example.com', role: 'عامل نظافة', status: 'inactive', gender: 'female', lastLogin: '2025-10-15 18:00:10', createdAt: '2025-02-15 12:00:00', updatedAt: '2025-10-01 08:00:00' },
-];
-
-const newUserTemplate: Omit<HotelUser, 'id' | 'lastLogin' | 'createdAt' | 'updatedAt'> = {
+const newUserTemplate: Omit<HotelUser, 'id' | 'last_login' | 'created_at' | 'updated_at' | 'profile' | 'role_display' | 'image_url' > = {
     username: '',
     name: '',
-    mobile: '',
+    phone_number: '',
     email: '',
-    role: 'موظف استقبال',
-    status: 'active',
-    gender: 'male',
-    dob: '',
+    role: 'hotel', // Default to hotel role for now
+    is_active: true,
+    // For form usage
     isManager: false,
     notes: '',
     permissions: {},
@@ -40,15 +36,40 @@ interface UsersPageProps {
 
 const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
     const { t, language } = useContext(LanguageContext);
-    const [users, setUsers] = useState<HotelUser[]>(mockUsers);
+    const [users, setUsers] = useState<HotelUser[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [paginationCurrentPage, setPaginationCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalRecords, setTotalRecords] = useState(0);
 
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<HotelUser | null>(null);
     const [userToDelete, setUserToDelete] = useState<HotelUser | null>(null);
     const [viewingUser, setViewingUser] = useState<HotelUser | null>(null);
+
+    const fetchUsers = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.append('role', 'hotel'); // Filter by hotel role as per doc
+            params.append('start', ((paginationCurrentPage - 1) * itemsPerPage).toString());
+            params.append('length', itemsPerPage.toString());
+            if (searchTerm) params.append('search', searchTerm);
+
+            const response = await apiClient<{ data: HotelUser[], recordsFiltered: number }>(`/ar/user/api/users/?${params.toString()}`);
+            setUsers(response.data);
+            setTotalRecords(response.recordsFiltered);
+        } catch (error) {
+            console.error("Failed to fetch users", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [paginationCurrentPage, itemsPerPage, searchTerm]);
+
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
 
     const handleAddNewClick = () => {
         setEditingUser(null);
@@ -65,50 +86,56 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
         setEditingUser(null);
     };
 
-    const handleSaveUser = (userData: Omit<HotelUser, 'id' | 'lastLogin' | 'createdAt' | 'updatedAt'>) => {
-        if (editingUser) {
-            // Update existing user
-            const updatedUser = { ...editingUser, ...userData, updatedAt: new Date().toISOString() };
-            setUsers(users.map(u => u.id === editingUser.id ? updatedUser : u));
-        } else {
-            // Add new user
-            const newUser: HotelUser = {
-                ...userData,
-                id: Math.max(...users.map(u => u.id)) + 1,
-                lastLogin: new Date().toISOString(),
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setUsers([newUser, ...users]);
+    const handleSaveUser = async (formData: FormData) => {
+        try {
+            if (editingUser) {
+                await apiClient(`/ar/user/api/users/${editingUser.id}/`, {
+                    method: 'PUT',
+                    body: formData
+                });
+            } else {
+                await apiClient('/ar/user/api/users/', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+            fetchUsers();
+            handleClosePanel();
+        } catch (err) {
+            alert(`Error saving user: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
-        handleClosePanel();
     };
     
     const handleDeleteClick = (user: HotelUser) => {
         setUserToDelete(user);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (userToDelete) {
-            setUsers(users.filter(u => u.id !== userToDelete.id));
-            setUserToDelete(null);
+            try {
+                await apiClient(`/ar/user/api/users/${userToDelete.id}/`, { method: 'DELETE' });
+                setUsers(users.filter(u => u.id !== userToDelete.id));
+                setUserToDelete(null);
+            } catch (e) {
+                alert(`Failed to delete user: ${e instanceof Error ? e.message : 'Unknown error'}`);
+            }
         }
     };
 
+    const handleToggleStatus = async (user: HotelUser, newStatus: boolean) => {
+        try {
+            const action = newStatus ? 'active' : 'disable';
+            await apiClient(`/ar/user/api/users/${user.id}/${action}/`, { method: 'POST' });
+            // Optimistically update
+            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_active: newStatus } : u));
+        } catch (err) {
+            alert(`Error changing status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            fetchUsers(); // Revert
+        }
+    };
 
-    const filteredUsers = useMemo(() => {
-        return users.filter(user =>
-            Object.values(user).some(val =>
-                String(val).toLowerCase().includes(searchTerm.toLowerCase())
-            )
-        );
-    }, [users, searchTerm]);
     
-    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-    const paginatedUsers = useMemo(() => {
-        const startIndex = (paginationCurrentPage - 1) * itemsPerPage;
-        return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredUsers, paginationCurrentPage, itemsPerPage]);
+    const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     const tableHeaders = [
         'th_id', 'th_username', 'th_name', 'th_mobile', 'th_email', 'th_role', 'th_status', 'th_gender', 
@@ -152,13 +179,13 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                         <span>{t('usersPage.entries')}</span>
                     </div>
                      <div className="relative w-full sm:w-auto sm:flex-grow max-w-lg">
-                        <MagnifyingGlassIcon className="absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 left-3" />
+                        <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
                         <input
                             type="text"
                             value={searchTerm}
                             onChange={(e) => { setSearchTerm(e.target.value); setPaginationCurrentPage(1); }}
                             placeholder={t('guests.searchPlaceholder')}
-                            className="w-full py-2 pl-10 pr-4 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200"
+                            className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
                         />
                     </div>
                 </div>
@@ -171,23 +198,27 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedUsers.map(user => (
+                            {loading ? (
+                                <tr><td colSpan={12} className="text-center py-8">Loading...</td></tr>
+                            ) : users.map(user => (
                                 <tr key={user.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                    <td className="px-6 py-4">{user.id}</td>
+                                    <td className="px-6 py-4"><span className="font-mono text-xs">{user.id.substring(0, 8)}</span></td>
                                     <td className="px-6 py-4">{user.username}</td>
                                     <td className="px-6 py-4">{user.name}</td>
-                                    <td className="px-6 py-4">{user.mobile}</td>
+                                    <td className="px-6 py-4" dir="ltr">{user.phone_number}</td>
                                     <td className="px-6 py-4">{user.email}</td>
-                                    <td className="px-6 py-4">{user.role}</td>
+                                    <td className="px-6 py-4">{user.role_display || user.role}</td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${user.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                            {t(`usersPage.status_${user.status}`)}
-                                        </span>
+                                        <Switch 
+                                            id={`status-${user.id}`} 
+                                            checked={!!user.is_active} 
+                                            onChange={(c) => handleToggleStatus(user, c)} 
+                                        />
                                     </td>
-                                    <td className="px-6 py-4">{user.gender}</td>
-                                    <td className="px-6 py-4">{user.lastLogin}</td>
-                                    <td className="px-6 py-4">{user.createdAt}</td>
-                                    <td className="px-6 py-4">{user.updatedAt}</td>
+                                    <td className="px-6 py-4">{user.profile?.gender_display || user.profile?.gender || '-'}</td>
+                                    <td className="px-6 py-4">{user.last_login ? new Date(user.last_login).toLocaleString() : '-'}</td>
+                                    <td className="px-6 py-4">{new Date(user.created_at).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4">{new Date(user.updated_at).toLocaleDateString()}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-1">
                                             <button onClick={() => setViewingUser(user)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
@@ -197,13 +228,16 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                                     </td>
                                 </tr>
                             ))}
+                            {!loading && users.length === 0 && (
+                                <tr><td colSpan={12} className="text-center py-8">{t('orders.noData')}</td></tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} ${filteredUsers.length > 0 ? (paginationCurrentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(paginationCurrentPage * itemsPerPage, filteredUsers.length)} ${t('usersPage.of')} ${filteredUsers.length} ${t('usersPage.entries')}`}
+                        {`${t('usersPage.showing')} ${users.length > 0 ? (paginationCurrentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(paginationCurrentPage * itemsPerPage, totalRecords)} ${t('usersPage.of')} ${totalRecords} ${t('usersPage.entries')}`}
                     </div>
                     {totalPages > 1 && (
                          <nav className="flex items-center gap-1" aria-label="Pagination">
@@ -221,6 +255,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                 onClose={handleClosePanel}
                 onSave={handleSaveUser}
                 isEditing={!!editingUser}
+                // @ts-ignore - Template mismatch for now
                 initialData={editingUser || newUserTemplate}
             />
 

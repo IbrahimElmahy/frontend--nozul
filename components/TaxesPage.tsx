@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useContext } from 'react';
+
+import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Tax } from '../types';
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -13,28 +14,28 @@ import TrashIcon from './icons-redesign/TrashIcon';
 import AddTaxPanel from './AddTaxPanel';
 import ConfirmationModal from './ConfirmationModal';
 import TaxDetailsModal from './TaxDetailsModal';
+import { apiClient } from '../apiClient';
+import Switch from './Switch';
 
-const mockTaxes: Tax[] = [
-    { id: 1, name: 'القيمة المضافة', tax: 15.0, applyTo: 'الحجوزات', startDate: '2025-01-07 01:00:00', endDate: '2031-01-09 01:00:00', addedToFees: false, subjectToVat: false, status: 'مفعل', createdAt: '2025-01-07 18:28:35', updatedAt: '2025-06-07 13:59:44' },
-    { id: 2, name: 'القيمة المضافة', tax: 15.0, applyTo: 'الخدمات', startDate: '2025-10-07 00:00:00', endDate: '2026-02-26 01:00:00', addedToFees: false, subjectToVat: false, status: 'مفعل', createdAt: '2025-10-07 14:21:10', updatedAt: '2025-10-07 14:21:10' },
-];
-
-const newTaxTemplate: Omit<Tax, 'id' | 'createdAt' | 'updatedAt'> = {
+const newTaxTemplate: Omit<Tax, 'id' | 'created_at' | 'updated_at'> = {
     name: '',
-    tax: 0,
-    applyTo: 'الحجوزات',
-    startDate: new Date().toISOString(),
-    endDate: new Date().toISOString(),
-    addedToFees: false,
-    subjectToVat: false,
-    status: 'مفعل',
+    tax_value: 0,
+    tax_type: 'percent',
+    applies_to: 'reservation',
+    start_date: new Date().toISOString(),
+    end_date: new Date().toISOString(),
+    is_added_to_price: false,
+    is_vat_included: false,
+    is_active: true,
 };
 
 const TaxesPage: React.FC = () => {
     const { t } = useContext(LanguageContext);
-    const [taxes, setTaxes] = useState<Tax[]>(mockTaxes);
+    const [taxes, setTaxes] = useState<Tax[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [loading, setLoading] = useState(true);
+    const [totalRecords, setTotalRecords] = useState(0);
     
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
@@ -42,12 +43,28 @@ const TaxesPage: React.FC = () => {
     const [taxToDelete, setTaxToDelete] = useState<Tax | null>(null);
     const [viewingTax, setViewingTax] = useState<Tax | null>(null);
 
+    const fetchTaxes = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.append('start', ((currentPage - 1) * itemsPerPage).toString());
+            params.append('length', itemsPerPage.toString());
+            
+            const response = await apiClient<{ data: Tax[], recordsFiltered: number }>(`/ar/tax/api/taxes/?${params.toString()}`);
+            setTaxes(response.data);
+            setTotalRecords(response.recordsFiltered);
+        } catch (error) {
+            console.error("Failed to fetch taxes", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [currentPage, itemsPerPage]);
 
-    const totalPages = Math.ceil(taxes.length / itemsPerPage);
-    const paginatedData = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return taxes.slice(startIndex, startIndex + itemsPerPage);
-    }, [taxes, currentPage, itemsPerPage]);
+    useEffect(() => {
+        fetchTaxes();
+    }, [fetchTaxes]);
+
+    const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     // Handlers
     const handleClosePanel = () => {
@@ -55,19 +72,8 @@ const TaxesPage: React.FC = () => {
         setEditingTax(null);
     };
 
-    const handleSaveTax = (taxData: Omit<Tax, 'id' | 'createdAt' | 'updatedAt'>) => {
-        if (editingTax) {
-            const updatedTax = { ...editingTax, ...taxData, updatedAt: new Date().toISOString() };
-            setTaxes(taxes.map(t => t.id === updatedTax.id ? updatedTax : t));
-        } else {
-            const newTax: Tax = {
-                ...taxData,
-                id: Math.max(...taxes.map(t => t.id), 0) + 1,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setTaxes(prev => [newTax, ...prev]);
-        }
+    const handleSaveTax = () => {
+        fetchTaxes();
         handleClosePanel();
     };
 
@@ -85,26 +91,41 @@ const TaxesPage: React.FC = () => {
         setTaxToDelete(tax);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (taxToDelete) {
-            setTaxes(taxes.filter(t => t.id !== taxToDelete.id));
-            setTaxToDelete(null);
+            try {
+                await apiClient(`/ar/tax/api/taxes/${taxToDelete.id}/`, { method: 'DELETE' });
+                fetchTaxes();
+                setTaxToDelete(null);
+            } catch (error) {
+                alert(`Error deleting tax: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+        }
+    };
+
+    const handleToggleStatus = async (tax: Tax, newStatus: boolean) => {
+        try {
+            const action = newStatus ? 'active' : 'disable';
+            await apiClient(`/ar/tax/api/taxes/${tax.id}/${action}/`, { method: 'POST' });
+            setTaxes(prev => prev.map(t => t.id === tax.id ? { ...t, is_active: newStatus } : t));
+        } catch (error) {
+            alert(`Error updating tax status: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
     const tableHeaders = [
-        { key: 'th_id', className: '' },
-        { key: 'th_name', className: '' },
-        { key: 'th_tax', className: 'hidden sm:table-cell' },
-        { key: 'th_applyTo', className: 'hidden sm:table-cell' },
-        { key: 'th_startDate', className: 'hidden md:table-cell' },
-        { key: 'th_endDate', className: 'hidden md:table-cell' },
-        { key: 'th_addedToFees', className: 'hidden lg:table-cell' },
-        { key: 'th_subjectToVat', className: 'hidden lg:table-cell' },
-        { key: 'th_status', className: '' },
-        { key: 'th_createdAt', className: 'hidden xl:table-cell' },
-        { key: 'th_updatedAt', className: 'hidden xl:table-cell' },
-        { key: 'th_actions', className: '' },
+        { key: 'id', className: 'hidden sm:table-cell' },
+        { key: 'name', className: '' },
+        { key: 'tax', className: 'hidden sm:table-cell' },
+        { key: 'applyTo', className: 'hidden sm:table-cell' },
+        { key: 'startDate', className: 'hidden md:table-cell' },
+        { key: 'endDate', className: 'hidden md:table-cell' },
+        { key: 'addedToFees', className: 'hidden lg:table-cell' },
+        { key: 'subjectToVat', className: 'hidden lg:table-cell' },
+        { key: 'status', className: '' },
+        { key: 'createdAt', className: 'hidden xl:table-cell' },
+        { key: 'updatedAt', className: 'hidden xl:table-cell' },
+        { key: 'actions', className: '' },
     ];
     
     return (
@@ -122,11 +143,11 @@ const TaxesPage: React.FC = () => {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('receipts.searchInfo')}</h3>
                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5"/></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                        <button onClick={handleAddNewClick} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5"/></button>
+                        <button onClick={fetchTaxes} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
-                <div className="h-16"></div> 
+                <div className="h-4"></div> 
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
@@ -138,6 +159,8 @@ const TaxesPage: React.FC = () => {
                         className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
                     >
                         <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
                     </select>
                     <span>{t('units.entries')}</span>
                 </div>
@@ -147,28 +170,32 @@ const TaxesPage: React.FC = () => {
                         <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                             <tr>
                                 {tableHeaders.map(header => (
-                                    <th key={header.key} scope="col" className={`px-4 py-3 whitespace-nowrap ${header.className}`}>{t(`taxes.${header.key}` as any)}</th>
+                                    <th key={header.key} scope="col" className={`px-4 py-3 whitespace-nowrap ${header.className}`}>{t(`taxes.th_${header.key}` as any)}</th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedData.map(tax => (
+                            {loading ? (
+                                <tr><td colSpan={12} className="text-center py-10">Loading...</td></tr>
+                            ) : taxes.map(tax => (
                                 <tr key={tax.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                    <td className="px-4 py-2">{tax.id}</td>
+                                    <td className="px-4 py-2 hidden sm:table-cell">{tax.id.substring(0, 8)}</td>
                                     <td className="px-4 py-2">{tax.name}</td>
-                                    <td className="px-4 py-2 hidden sm:table-cell">{tax.tax.toFixed(1)}%</td>
-                                    <td className="px-4 py-2 hidden sm:table-cell">{tax.applyTo}</td>
-                                    <td className="px-4 py-2 hidden md:table-cell">{tax.startDate}</td>
-                                    <td className="px-4 py-2 hidden md:table-cell">{tax.endDate}</td>
-                                    <td className="px-4 py-2 hidden lg:table-cell"><input type="checkbox" checked={tax.addedToFees} readOnly className="form-checkbox h-4 w-4 text-blue-600 rounded" /></td>
-                                    <td className="px-4 py-2 hidden lg:table-cell"><input type="checkbox" checked={tax.subjectToVat} readOnly className="form-checkbox h-4 w-4 text-blue-600 rounded" /></td>
+                                    <td className="px-4 py-2 hidden sm:table-cell">{tax.tax_value.toFixed(1)}{tax.tax_type === 'percent' ? '%' : ''}</td>
+                                    <td className="px-4 py-2 hidden sm:table-cell">{tax.applies_to}</td>
+                                    <td className="px-4 py-2 hidden md:table-cell">{tax.start_date}</td>
+                                    <td className="px-4 py-2 hidden md:table-cell">{tax.end_date}</td>
+                                    <td className="px-4 py-2 hidden lg:table-cell"><input type="checkbox" checked={tax.is_added_to_price} readOnly className="form-checkbox h-4 w-4 text-blue-600 rounded" /></td>
+                                    <td className="px-4 py-2 hidden lg:table-cell"><input type="checkbox" checked={tax.is_vat_included} readOnly className="form-checkbox h-4 w-4 text-blue-600 rounded" /></td>
                                     <td className="px-4 py-2">
-                                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${tax.status === 'مفعل' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                            {tax.status}
-                                        </span>
+                                        <Switch 
+                                            id={`tax-status-${tax.id}`} 
+                                            checked={tax.is_active} 
+                                            onChange={(c) => handleToggleStatus(tax, c)} 
+                                        />
                                     </td>
-                                    <td className="px-4 py-2 hidden xl:table-cell">{tax.createdAt}</td>
-                                    <td className="px-4 py-2 hidden xl:table-cell">{tax.updatedAt}</td>
+                                    <td className="px-4 py-2 hidden xl:table-cell">{new Date(tax.created_at).toLocaleDateString()}</td>
+                                    <td className="px-4 py-2 hidden xl:table-cell">{new Date(tax.updated_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center justify-center gap-1">
                                             <button onClick={() => setViewingTax(tax)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
@@ -178,13 +205,16 @@ const TaxesPage: React.FC = () => {
                                     </td>
                                 </tr>
                             ))}
+                            {!loading && taxes.length === 0 && (
+                                <tr><td colSpan={12} className="text-center py-8">{t('orders.noData')}</td></tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} ${paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(currentPage * itemsPerPage, paginatedData.length)} ${t('usersPage.of')} ${taxes.length} ${t('usersPage.entries')}`}
+                        {`${t('units.showing')} ${taxes.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, totalRecords)} ${t('units.of')} ${totalRecords} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
                          <nav className="flex items-center gap-1" aria-label="Pagination">

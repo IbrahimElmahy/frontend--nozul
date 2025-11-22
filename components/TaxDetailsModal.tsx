@@ -1,3 +1,4 @@
+
 import React, { useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Tax } from '../types';
@@ -43,23 +44,23 @@ const TaxDetailsModal: React.FC<TaxDetailsModalProps> = ({ tax, onClose }) => {
                 <div className="flex-grow p-6 overflow-y-auto">
                     <Section title={t('taxes.taxInfo')}>
                         <DetailItem label={t('taxes.th_name')} value={tax.name} />
-                        <DetailItem label={t('taxes.th_tax')} value={`${tax.tax.toFixed(1)}%`} />
-                        <DetailItem label={t('taxes.th_applyTo')} value={tax.applyTo} />
-                        <DetailItem label={t('taxes.th_startDate')} value={formatDate(tax.startDate)} />
-                        <DetailItem label={t('taxes.th_endDate')} value={formatDate(tax.endDate)} />
+                        <DetailItem label={t('taxes.th_tax')} value={`${tax.tax_value}% (${tax.tax_type})`} />
+                        <DetailItem label={t('taxes.th_applyTo')} value={tax.applies_to} />
+                        <DetailItem label={t('taxes.th_startDate')} value={tax.start_date} />
+                        <DetailItem label={t('taxes.th_endDate')} value={tax.end_date} />
                          <DetailItem label={t('taxes.th_status')} value={
-                             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${tax.status === 'مفعل' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                {tax.status}
+                             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${tax.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
+                                {tax.is_active ? 'Active' : 'Inactive'}
                             </span>
                          } />
                     </Section>
                     <Section title={t('taxes.additionalInfo')}>
-                        <DetailItem label={t('taxes.th_addedToFees')} value={tax.addedToFees ? t('settings.enable') : t('settings.disable')} />
-                        <DetailItem label={t('taxes.th_subjectToVat')} value={tax.subjectToVat ? t('settings.enable') : t('settings.disable')} />
+                        <DetailItem label={t('taxes.th_addedToFees')} value={tax.is_added_to_price ? t('settings.enable') : t('settings.disable')} />
+                        <DetailItem label={t('taxes.th_subjectToVat')} value={tax.is_vat_included ? t('settings.enable') : t('settings.disable')} />
                     </Section>
                     <Section title={t('bookings.details.timestamps')}>
-                        <DetailItem label={t('taxes.th_createdAt')} value={formatDate(tax.createdAt)} />
-                        <DetailItem label={t('taxes.th_updatedAt')} value={formatDate(tax.updatedAt)} />
+                        <DetailItem label={t('taxes.th_createdAt')} value={formatDate(tax.created_at)} />
+                        <DetailItem label={t('taxes.th_updatedAt')} value={formatDate(tax.updated_at)} />
                     </Section>
                 </div>
             </div>

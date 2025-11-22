@@ -237,22 +237,43 @@ export interface Invoice {
   tax?: number;
 }
 
+export interface HotelUserProfile {
+    birthdate: string | null;
+    gender: string | null;
+    timezone: string | null;
+    image: string | null;
+    gender_display: string | null;
+}
+
 export interface HotelUser {
-    id: number;
+    id: string; // UUID
     username: string;
     name: string;
-    mobile: string;
+    phone_number: string;
     email: string;
     role: string;
-    status: 'active' | 'inactive';
-    gender: 'male' | 'female' | '-';
-    lastLogin: string;
-    createdAt: string;
-    updatedAt: string;
-    dob?: string;
+    role_display: string;
+    is_active: boolean;
+    last_login: string | null;
+    created_at: string;
+    updated_at: string;
+    profile: HotelUserProfile;
+    image_url: string | null;
+    login_allowed?: boolean;
+    
+    // Optional fields for UI/Forms that might not be in main list API
     isManager?: boolean;
     notes?: string;
     permissions?: Record<string, boolean>;
+    
+    // Deprecated/Mapped fields for backward compatibility with existing components if needed
+    mobile?: string; // mapped to phone_number
+    status?: 'active' | 'inactive'; // mapped to is_active
+    gender?: string; // mapped to profile.gender
+    lastLogin?: string; // mapped to last_login
+    createdAt?: string; // mapped to created_at
+    updatedAt?: string; // mapped to updated_at
+    dob?: string; // mapped to profile.birthdate
 }
 
 export interface ApartmentPrice {
@@ -288,17 +309,18 @@ export interface PeakTime {
 }
 
 export interface Tax {
-    id: number;
+    id: string; // UUID
     name: string;
-    tax: number;
-    applyTo: 'الحجوزات' | 'الخدمات';
-    startDate: string;
-    endDate: string;
-    addedToFees: boolean;
-    subjectToVat: boolean;
-    status: 'مفعل' | 'غير مفعل';
-    createdAt: string;
-    updatedAt: string;
+    tax_value: number;
+    tax_type: string; // amount, percent
+    applies_to: string; // reservation, service
+    start_date: string;
+    end_date: string;
+    is_added_to_price: boolean;
+    is_vat_included: boolean;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Item {
@@ -384,4 +406,17 @@ export interface ArchiveLog {
     action_by: string;
     role: string;
     data: Record<string, any>;
+}
+
+export interface Notification {
+    pk: string;
+    unread: boolean;
+    verb: string;
+    timestamp: string;
+    actor: {
+        phone_number: string;
+        username: string;
+        name: string;
+        image_url: string | null;
+    };
 }

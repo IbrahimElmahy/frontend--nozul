@@ -1,33 +1,15 @@
-import React, { useState, useMemo, useContext } from 'react';
+
+import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 
 // Import necessary icons
 import UserPlusIcon from './icons-redesign/UserPlusIcon';
-import CurrencyDollarIcon from './icons-redesign/CurrencyDollarIcon';
-import ServerIcon from './icons-redesign/ServerIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
-import CalendarIcon from './icons-redesign/CalendarIcon';
-import WrenchScrewdriverIcon from './icons-redesign/WrenchScrewdriverIcon';
+import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
 import { TranslationKey } from '../translations';
-
-interface Notification {
-  id: number;
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-  timestamp: string; // ISO string
-  read: boolean;
-}
-
-const initialNotifications: Notification[] = [
-    { id: 1, icon: UserPlusIcon, title: 'New account created', description: 'A new user has registered on the platform.', timestamp: new Date(Date.now() - 3600 * 1000 * 0.1).toISOString(), read: false },
-    { id: 2, icon: CurrencyDollarIcon, title: 'New payment received', description: 'Payment of $250 received from booking #12345.', timestamp: new Date(Date.now() - 3600 * 1000 * 3).toISOString(), read: false },
-    { id: 3, icon: ServerIcon, title: 'Server 1 overloaded', description: 'The main server is reaching 95% capacity.', timestamp: new Date(Date.now() - 3600 * 1000 * 25).toISOString(), read: true },
-    { id: 4, icon: UserPlusIcon, title: 'New user registered', description: 'Guest "Ahmed Ali" has completed registration.', timestamp: new Date(Date.now() - 3600 * 1000 * 48).toISOString(), read: false },
-    { id: 5, icon: CalendarIcon, title: 'Booking Confirmed', description: 'Booking #67890 for Room 101 is confirmed.', timestamp: new Date(Date.now() - 3600 * 1000 * 72).toISOString(), read: true },
-    { id: 6, icon: WrenchScrewdriverIcon, title: 'Maintenance Request', description: 'Room 203 reports a broken AC unit.', timestamp: new Date(Date.now() - 3600 * 1000 * 90).toISOString(), read: true },
-];
+import { apiClient } from '../apiClient';
+import { Notification } from '../types';
 
 const timeAgo = (isoString: string, t: (key: TranslationKey, ...args: any[]) => string): string => {
     const date = new Date(isoString);
@@ -46,24 +28,43 @@ const timeAgo = (isoString: string, t: (key: TranslationKey, ...args: any[]) => 
 
 const NotificationsPage: React.FC = () => {
     const { t } = useContext(LanguageContext);
-    const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
+    const [loading, setLoading] = useState(true);
 
-    const handleMarkAsRead = (id: number) => {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                setLoading(true);
+                const response = await apiClient<{ data: Notification[] }>('/ar/notification/api/notifications/');
+                setNotifications(response.data);
+            } catch (error) {
+                console.error("Failed to fetch notifications", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchNotifications();
+    }, []);
+
+    const handleMarkAsRead = (id: string) => {
+        setNotifications(prev => prev.map(n => n.pk === id ? { ...n, unread: false } : n));
+        // In a real app, call API here
     };
 
-    const handleDelete = (id: number) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+    const handleDelete = (id: string) => {
+        setNotifications(prev => prev.filter(n => n.pk !== id));
+        // In a real app, call API DELETE here
     };
 
     const handleMarkAllAsRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+        // Call API
     };
 
     const filteredNotifications = useMemo(() => {
         if (activeFilter === 'unread') {
-            return notifications.filter(n => !n.read);
+            return notifications.filter(n => n.unread);
         }
         return notifications;
     }, [notifications, activeFilter]);
@@ -98,6 +99,10 @@ const NotificationsPage: React.FC = () => {
     }, [filteredNotifications, t]);
     
 
+    if (loading) {
+        return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div></div>;
+    }
+
     return (
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm">
             <header className="p-4 border-b dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -115,23 +120,27 @@ const NotificationsPage: React.FC = () => {
                             <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">{group.title}</h3>
                             <div className="space-y-3">
                                 {group.notifications.map(notification => (
-                                    <div key={notification.id} className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${!notification.read ? 'bg-blue-50/50 dark:bg-blue-500/10' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
-                                        {!notification.read && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full mt-2.5 flex-shrink-0"></div>}
+                                    <div key={notification.pk} className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${notification.unread ? 'bg-blue-50/50 dark:bg-blue-500/10' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
+                                        {notification.unread && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full mt-2.5 flex-shrink-0"></div>}
                                         <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700">
-                                            <notification.icon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                                            {notification.actor.image_url ? (
+                                                <img src={notification.actor.image_url} alt="User" className="w-10 h-10 rounded-full" />
+                                            ) : (
+                                                <InformationCircleIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                                            )}
                                         </div>
                                         <div className="flex-grow">
-                                            <p className="font-semibold text-slate-800 dark:text-slate-200">{notification.title}</p>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400">{notification.description}</p>
+                                            <p className="font-semibold text-slate-800 dark:text-slate-200">{notification.verb}</p>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">{notification.actor.name} ({notification.actor.username})</p>
                                             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{timeAgo(notification.timestamp, t)}</p>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            {!notification.read && (
-                                                <button onClick={() => handleMarkAsRead(notification.id)} className="p-2 rounded-full text-green-500 hover:bg-green-100 dark:hover:bg-green-500/10" title="Mark as read">
+                                            {notification.unread && (
+                                                <button onClick={() => handleMarkAsRead(notification.pk)} className="p-2 rounded-full text-green-500 hover:bg-green-100 dark:hover:bg-green-500/10" title="Mark as read">
                                                     <CheckCircleIcon className="w-5 h-5" />
                                                 </button>
                                             )}
-                                            <button onClick={() => handleDelete(notification.id)} className="p-2 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" title="Delete">
+                                            <button onClick={() => handleDelete(notification.pk)} className="p-2 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" title="Delete">
                                                 <TrashIcon className="w-5 h-5" />
                                             </button>
                                         </div>
