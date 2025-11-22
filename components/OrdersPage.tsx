@@ -21,6 +21,7 @@ import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
+import Switch from './Switch';
 
 
 const newOrderTemplate: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -147,6 +148,19 @@ const OrdersPage: React.FC = () => {
         }
     };
 
+    const handleToggleStatus = async (order: Order, newStatus: boolean) => {
+        try {
+            const action = newStatus ? 'active' : 'disable';
+            await apiClient(`/ar/order/api/orders/${order.id}/${action}/`, { method: 'POST' });
+            
+            // Optimistically update
+            setOrders(prev => prev.map(o => o.id === order.id ? { ...o, isActive: newStatus } : o));
+        } catch (err) {
+             alert(`Error changing status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+             fetchOrders(); // Revert on error
+        }
+    };
+
     const handleAddNewClick = () => {
         setEditingOrder(null);
         setIsAddPanelOpen(true);
@@ -191,6 +205,7 @@ const OrdersPage: React.FC = () => {
         { key: 'subtotal', labelKey: 'orders.th_subtotal' },
         { key: 'tax', labelKey: 'orders.th_tax' },
         { key: 'total', labelKey: 'orders.th_total' },
+        { key: 'isActive', labelKey: 'agencies.th_status' },
         { key: 'createdAt', labelKey: 'orders.th_createdAt' },
         { key: 'updatedAt', labelKey: 'orders.th_updatedAt' },
         { key: 'actions', labelKey: 'orders.th_actions' },
@@ -337,6 +352,12 @@ const OrdersPage: React.FC = () => {
                                                     <span className="bg-cyan-400 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
                                                         {(order.discount || 0).toFixed(1)}%
                                                     </span>
+                                                ) : header.key === 'isActive' ? (
+                                                     <Switch 
+                                                        id={`status-${order.id}`} 
+                                                        checked={!!order.isActive} 
+                                                        onChange={(c) => handleToggleStatus(order, c)} 
+                                                    />
                                                 ) : (
                                                     (order[header.key as keyof Order] as string | number) || '-'
                                                 )}

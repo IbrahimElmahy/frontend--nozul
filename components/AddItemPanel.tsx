@@ -63,9 +63,9 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, is
     };
     
     const titles = {
-        add: type === 'services' ? 'إضافة خدمة' : t('itemsPage.addItemTitle'),
-        edit: type === 'services' ? 'تعديل خدمة' : t('itemsPage.editItemTitle'),
-        copy: type === 'services' ? 'نسخ خدمة' : t('itemsPage.copyItemTitle'),
+        add: type === 'services' ? t('itemsPage.addServiceTitle') : t('itemsPage.addCategoryTitle'),
+        edit: type === 'services' ? t('itemsPage.editServiceTitle') : t('itemsPage.editCategoryTitle'),
+        copy: type === 'services' ? t('itemsPage.copyServiceTitle') : t('itemsPage.copyItemTitle'),
     }
 
     if (!isOpen || !formData) return null;
@@ -97,11 +97,11 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, is
                         {type === 'services' && (
                             <>
                                 <div>
-                                    <label htmlFor="price" className={labelBaseClass}>{'السعر'}</label>
+                                    <label htmlFor="price" className={labelBaseClass}>{t('itemsPage.servicePrice')}</label>
                                     <input type="number" name="price" id="price" value={formData.price} onChange={handleNumberChange} className={inputBaseClass} />
                                 </div>
                                 <div>
-                                    <label htmlFor="category" className={labelBaseClass}>{'التصنيف'}</label>
+                                    <label htmlFor="category" className={labelBaseClass}>{t('itemsPage.serviceCategory')}</label>
                                     <SearchableSelect 
                                         id="category" 
                                         options={categoryOptions} 
@@ -110,14 +110,14 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, is
                                             const cat = categories.find(c => c.name === name);
                                             if(cat) setFormData(prev => ({...prev!, category: cat.id}))
                                         }} 
-                                        placeholder="اختر التصنيف"
+                                        placeholder={t('itemsPage.selectCategory')}
                                     />
                                 </div>
                             </>
                         )}
 
                          <div>
-                            <label htmlFor="description" className={labelBaseClass}>{"الوصف"}</label>
+                            <label htmlFor="description" className={labelBaseClass}>{t('itemsPage.description')}</label>
                             <textarea name="description" id="description" value={formData.description || ''} onChange={handleInputChange} className={inputBaseClass} rows={3}></textarea>
                         </div>
                         <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">

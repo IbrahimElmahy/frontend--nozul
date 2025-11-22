@@ -199,11 +199,11 @@ const ItemsPage: React.FC = () => {
         <div className="space-y-6">
              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
-                    {activeView === 'services' ? 'إدارة الخدمات' : 'إدارة التصنيفات'}
+                    {activeView === 'services' ? t('itemsPage.pageTitle') : t('categories.pageTitle')}
                 </h2>
                  <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                     <PlusCircleIcon className="w-5 h-5" />
-                    <span>{activeView === 'services' ? 'إضافة خدمة' : t('itemsPage.addNewItem')}</span>
+                    <span>{activeView === 'services' ? t('itemsPage.addService') : t('categories.addCategory')}</span>
                 </button>
             </div>
 
@@ -214,14 +214,14 @@ const ItemsPage: React.FC = () => {
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeView === 'services' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                 >
                     <CubeIcon className="w-4 h-4" />
-                    <span>الخدمات</span>
+                    <span>{t('itemsPage.services')}</span>
                 </button>
                 <button 
                     onClick={() => setActiveView('categories')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeView === 'categories' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                 >
                     <TagIcon className="w-4 h-4" />
-                    <span>التصنيفات</span>
+                    <span>{t('itemsPage.categories')}</span>
                 </button>
             </div>
             
@@ -259,8 +259,8 @@ const ItemsPage: React.FC = () => {
                                 <th className="px-4 py-3 text-start">{t('itemsPage.th_name_ar')}</th>
                                 {activeView === 'services' ? (
                                     <>
-                                        <th className="px-4 py-3">{'السعر'}</th>
-                                        <th className="px-4 py-3">{'التصنيف'}</th>
+                                        <th className="px-4 py-3">{t('itemsPage.servicePrice')}</th>
+                                        <th className="px-4 py-3">{t('itemsPage.serviceCategory')}</th>
                                     </>
                                 ) : (
                                     <th className="px-4 py-3">{t('itemsPage.th_services')}</th>
@@ -340,8 +340,8 @@ const ItemsPage: React.FC = () => {
                 isOpen={!!itemToDelete}
                 onClose={() => setItemToDelete(null)}
                 onConfirm={handleConfirmDelete}
-                title={t('itemsPage.deleteItemTitle')}
-                message={t('itemsPage.confirmDeleteMessage')}
+                title={activeView === 'services' ? t('itemsPage.deleteItemTitle') : t('categories.deleteCategory')}
+                message={activeView === 'services' ? t('itemsPage.confirmDeleteMessage') : t('categories.confirmDeleteMessage')}
             />
 
             <ItemDetailsModal 

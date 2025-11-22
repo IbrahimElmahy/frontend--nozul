@@ -5,6 +5,7 @@
 
 
 
+
 export const translations = {
   ar: {
     buttons: {
@@ -994,7 +995,11 @@ export const translations = {
     },
     itemsPage: {
         pageTitle: "الأصناف والخدمات",
+        services: "الخدمات",
+        categories: "التصنيفات",
         addNewItem: "إضافة صنف جديد",
+        addService: "إضافة خدمة",
+        addCategory: "إضافة تصنيف",
         searchInfo: "معلومات البحث",
         th_id: "#",
         th_name_en: "الاسم (EN)",
@@ -1007,14 +1012,31 @@ export const translations = {
         status_active: "مفعل",
         status_inactive: "غير مفعل",
         addItemTitle: "إضافة صنف",
+        addServiceTitle: "إضافة خدمة",
+        addCategoryTitle: "إضافة تصنيف",
         editItemTitle: "تعديل صنف",
+        editServiceTitle: "تعديل خدمة",
+        editCategoryTitle: "تعديل تصنيف",
         copyItemTitle: "نسخ صنف",
+        copyServiceTitle: "نسخ خدمة",
         save: "حفظ",
         cancel: "إلغاء",
         detailsTitle: "تفاصيل الصنف",
         itemInfo: "معلومات الصنف",
         deleteItemTitle: "حذف الصنف",
         confirmDeleteMessage: "هل أنت متأكد أنك تريد حذف هذا الصنف؟",
+        servicePrice: "السعر",
+        serviceCategory: "التصنيف",
+        selectCategory: "اختر التصنيف",
+        description: "الوصف",
+    },
+    categories: {
+        pageTitle: "إدارة التصنيفات",
+        addCategory: "إضافة تصنيف",
+        editCategory: "تعديل تصنيف",
+        deleteCategory: "حذف تصنيف",
+        confirmDeleteMessage: "هل أنت متأكد أنك تريد حذف هذا التصنيف؟",
+        categoryInfo: "معلومات التصنيف",
     },
     currenciesPage: {
         pageTitle: "العملات",
@@ -1067,6 +1089,8 @@ export const translations = {
         fundInfo: "معلومات الصندوق",
         deleteTitle: "حذف الصندوق",
         confirmDeleteMessage: "هل أنت متأكد أنك تريد حذف هذا الصندوق؟",
+        description: "الوصف",
+        notes: "ملاحظات",
     },
     banksPage: {
         pageTitle: "البنوك",
@@ -1089,6 +1113,8 @@ export const translations = {
         bankInfo: "معلومات البنك",
         deleteTitle: "حذف البنك",
         confirmDeleteMessage: "هل أنت متأكد أنك تريد حذف هذا البنك؟",
+        description: "الوصف",
+        notes: "ملاحظات",
     },
     expensesPage: {
         pageTitle: "المصروفات",
@@ -1111,6 +1137,8 @@ export const translations = {
         expenseInfo: "معلومات المصروف",
         deleteTitle: "حذف المصروف",
         confirmDeleteMessage: "هل أنت متأكد أنك تريد حذف هذا المصروف؟",
+        description: "الوصف",
+        notes: "ملاحظات",
     },
     taxes: {
         pageTitle: "الضرائب والرسوم",

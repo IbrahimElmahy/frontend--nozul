@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Fund } from '../types';
@@ -54,7 +55,7 @@ const AddFundPanel: React.FC<AddFundPanelProps> = ({ initialData, isEditing, isO
                             <input type="text" name="name_ar" id="name_ar" value={formData.name_ar} onChange={handleInputChange} className={inputBaseClass} />
                         </div>
                         <div>
-                            <label htmlFor="description" className={labelBaseClass}>{"الوصف"}</label>
+                            <label htmlFor="description" className={labelBaseClass}>{t('fundsPage.description')}</label>
                             <textarea name="description" id="description" value={formData.description || ''} onChange={handleInputChange} className={inputBaseClass} rows={3}></textarea>
                         </div>
                         <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
