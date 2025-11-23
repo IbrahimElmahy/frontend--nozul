@@ -27,7 +27,7 @@ const SectionHeader: React.FC<{ title: string; }> = ({ title }) => (
 );
 
 
-const ActionButton: React.FC<{ icon: React.ComponentType<{className?: string}>, color: string, onClick?: () => void, disabled?: boolean }> = ({ icon: Icon, color, onClick, disabled = false }) => (
+const ActionButton: React.FC<{ icon: React.ComponentType<{ className?: string }>, color: string, onClick?: () => void, disabled?: boolean }> = ({ icon: Icon, color, onClick, disabled = false }) => (
     <button type="button" onClick={onClick} className={`w-7 h-7 flex items-center justify-center rounded ${color} text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed`} disabled={disabled}>
         <Icon className="w-4 h-4" />
     </button>
@@ -49,7 +49,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
             setFormData(JSON.parse(JSON.stringify(initialData)));
         }
     }, [isOpen, initialData]);
-    
+
     useEffect(() => {
         const value = formData.rent || 0;
         const discount = formData.discount || 0;
@@ -85,7 +85,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
 
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
     const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
-    
+
     const bookingSources = [t('bookings.booking_source_airbnb'), t('bookings.booking_source_booking'), t('bookings.booking_source_almosafer'), t('bookings.booking_source_agoda'), t('bookings.booking_source_websites'), t('bookings.booking_source_reception')];
     const rentTypeOptions = [{ value: 'hourly', label: t('bookings.rent_hourly') }, { value: 'daily', label: t('bookings.rent_daily') }, { value: 'monthly', label: t('bookings.rent_monthly') }];
     const bookingReasonOptions = [t('bookings.guest_type_health_employee'), t('bookings.guest_type_quarantine'), t('bookings.guest_type_court_employee'), t('bookings.guest_type_recreational'), t('bookings.guest_type_sports'), t('bookings.guest_type_family_visit'), t('bookings.guest_type_tourism')];
@@ -121,13 +121,13 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                 </div>
                                 <div>
                                     <label htmlFor="bookingSource" className={labelBaseClass}>{t('bookings.bookingSource')}</label>
-                                    <SearchableSelect id="bookingSource" options={bookingSources} value={formData.bookingSource || ''} onChange={(val) => setFormData(p => ({...p, bookingSource: val}))} placeholder={t('bookings.selectBookingSource')} />
+                                    <SearchableSelect id="bookingSource" options={bookingSources} value={formData.bookingSource || ''} onChange={(val) => setFormData(p => ({ ...p, bookingSource: val }))} placeholder={t('bookings.selectBookingSource')} />
                                 </div>
 
                                 <SectionHeader title={t('bookings.calendarInfo')} />
                                 <div>
                                     <label htmlFor="rentType" className={labelBaseClass}>{t('bookings.rent')}</label>
-                                    <SearchableSelect id="rentType" options={rentTypeOptions.map(o=>o.label)} value={rentTypeOptions.find(o => o.value === formData.rentType)?.label || ''} onChange={(label) => { const opt = rentTypeOptions.find(o=>o.label===label); if(opt) setFormData(p=>({...p, rentType: opt.value as RentType})); }} placeholder={t('bookings.selectRentType')} />
+                                    <SearchableSelect id="rentType" options={rentTypeOptions.map(o => o.label)} value={rentTypeOptions.find(o => o.value === formData.rentType)?.label || ''} onChange={(label) => { const opt = rentTypeOptions.find(o => o.label === label); if (opt) setFormData(p => ({ ...p, rentType: opt.value as RentType })); }} placeholder={t('bookings.selectRentType')} />
                                 </div>
                                 <div>
                                     <label className={labelBaseClass}>{t('bookings.rentCalendar')}</label>
@@ -151,7 +151,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                     <input type="number" name="duration" value={formData.duration} onChange={handleNumberChange} className={`${inputBaseClass} bg-slate-100 dark:bg-slate-700`} readOnly />
                                 </div>
                             </div>
-                            
+
                             {/* Column 2: Apartment, Guest Info */}
                             <div className="space-y-4">
                                 <SectionHeader title={t('bookings.apartmentInfo')} />
@@ -159,7 +159,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                     <label htmlFor="unitName" className={labelBaseClass}>{t('bookings.apartments')}</label>
                                     <div className="flex items-center gap-2">
                                         <div className="flex-grow">
-                                            <SearchableSelect id="unitName" options={['101', '102', '103']} value={formData.unitName} onChange={(val) => setFormData(p=>({...p, unitName: val}))} placeholder="Select Apartment" />
+                                            <SearchableSelect id="unitName" options={['101', '102', '103']} value={formData.unitName} onChange={(val) => setFormData(p => ({ ...p, unitName: val }))} placeholder="Select Apartment" />
                                         </div>
                                         <ActionButton icon={PlusIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.addingNewApartment'))} />
                                         <ActionButton icon={PencilIcon} color="bg-yellow-400" onClick={() => alert(t('bookings.alerts.editingApartment', formData.unitName))} disabled={!formData.unitName} />
@@ -170,21 +170,21 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                     <label className={labelBaseClass}>{t('bookings.price')}</label>
                                     <p className="text-slate-500 dark:text-slate-400 text-sm h-10 flex items-center">----------</p>
                                 </div>
-                                
+
                                 <SectionHeader title={t('bookings.guestInfo')} />
                                 <div>
                                     <label htmlFor="bookingReason" className={labelBaseClass}>{t('bookings.bookingReasons')}</label>
-                                    <SearchableSelect id="bookingReason" options={bookingReasonOptions} value={formData.bookingReason || ''} onChange={(val) => setFormData(p=>({...p, bookingReason: val}))} placeholder={t('bookings.selectBookingReason')} />
+                                    <SearchableSelect id="bookingReason" options={bookingReasonOptions} value={formData.bookingReason || ''} onChange={(val) => setFormData(p => ({ ...p, bookingReason: val }))} placeholder={t('bookings.selectBookingReason')} />
                                 </div>
                                 <div>
                                     <label htmlFor="guestType" className={labelBaseClass}>{t('bookings.guestType')}</label>
-                                    <SearchableSelect id="guestType" options={guestTypeOptions} value={formData.guestType || ''} onChange={(val) => setFormData(p=>({...p, guestType: val}))} placeholder={t('bookings.selectGuestType')} />
+                                    <SearchableSelect id="guestType" options={guestTypeOptions} value={formData.guestType || ''} onChange={(val) => setFormData(p => ({ ...p, guestType: val }))} placeholder={t('bookings.selectGuestType')} />
                                 </div>
                                 <div>
                                     <label htmlFor="guestName" className={labelBaseClass}>{t('bookings.guest')}</label>
                                     <div className="flex items-center gap-2">
                                         <div className="flex-grow">
-                                            <SearchableSelect id="guestName" options={['حملة محمد', 'محمد سالم']} value={formData.guestName} onChange={(val) => setFormData(p=>({...p, guestName: val}))} placeholder="Select Guest" />
+                                            <SearchableSelect id="guestName" options={['حملة محمد', 'محمد سالم']} value={formData.guestName} onChange={(val) => setFormData(p => ({ ...p, guestName: val }))} placeholder="Select Guest" />
                                         </div>
                                         <ActionButton icon={PlusIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.addingNewGuest'))} />
                                         <ActionButton icon={PencilIcon} color="bg-yellow-400" onClick={() => alert(t('bookings.alerts.editingGuest', formData.guestName))} disabled={!formData.guestName} />
@@ -197,8 +197,8 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                         <div className="flex-grow">
                                             <input type="number" id="companions" name="companions" value={formData.companions || 0} onChange={handleNumberChange} className={`${inputBaseClass} text-center`} min="0" />
                                         </div>
-                                        <ActionButton icon={MinusIcon} color="bg-red-500" onClick={() => setFormData(p => ({...p, companions: Math.max(0, (p.companions || 0) - 1)}))} />
-                                        <ActionButton icon={PlusIcon} color="bg-blue-500" onClick={() => setFormData(p => ({...p, companions: (p.companions || 0) + 1}))} />
+                                        <ActionButton icon={MinusIcon} color="bg-red-500" onClick={() => setFormData(p => ({ ...p, companions: Math.max(0, (p.companions || 0) - 1) }))} />
+                                        <ActionButton icon={PlusIcon} color="bg-blue-500" onClick={() => setFormData(p => ({ ...p, companions: (p.companions || 0) + 1 }))} />
                                     </div>
                                 </div>
                             </div>
@@ -211,40 +211,40 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                         <label htmlFor="receiptVoucher" className={labelBaseClass}>{t('bookings.receiptVoucher')}</label>
                                         <div className="flex items-center gap-2">
                                             <div className="flex-grow">
-                                                <SearchableSelect id="receiptVoucher" options={[]} value={formData.receiptVoucher || ''} onChange={(val) => setFormData(p=>({...p, receiptVoucher: val}))} placeholder="" />
+                                                <SearchableSelect id="receiptVoucher" options={[]} value={formData.receiptVoucher || ''} onChange={(val) => setFormData(p => ({ ...p, receiptVoucher: val }))} placeholder="" />
                                             </div>
                                             <ActionButton icon={PlusIcon} color="bg-green-500" onClick={() => alert(t('bookings.alerts.addingNewReceipt'))} />
                                             <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.editingReceipt', formData.receiptVoucher))} disabled={!formData.receiptVoucher} />
                                             <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.previewingReceipt', formData.receiptVoucher))} disabled={!formData.receiptVoucher} />
                                         </div>
                                     </div>
-                                     <div>
+                                    <div>
                                         <label htmlFor="returnVouchers" className={labelBaseClass}>{t('bookings.returnVouchers')}</label>
                                         <div className="flex items-center gap-2">
                                             <div className="flex-grow">
-                                                <SearchableSelect id="returnVouchers" options={[]} value={formData.returnVouchers || ''} onChange={(val) => setFormData(p=>({...p, returnVouchers: val}))} placeholder="" />
+                                                <SearchableSelect id="returnVouchers" options={[]} value={formData.returnVouchers || ''} onChange={(val) => setFormData(p => ({ ...p, returnVouchers: val }))} placeholder="" />
                                             </div>
                                             <ActionButton icon={PlusIcon} color="bg-green-500" onClick={() => alert(t('bookings.alerts.addingNewReturnVoucher'))} />
                                             <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.editingReturnVoucher', formData.returnVouchers))} disabled={!formData.returnVouchers} />
                                             <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.previewingReturnVoucher', formData.returnVouchers))} disabled={!formData.returnVouchers} />
                                         </div>
                                     </div>
-                                     <div>
+                                    <div>
                                         <label htmlFor="invoices" className={labelBaseClass}>{t('bookings.invoices')}</label>
                                         <div className="flex items-center gap-2">
                                             <div className="flex-grow">
-                                                <SearchableSelect id="invoices" options={[]} value={formData.invoices || ''} onChange={(val) => setFormData(p=>({...p, invoices: val}))} placeholder="" />
+                                                <SearchableSelect id="invoices" options={[]} value={formData.invoices || ''} onChange={(val) => setFormData(p => ({ ...p, invoices: val }))} placeholder="" />
                                             </div>
                                             <ActionButton icon={PlusIcon} color="bg-green-500" onClick={() => alert(t('bookings.alerts.addingNewInvoice'))} />
                                             <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.editingInvoice', formData.invoices))} disabled={!formData.invoices} />
                                             <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.previewingInvoice', formData.invoices))} disabled={!formData.invoices} />
                                         </div>
                                     </div>
-                                     <div>
+                                    <div>
                                         <label htmlFor="order" className={labelBaseClass}>{t('bookings.order')}</label>
                                         <div className="flex items-center gap-2">
                                             <div className="flex-grow">
-                                                <SearchableSelect id="order" options={[]} value={formData.order || ''} onChange={(val) => setFormData(p=>({...p, order: val}))} placeholder="" />
+                                                <SearchableSelect id="order" options={[]} value={formData.order || ''} onChange={(val) => setFormData(p => ({ ...p, order: val }))} placeholder="" />
                                             </div>
                                             <ActionButton icon={PlusIcon} color="bg-green-500" onClick={() => alert(t('bookings.alerts.addingNewOrder'))} />
                                             <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.editingOrder', formData.order))} disabled={!formData.order} />
@@ -264,10 +264,10 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                     </div>
                                     <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-md space-y-2 text-sm">
                                         {([
-                                            {label: t('bookings.value'), value: formData.value.toFixed(2)},
-                                            {label: t('bookings.subtotal'), value: formData.subtotal.toFixed(2)},
-                                            {label: t('bookings.total'), value: formData.total.toFixed(2)},
-                                            {label: t('bookings.totalOrders'), value: formData.totalOrders?.toFixed(2)},
+                                            { label: t('bookings.value'), value: formData.value.toFixed(2) },
+                                            { label: t('bookings.subtotal'), value: formData.subtotal.toFixed(2) },
+                                            { label: t('bookings.total'), value: formData.total.toFixed(2) },
+                                            { label: t('bookings.totalOrders'), value: formData.totalOrders?.toFixed(2) },
                                         ]).map(item => (
                                             <div key={item.label} className="flex justify-between items-center">
                                                 <span className="font-medium text-slate-600 dark:text-slate-300">{item.label}</span>
@@ -275,16 +275,16 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                             </div>
                                         ))}
                                         <div className="flex justify-between items-center">
-                                             <span className="font-medium text-slate-600 dark:text-slate-300">{t('bookings.payments')}</span>
-                                             <input type="number" name="payments" value={formData.payments} onChange={handleNumberChange} className={`${inputBaseClass} w-24 text-center font-bold`} />
+                                            <span className="font-medium text-slate-600 dark:text-slate-300">{t('bookings.payments')}</span>
+                                            <input type="number" name="payments" value={formData.payments} onChange={handleNumberChange} className={`${inputBaseClass} w-24 text-center font-bold`} />
                                         </div>
-                                         <div className="flex justify-between items-center mt-2 pt-2 border-t dark:border-slate-600">
+                                        <div className="flex justify-between items-center mt-2 pt-2 border-t dark:border-slate-600">
                                             <span className="font-bold text-slate-800 dark:text-slate-100">{t('bookings.balance')}</span>
                                             <span className="font-bold text-lg text-green-600 dark:text-green-400">{formData.balance.toFixed(2)}</span>
-                                         </div>
+                                        </div>
                                     </div>
                                 </div>
-                                
+
                                 <SectionHeader title={t('bookings.notes')} />
                                 <textarea name="notes" rows={4} placeholder={t('bookings.notesPlaceholder')} value={formData.notes || ''} onChange={handleInputChange} className={inputBaseClass}></textarea>
                             </div>
@@ -298,7 +298,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                         <CheckCircleIcon className="w-5 h-5" />
                         <span>{t('bookings.saveBooking')}</span>
                     </button>
-                     <button onClick={onClose} className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200">
+                    <button onClick={onClose} className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200">
                         {t('bookings.cancel')}
                     </button>
                 </footer>

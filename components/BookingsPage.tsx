@@ -108,7 +108,7 @@ const BookingsPage: React.FC = () => {
 
 
     const filteredBookings = useMemo(() => {
-        return bookings.filter(booking => 
+        return bookings.filter(booking =>
             booking.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             booking.bookingNumber.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -124,20 +124,20 @@ const BookingsPage: React.FC = () => {
 
                 if (aValue === null || aValue === undefined) return 1;
                 if (bValue === null || bValue === undefined) return -1;
-                
+
                 let comparison = 0;
                 if (typeof aValue === 'number' && typeof bValue === 'number') {
                     comparison = aValue - bValue;
                 } else {
                     comparison = String(aValue).localeCompare(String(bValue));
                 }
-                
+
                 return sortConfig.direction === 'ascending' ? comparison : -comparison;
             });
         }
         return sortableItems;
     }, [filteredBookings, sortConfig]);
-    
+
     const totalPages = itemsPerPage === Number.MAX_SAFE_INTEGER ? 1 : Math.ceil(sortedBookings.length / itemsPerPage);
 
     const paginatedBookings = useMemo(() => {
@@ -166,7 +166,7 @@ const BookingsPage: React.FC = () => {
         }
         handleClosePanel();
     };
-    
+
     const handleSaveGroupBooking = (newBookings: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>[]) => {
         const maxId = Math.max(0, ...bookings.map(b => b.id));
         const bookingsToAdd: Booking[] = newBookings.map((booking, index) => ({
@@ -201,7 +201,7 @@ const BookingsPage: React.FC = () => {
             setBookingToDeleteId(null);
         }
     };
-    
+
     const requestSort = (key: keyof Booking) => {
         let direction: 'ascending' | 'descending' = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -283,15 +283,15 @@ const BookingsPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('bookings.manageBookings')}</h2>
-                 <div className="flex flex-wrap items-center gap-2">
-                    <button 
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
                         onClick={() => setIsAddGroupPanelOpen(true)}
                         className="flex items-center gap-2 bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600 transition-colors"
                     >
                         <UsersIcon className="w-5 h-5" />
                         <span>{t('bookings.addGroupBooking')}</span>
                     </button>
-                    <button 
+                    <button
                         onClick={handleAddNewClick}
                         className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
                     >
@@ -306,7 +306,7 @@ const BookingsPage: React.FC = () => {
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
                     {language === 'ar' ? (
                         <>
                             {searchAndViewsControls}
@@ -342,8 +342,8 @@ const BookingsPage: React.FC = () => {
                                     {tableHeaders.map(header => (
                                         <th key={header.key} scope="col" className={`px-4 py-3 ${header.numeric || header.key === 'actions' ? 'text-end' : 'text-start'} ${header.className || ''}`}>
                                             {header.key !== 'actions' ? (
-                                                <button 
-                                                    className="flex items-center gap-1.5 group" 
+                                                <button
+                                                    className="flex items-center gap-1.5 group"
                                                     onClick={() => requestSort(header.key as keyof Booking)}
                                                     aria-label={`Sort by ${t(header.labelKey as any)}`}
                                                 >
@@ -370,21 +370,21 @@ const BookingsPage: React.FC = () => {
                                             <td key={`${booking.id}-${header.key}`} className={`px-4 py-3 whitespace-nowrap ${header.numeric || header.key === 'actions' ? 'text-end' : 'text-start'} ${header.className || ''}`}>
                                                 {header.key === 'actions' ? (
                                                     <div className="flex items-center gap-1 justify-end">
-                                                        <button 
+                                                        <button
                                                             onClick={() => setViewingBooking(booking)}
                                                             className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"
                                                             aria-label={`View details for booking ${booking.bookingNumber}`}
                                                         >
                                                             <EyeIcon className="w-5 h-5" />
                                                         </button>
-                                                         <button 
+                                                        <button
                                                             onClick={() => handleEditClick(booking)}
                                                             className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"
                                                             aria-label={`Edit booking ${booking.bookingNumber}`}
                                                         >
                                                             <PencilSquareIcon className="w-5 h-5" />
                                                         </button>
-                                                         <button 
+                                                        <button
                                                             onClick={() => handleDeleteClick(booking.id)}
                                                             className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"
                                                             aria-label={`Delete booking ${booking.bookingNumber}`}
@@ -421,13 +421,13 @@ const BookingsPage: React.FC = () => {
                         </table>
                     </div>
                 )}
-                
+
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
                         {`${t('units.showing')} ${sortedBookings.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, sortedBookings.length)} ${t('units.of')} ${sortedBookings.length} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <nav className="flex items-center gap-1" aria-label="Pagination">
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
@@ -435,7 +435,7 @@ const BookingsPage: React.FC = () => {
                             >
                                 <ChevronLeftIcon className="w-5 h-5" />
                             </button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
+                            <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages || totalPages === 0}
@@ -447,7 +447,7 @@ const BookingsPage: React.FC = () => {
                     )}
                 </div>
             </div>
-            
+
             <AddBookingPanel
                 initialData={editingBooking || newBookingTemplate}
                 isEditing={!!editingBooking}

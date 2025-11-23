@@ -3,12 +3,12 @@ import React from 'react';
 
 // FIX: Remove circular import and define ChartData.
 export interface ChartData {
-  name: string;
-  value: number;
+    name: string;
+    value: number;
 }
 
 export interface DonutChartData extends ChartData {
-  color: string;
+    color: string;
 }
 
 export type UnitStatus = 'free' | 'occupied' | 'not-checked-in' | 'out-of-service';
@@ -20,7 +20,7 @@ export interface Unit {
     id: string; // unique identifier
     unitNumber: string;
     unitName?: string;
-    
+
     // Status & Reservation
     status: UnitStatus;
     customerName?: string;
@@ -63,71 +63,71 @@ export type BookingStatus = 'check-in' | 'check-out';
 export type RentType = 'daily' | 'hourly' | 'monthly';
 
 export interface Booking {
-  id: number;
-  bookingNumber: string;
-  guestName: string;
-  unitName: string;
-  checkInDate: string;
-  checkOutDate: string;
-  time: string;
-  status: BookingStatus;
-  rentType: RentType;
-  duration: number;
-  rent: number;
-  value: number;
-  discount: number; // Changed from string for calculations
-  subtotal: number;
-  // FIX: Add optional tax property to support mock data.
-  tax?: number;
-  total: number;
-  payments: number;
-  balance: number;
-  createdAt: string;
-  updatedAt: string;
+    id: number;
+    bookingNumber: string;
+    guestName: string;
+    unitName: string;
+    checkInDate: string;
+    checkOutDate: string;
+    time: string;
+    status: BookingStatus;
+    rentType: RentType;
+    duration: number;
+    rent: number;
+    value: number;
+    discount: number; // Changed from string for calculations
+    subtotal: number;
+    // FIX: Add optional tax property to support mock data.
+    tax?: number;
+    total: number;
+    payments: number;
+    balance: number;
+    createdAt: string;
+    updatedAt: string;
 
-  // New detailed fields from the form redesign
-  bookingSource?: string;
-  bookingReason?: string;
-  guestType?: string;
-  companions?: number;
-  discountType?: 'percentage' | 'fixed' | '';
-  totalOrders?: number;
-  notes?: string;
-  price?: number;
-  receiptVoucher?: string;
-  returnVouchers?: string;
-  invoices?: string;
-  order?: string;
+    // New detailed fields from the form redesign
+    bookingSource?: string;
+    bookingReason?: string;
+    guestType?: string;
+    companions?: number;
+    discountType?: 'percentage' | 'fixed' | '';
+    totalOrders?: number;
+    notes?: string;
+    price?: number;
+    receiptVoucher?: string;
+    returnVouchers?: string;
+    invoices?: string;
+    order?: string;
 }
 
 export type GuestStatus = 'active' | 'inactive';
 
 // Updated Guest interface to match API
 export interface Guest {
-  id: string; // It's a UUID
-  name: string;
-  gender: 'male' | 'female';
-  country: string; // e.g., "SA"
-  country_display: string;
-  phone_number: string;
-  email?: string;
-  city?: string;
-  guest_type: string; // Display name like "مواطن"
-  id_number: string;
-  ids: string; // Display name like "جواز سفر"
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  birthdate: string | null;
-  work_number: string | null;
-  work_place: string | null;
-  issue_date: string | null;
-  expiry_date: string | null;
-  note: string;
-  postal_code: string;
-  street: string;
-  neighborhood: string;
-  account?: string; // UUID for financial account
+    id: string; // It's a UUID
+    name: string;
+    gender: 'male' | 'female';
+    country: string; // e.g., "SA"
+    country_display: string;
+    phone_number: string;
+    email?: string;
+    city?: string;
+    guest_type: string; // Display name like "مواطن"
+    id_number: string;
+    ids: string; // Display name like "جواز سفر"
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    birthdate: string | null;
+    work_number: string | null;
+    work_place: string | null;
+    issue_date: string | null;
+    expiry_date: string | null;
+    note: string;
+    postal_code: string;
+    street: string;
+    neighborhood: string;
+    account?: string; // UUID for financial account
 }
 
 export interface GuestTypeAPI {
@@ -152,89 +152,89 @@ export interface CountryAPI {
 
 // Aligned with Agent API (which is a Guest with category='agent')
 export interface BookingAgency {
-  id: string;
-  name: string;
-  phone_number: string;
-  country: string;
-  country_display: string;
-  guest_type: string; // This is the UUID for the form, but display name from list
-  ids: string; // This is the UUID for the form, but display name from list
-  id_number: string;
-  email?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  discount_type?: 'percent' | 'amount' | string;
-  discount_value?: number;
-  discount_display?: string;
-  
-  // Address fields
-  address_country?: string;
-  city?: string;
-  neighborhood?: string;
-  street?: string;
-  postal_code?: string;
+    id: string;
+    name: string;
+    phone_number: string;
+    country: string;
+    country_display: string;
+    guest_type: string; // This is the UUID for the form, but display name from list
+    ids: string; // This is the UUID for the form, but display name from list
+    id_number: string;
+    email?: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    discount_type?: 'percent' | 'amount' | string;
+    discount_value?: number;
+    discount_display?: string;
+
+    // Address fields
+    address_country?: string;
+    city?: string;
+    neighborhood?: string;
+    street?: string;
+    postal_code?: string;
 }
 
 
 export interface OrderItem {
-  id: string;
-  service: string; // Service ID or Name depending on context
-  service_name?: string; // Display name
-  category: string; // Category ID or Name
-  category_name?: string; // Display name
-  quantity: number;
-  price: number;
+    id: string;
+    service: string; // Service ID or Name depending on context
+    service_name?: string; // Display name
+    category: string; // Category ID or Name
+    category_name?: string; // Display name
+    quantity: number;
+    price: number;
 }
 
 export interface Order {
-  id: string; // Changed to string to match API UUIDs
-  orderNumber: string;
-  bookingNumber: string;
-  apartmentName: string;
-  value: number;
-  discount: number; // Represents percentage
-  subtotal: number;
-  tax: number;
-  total: number;
-  createdAt: string;
-  updatedAt: string;
-  items?: OrderItem[];
-  notes?: string;
-  isActive?: boolean;
+    id: string; // Changed to string to match API UUIDs
+    orderNumber: string;
+    bookingNumber: string;
+    apartmentName: string;
+    value: number;
+    discount: number; // Represents percentage
+    subtotal: number;
+    tax: number;
+    total: number;
+    createdAt: string;
+    updatedAt: string;
+    items?: OrderItem[];
+    notes?: string;
+    isActive?: boolean;
 }
 
 export interface Receipt {
-  id: string;
-  receiptNumber: string; // Maps to 'number' or 'id' for display
-  currency: string;
-  value: number; // Maps to 'amount'
-  date: string;
-  time: string;
-  paymentMethod: string;
-  paymentType: string | null; // 'payment' or 'receipt'
-  transactionNumber: string | null;
-  bookingNumber: string | null;
-  createdAt: string; // created_at
-  updatedAt: string; // updated_at
-  description?: string;
-  // Financial legs for reconstruction in edit (simplified)
-  debitAccount?: string; 
-  creditAccount?: string;
+    id: string;
+    receiptNumber: string; // Maps to 'number' or 'id' for display
+    currency: string;
+    value: number; // Maps to 'amount'
+    date: string;
+    time: string;
+    paymentMethod: string;
+    paymentType: string | null; // 'payment' or 'receipt'
+    transactionNumber: string | null;
+    bookingNumber: string | null;
+    createdAt: string; // created_at
+    updatedAt: string; // updated_at
+    description?: string;
+    // Financial legs for reconstruction in edit (simplified)
+    debitAccount?: string;
+    creditAccount?: string;
 }
 
 export interface Invoice {
-  id: string;
-  number: string; // was invoiceNumber
-  reservation: string; // was bookingNumber
-  amount: number; // was value
-  total: number;
-  created_at: string; // was createdAt
-  updated_at: string; // was updatedAt
-  // The old fields were: discount, subtotal, tax. They are not in the main list response
-  discount?: number;
-  subtotal?: number;
-  tax?: number;
+    id: string;
+    number: string; // was invoiceNumber
+    reservation: string; // was bookingNumber
+    amount: number; // was value
+    total: number;
+    created_at: string; // was createdAt
+    updated_at: string; // was updatedAt
+    // The old fields were: discount, subtotal, tax. They are not in the main list response
+    discount?: number;
+    subtotal?: number;
+    tax?: number;
 }
 
 export interface HotelUserProfile {
@@ -260,12 +260,12 @@ export interface HotelUser {
     profile: HotelUserProfile;
     image_url: string | null;
     login_allowed?: boolean;
-    
+
     // Optional fields for UI/Forms that might not be in main list API
     isManager?: boolean;
     notes?: string;
     permissions?: Record<string, boolean>;
-    
+
     // Deprecated/Mapped fields for backward compatibility with existing components if needed
     mobile?: string; // mapped to phone_number
     status?: 'active' | 'inactive'; // mapped to is_active
@@ -327,7 +327,7 @@ export interface Item {
     id: string;
     name_en: string;
     name_ar: string;
-    services?: number; 
+    services?: number;
     description?: string;
     status?: 'active' | 'inactive';
     is_active?: boolean;
@@ -336,7 +336,7 @@ export interface Item {
     // Service specific fields
     price?: number;
     category?: string; // UUID of category
-    category_name?: string; 
+    category_name?: string;
 }
 
 export interface Service extends Item {

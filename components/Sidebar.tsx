@@ -32,7 +32,7 @@ interface NavItemProps {
 
 const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificationCount, hasSubMenu, collapsed, sidebarColor, onClick }) => {
     const { language } = useContext(LanguageContext);
-    
+
     // Using 'blue' classes here because App.tsx maps the selected theme color to the Tailwind 'blue' palette.
     // So 'text-blue-600' will actually render as Red, Green, Purple, etc. based on the settings.
     const colorStyles = {
@@ -68,7 +68,7 @@ const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, active, notificati
 
     const styles = colorStyles[sidebarColor] || colorStyles.brand;
     const baseClasses = 'flex items-center w-full p-3 my-1 rounded-lg text-base font-medium transition-all duration-200';
-    
+
     return (
         <a
             href="#"
@@ -120,7 +120,7 @@ interface UserInfoBlockProps {
 
 const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurrentPage, sidebarColor }) => {
     const { t, language } = useContext(LanguageContext);
-    
+
     const colorStyles = {
         light: { base: 'text-slate-600 hover:bg-slate-100' },
         dark: { base: 'text-slate-300 hover:bg-slate-700' },
@@ -137,7 +137,7 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurre
     };
 
     return (
-        <a 
+        <a
             href="#"
             className={`${baseClasses} ${styles.base} ${collapsed ? 'justify-center' : ''}`}
             onClick={handleProfileClick}
@@ -200,9 +200,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         {
             header: t('sidebar.reservationsManagement'),
             items: [
-            { id: 'rooms', label: t('sidebar.residentialRooms'), icon: CalendarIcon },
-            { id: 'bookings', label: t('sidebar.bookings'), icon: BriefcaseIcon },
-            { id: 'orders', label: t('sidebar.orders'), icon: CartIcon }
+                { id: 'rooms', label: t('sidebar.residentialRooms'), icon: CalendarIcon },
+                { id: 'bookings', label: t('sidebar.bookings'), icon: BriefcaseIcon },
+                { id: 'orders', label: t('sidebar.orders'), icon: CartIcon }
             ]
         },
         {
@@ -212,17 +212,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         {
             header: t('sidebar.guestManagement'),
             items: [
-            { id: 'guests', label: t('sidebar.guests'), icon: UsersIcon },
-            { id: 'agencies', label: t('sidebar.bookingAgencies'), icon: PresentationChartLineIcon }
+                { id: 'guests', label: t('sidebar.guests'), icon: UsersIcon },
+                { id: 'agencies', label: t('sidebar.bookingAgencies'), icon: PresentationChartLineIcon }
             ]
         },
         {
             header: t('sidebar.other'),
             items: [
-            { id: 'reports', label: t('sidebar.reports'), icon: ClockIcon },
-            { id: 'archives', label: t('sidebar.archives'), icon: ArchiveBoxIcon },
-            { id: 'notifications', label: t('sidebar.notifications'), icon: PaperAirplaneIcon },
-            { id: 'settings', label: t('sidebar.settings'), icon: CogIcon }
+                { id: 'reports', label: t('sidebar.reports'), icon: ClockIcon },
+                { id: 'archives', label: t('sidebar.archives'), icon: ArchiveBoxIcon },
+                { id: 'notifications', label: t('sidebar.notifications'), icon: PaperAirplaneIcon },
+                { id: 'settings', label: t('sidebar.settings'), icon: CogIcon }
             ]
         }
     ];
@@ -232,7 +232,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         e.preventDefault();
         onLogout();
     };
-    
+
     const handleNavItemClick = (e: React.MouseEvent<HTMLAnchorElement>, itemId: string) => {
         e.preventDefault();
         const targetPage = pageMapping[itemId];
@@ -244,7 +244,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
             setMobileMenuOpen(false);
         }
     };
-    
+
     const handleLogoutAndMenuClose = (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (isMobileMenuOpen) {
             setMobileMenuOpen(false);
@@ -274,7 +274,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         compact: { collapsed: 'lg:w-20', expanded: 'lg:w-64' },
         condensed: { collapsed: 'lg:w-16', expanded: 'lg:w-56' }
     };
-    
+
     const borderColor = {
         light: 'border-slate-200 dark:border-slate-700',
         dark: 'border-slate-700',
@@ -285,44 +285,47 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
     const widthClass = isDesktopCollapsed ? sizeClasses[sidebarSize].collapsed : sizeClasses[sidebarSize].expanded;
     const isEffectivelyCollapsed = isMobileMenuOpen ? false : isDesktopCollapsed;
 
-    const mobileMenuPosition = language === 'ar' 
-        ? `right-0 ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}` 
+    const mobileMenuPosition = language === 'ar'
+        ? `right-0 ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`
         : `left-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`;
-    
+
     return (
-    <aside 
-        className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-transform duration-300 ease-in-out lg:transition-all lg:duration-300 h-screen fixed lg:relative z-50 w-72 ${mobileMenuPosition} lg:translate-x-0 ${widthClass}`}
-        onMouseEnter={() => setIsDesktopCollapsed(false)}
-        onMouseLeave={() => setIsDesktopCollapsed(true)}
-    >
-        <div className={`border-b ${borderColor[effectiveSidebarColor]} transition-all duration-300 flex items-center justify-center h-20 px-4`}>
-            <Logo className={`transition-all duration-300 ${isEffectivelyCollapsed ? 'h-8' : 'h-10'} ${effectiveSidebarColor !== 'light' ? 'brightness-0 invert' : ''}`} />
-        </div>
-
-      <nav className="flex-grow p-3 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20">
-        {navigationSections.map((section, index) => (
-            <div key={index}>
-                <NavHeader collapsed={isEffectivelyCollapsed} sidebarColor={effectiveSidebarColor}>{section.header}</NavHeader>
-                {section.items.map((item, itemIndex) => (
-                    <NavItem 
-                        key={itemIndex}
-                        {...item}
-                        active={item.id === 'settings' ? settingsSubPages.includes(currentPage) : currentPage === pageMapping[item.id]}
-                        collapsed={isEffectivelyCollapsed}
-                        sidebarColor={effectiveSidebarColor}
-                        onClick={(e) => handleNavItemClick(e, item.id)}
-                    />
-                ))}
+        <aside
+            className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-transform duration-300 ease-in-out lg:transition-all lg:duration-300 h-screen fixed lg:relative z-50 w-72 ${mobileMenuPosition} lg:translate-x-0 ${widthClass}`}
+            onMouseEnter={() => setIsDesktopCollapsed(false)}
+            onMouseLeave={() => setIsDesktopCollapsed(true)}
+        >
+            <div className={`border-b ${borderColor[effectiveSidebarColor]} transition-all duration-300 flex items-center justify-center h-20 px-4`}>
+                <Logo
+                    className={`transition-all duration-300 ${isEffectivelyCollapsed ? 'h-8' : 'h-10'}`}
+                    variant={effectiveSidebarColor !== 'light' ? 'light' : 'dark'}
+                />
             </div>
-        ))}
-      </nav>
 
-      <div className={`p-3 border-t ${borderColor[effectiveSidebarColor]}`}>
-        {showUserInfo && <UserInfoBlock collapsed={isEffectivelyCollapsed} user={user} setCurrentPage={setCurrentPage} sidebarColor={effectiveSidebarColor}/>}
-        <NavItem label={t('userMenu.logout')} icon={ArrowLeftOnRectangleIcon} collapsed={isEffectivelyCollapsed} onClick={handleLogoutAndMenuClose} sidebarColor={effectiveSidebarColor} />
-      </div>
-    </aside>
-  );
+            <nav className="flex-grow p-3 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20">
+                {navigationSections.map((section, index) => (
+                    <div key={index}>
+                        <NavHeader collapsed={isEffectivelyCollapsed} sidebarColor={effectiveSidebarColor}>{section.header}</NavHeader>
+                        {section.items.map((item, itemIndex) => (
+                            <NavItem
+                                key={itemIndex}
+                                {...item}
+                                active={item.id === 'settings' ? settingsSubPages.includes(currentPage) : currentPage === pageMapping[item.id]}
+                                collapsed={isEffectivelyCollapsed}
+                                sidebarColor={effectiveSidebarColor}
+                                onClick={(e) => handleNavItemClick(e, item.id)}
+                            />
+                        ))}
+                    </div>
+                ))}
+            </nav>
+
+            <div className={`p-3 border-t ${borderColor[effectiveSidebarColor]}`}>
+                {showUserInfo && <UserInfoBlock collapsed={isEffectivelyCollapsed} user={user} setCurrentPage={setCurrentPage} sidebarColor={effectiveSidebarColor} />}
+                <NavItem label={t('userMenu.logout')} icon={ArrowLeftOnRectangleIcon} collapsed={isEffectivelyCollapsed} onClick={handleLogoutAndMenuClose} sidebarColor={effectiveSidebarColor} />
+            </div>
+        </aside>
+    );
 };
 
 export default Sidebar;

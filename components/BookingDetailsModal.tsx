@@ -27,7 +27,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 
 const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onClose }) => {
     const { t } = useContext(LanguageContext);
-    
+
     if (!booking) return null;
 
     const isOpen = !!booking;
@@ -85,7 +85,7 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
                         </div>
                     </div>
 
-                     <Section title={t('bookings.details.timestamps')}>
+                    <Section title={t('bookings.details.timestamps')}>
                         <DetailItem label={t('bookings.th_createdAt')} value={new Date(booking.createdAt).toLocaleString()} />
                         <DetailItem label={t('bookings.th_updatedAt')} value={new Date(booking.updatedAt).toLocaleString()} />
                     </Section>
