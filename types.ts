@@ -420,3 +420,12 @@ export interface Notification {
         image_url: string | null;
     };
 }
+
+export interface HotelCondition {
+    id: string;
+    hotel: string;
+    content_en: string;
+    content_ar: string;
+    created_at: string;
+    updated_at: string;
+}
