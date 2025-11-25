@@ -39,7 +39,7 @@ export interface ThemeSettings {
   sidebarSize: 'default' | 'compact' | 'condensed';
   showUserInfo: boolean;
   topbarColor: 'light' | 'dark' | 'brand';
-  themeColor: ColorSchemeName; 
+  themeColor: ColorSchemeName;
   cardStyle?: 'solid' | 'soft' | 'glass';
   animatedBackground?: boolean;
 }
@@ -128,60 +128,69 @@ interface DashboardPageProps {
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSettings, user }) => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
+  // Load current page from localStorage, default to 'dashboard' if not found
+  const [currentPage, setCurrentPage] = useState<Page>(() => {
+    const savedPage = localStorage.getItem('currentPage');
+    return (savedPage as Page) || 'dashboard';
+  });
+
+  // Save current page to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('currentPage', currentPage);
+  }, [currentPage]);
 
   const layoutWidthClass = settings.layoutWidth === 'boxed' ? 'max-w-screen-xl mx-auto shadow-2xl' : 'w-full';
-  
+
   // Updated: Use primary color (blue-*) for background gradient so it follows the theme.
   // The 'blue' classes here are mapped to var(--color-primary-*) in index.html
   // Increased opacity/strength of the gradient for better visibility.
   // In dark mode, we add a slight tint of the primary color to the dark background.
-  const animatedBgClass = settings.animatedBackground 
-    ? 'animate-gradient-x bg-gradient-to-r from-blue-100 via-white to-blue-200 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/30' 
+  const animatedBgClass = settings.animatedBackground
+    ? 'animate-gradient-x bg-gradient-to-r from-blue-100 via-white to-blue-200 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/30'
     : 'bg-slate-50 dark:bg-slate-900';
 
   return (
     <div className={`${layoutWidthClass} h-screen overflow-hidden`}>
-        <div className={`relative flex h-full ${animatedBgClass} font-sans transition-colors duration-500`}>
-            {/* Overlay for mobile sidebar */}
-            {isMobileMenuOpen && (
-              <div
-                className="fixed inset-0 bg-black/30 z-40 lg:hidden"
-                onClick={() => setMobileMenuOpen(false)}
-                aria-hidden="true"
-              ></div>
-            )}
-            <Sidebar onLogout={onLogout} settings={settings} isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} setCurrentPage={setCurrentPage} currentPage={currentPage} user={user} />
-            <div className="flex-1 flex flex-col min-w-0">
-                <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} setCurrentPage={setCurrentPage} currentPage={currentPage} user={user} />
-                <main className={`flex-1 overflow-y-auto p-4 sm:p-6 ${settings.animatedBackground ? 'bg-transparent' : 'bg-slate-100 dark:bg-slate-950'}`}>
-                    {currentPage === 'dashboard' && <Dashboard />}
-                    {currentPage === 'profile' && <UserProfilePage user={user} />}
-                    {currentPage === 'units' && <UnitsPage />}
-                    {currentPage === 'bookings' && <BookingsPage />}
-                    {currentPage === 'guests' && <GuestsPage />}
-                    {currentPage === 'agencies' && <BookingAgenciesPage />}
-                    {currentPage === 'orders' && <OrdersPage />}
-                    {currentPage === 'receipts' && <ReceiptsPage user={user} />}
-                    {currentPage === 'reports' && <ReportsPage />}
-                    {currentPage === 'archives' && <ArchivesPage />}
-                    {currentPage === 'notifications' && <NotificationsPage />}
-                    {currentPage === 'hotel-settings' && <HotelSettingsPage setCurrentPage={setCurrentPage} />}
-                    {currentPage === 'hotel-info' && <HotelInfoPage setCurrentPage={setCurrentPage} />}
-                    {currentPage === 'hotel-users' && <UsersPage setCurrentPage={setCurrentPage} />}
-                    {currentPage === 'apartment-prices' && <ApartmentPricesPage />}
-                    {currentPage === 'peak-times' && <PeakTimesPage />}
-                    {currentPage === 'taxes' && <TaxesPage />}
-                    {currentPage === 'items' && <ItemsPage />}
-                    {currentPage === 'currencies' && <CurrenciesPage />}
-                    {currentPage === 'funds' && <FundsPage />}
-                    {currentPage === 'banks' && <BanksPage />}
-                    {currentPage === 'expenses' && <ExpensesPage />}
-                    {currentPage === 'hotel-conditions' && <HotelConditionsPage />}
-                </main>
-            </div>
-            <SettingsCog settings={settings} setSettings={setSettings} />
+      <div className={`relative flex h-full ${animatedBgClass} font-sans transition-colors duration-500`}>
+        {/* Overlay for mobile sidebar */}
+        {isMobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          ></div>
+        )}
+        <Sidebar onLogout={onLogout} settings={settings} isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} setCurrentPage={setCurrentPage} currentPage={currentPage} user={user} />
+        <div className="flex-1 flex flex-col min-w-0">
+          <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} setCurrentPage={setCurrentPage} currentPage={currentPage} user={user} />
+          <main className={`flex-1 overflow-y-auto p-4 sm:p-6 ${settings.animatedBackground ? 'bg-transparent' : 'bg-slate-100 dark:bg-slate-950'}`}>
+            {currentPage === 'dashboard' && <Dashboard />}
+            {currentPage === 'profile' && <UserProfilePage user={user} />}
+            {currentPage === 'units' && <UnitsPage />}
+            {currentPage === 'bookings' && <BookingsPage />}
+            {currentPage === 'guests' && <GuestsPage />}
+            {currentPage === 'agencies' && <BookingAgenciesPage />}
+            {currentPage === 'orders' && <OrdersPage />}
+            {currentPage === 'receipts' && <ReceiptsPage user={user} />}
+            {currentPage === 'reports' && <ReportsPage />}
+            {currentPage === 'archives' && <ArchivesPage />}
+            {currentPage === 'notifications' && <NotificationsPage />}
+            {currentPage === 'hotel-settings' && <HotelSettingsPage setCurrentPage={setCurrentPage} />}
+            {currentPage === 'hotel-info' && <HotelInfoPage setCurrentPage={setCurrentPage} />}
+            {currentPage === 'hotel-users' && <UsersPage setCurrentPage={setCurrentPage} />}
+            {currentPage === 'apartment-prices' && <ApartmentPricesPage />}
+            {currentPage === 'peak-times' && <PeakTimesPage />}
+            {currentPage === 'taxes' && <TaxesPage />}
+            {currentPage === 'items' && <ItemsPage />}
+            {currentPage === 'currencies' && <CurrenciesPage />}
+            {currentPage === 'funds' && <FundsPage />}
+            {currentPage === 'banks' && <BanksPage />}
+            {currentPage === 'expenses' && <ExpensesPage />}
+            {currentPage === 'hotel-conditions' && <HotelConditionsPage />}
+          </main>
         </div>
+        <SettingsCog settings={settings} setSettings={setSettings} />
+      </div>
     </div>
   );
 };
@@ -195,13 +204,13 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<ThemeSettings>(() => {
     const savedSettings = localStorage.getItem('themeSettings');
     const loadedSettings = savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings;
-    
+
     // Ensure backwards compatibility if new properties are missing in local storage
     if (!loadedSettings.themeColor) loadedSettings.themeColor = 'blue';
     if (!loadedSettings.topbarColor) loadedSettings.topbarColor = 'light';
     if (!loadedSettings.cardStyle) loadedSettings.cardStyle = 'soft';
     if (loadedSettings.animatedBackground === undefined) loadedSettings.animatedBackground = false;
-    
+
     loadedSettings.sidebarSize = 'condensed'; // Force condensed size
     return loadedSettings;
   });
@@ -220,7 +229,7 @@ const App: React.FC = () => {
       setUser(null);
     }
   }, [isAuthenticated]);
-  
+
   // Apply Theme Settings and CSS Variables
   useEffect(() => {
     const currentSettings = { ...settings };
@@ -238,11 +247,11 @@ const App: React.FC = () => {
     // Apply Color Palette Variables
     const root = document.documentElement;
     const palette = colorPalettes[settings.themeColor || 'blue'];
-    
+
     if (palette) {
-        Object.entries(palette).forEach(([shade, rgbValue]) => {
-            root.style.setProperty(`--color-primary-${shade}`, String(rgbValue));
-        });
+      Object.entries(palette).forEach(([shade, rgbValue]) => {
+        root.style.setProperty(`--color-primary-${shade}`, String(rgbValue));
+      });
     }
 
   }, [settings]);
