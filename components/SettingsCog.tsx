@@ -29,11 +29,10 @@ const ToggleGroup: React.FC<{ options: { value: string; label: string }[]; value
                 <button
                     key={option.value}
                     onClick={() => onChange(option.value)}
-                    className={`flex-1 py-2 px-2 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
-                        value === option.value
+                    className={`flex-1 py-2 px-2 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${value === option.value
                             ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 ring-1 ring-black/5 dark:ring-white/5'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                    }`}
+                        }`}
                 >
                     {option.label}
                 </button>
@@ -57,7 +56,7 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
         { id: 'violet', color: '#8b5cf6', pair: '#4c1d95' },
         { id: 'blue', color: '#3b82f6', pair: '#1e3a8a' },
         { id: 'sky', color: '#0ea5e9', pair: '#0c4a6e' },
-        { id: 'emerald', color: '#10b981', pair: '#064e3b' },
+        { id: 'emerald', color: '#16b89b', pair: '#0f766e' }, // Updated preview color to match new Misty Forest theme
         { id: 'cyan', color: '#06b6d4', pair: '#164e63' },
         { id: 'indigo', color: '#6366f1', pair: '#312e81' },
         { id: 'amber', color: '#f59e0b', pair: '#78350f' },
@@ -69,75 +68,75 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
     ];
 
     const packages = [
-        { 
-            id: 'seaBreeze', 
-            color: 'cyan', 
-            mode: 'light', 
+        {
+            id: 'seaBreeze',
+            color: 'cyan',
+            mode: 'light',
             sidebar: 'gradient',
             topbar: 'light',
             card: 'soft',
             bgAnim: true,
-            previewGradient: 'from-cyan-400 to-teal-300' 
+            previewGradient: 'from-cyan-400 to-teal-300'
         },
-        { 
-            id: 'citySunset', 
-            color: 'orange', 
-            mode: 'light', 
+        {
+            id: 'citySunset',
+            color: 'orange',
+            mode: 'light',
             sidebar: 'brand',
             topbar: 'light',
             card: 'solid',
             bgAnim: true,
-            previewGradient: 'from-orange-400 to-rose-400' 
+            previewGradient: 'from-orange-400 to-rose-400'
         },
-        { 
-            id: 'mistyForests', 
-            color: 'emerald', 
-            mode: 'light', 
-            sidebar: 'dark',
+        {
+            id: 'mistyForests',
+            color: 'emerald',
+            mode: 'light',
+            sidebar: 'gradient', // Changed to gradient for luxury feel
             topbar: 'light',
-            card: 'soft',
-            bgAnim: false,
-            previewGradient: 'from-emerald-500 to-teal-600' 
+            card: 'glass', // Glass effect for calming/misty vibe
+            bgAnim: true,
+            previewGradient: 'from-emerald-600 to-cyan-700' // Updated gradient
         },
-        { 
-            id: 'purpleCity', 
-            color: 'fuchsia', 
-            mode: 'light', 
+        {
+            id: 'purpleCity',
+            color: 'fuchsia',
+            mode: 'light',
             sidebar: 'gradient',
             topbar: 'brand',
             card: 'glass',
             bgAnim: true,
-            previewGradient: 'from-violet-500 to-fuchsia-500' 
+            previewGradient: 'from-violet-500 to-fuchsia-500'
         },
-        { 
-            id: 'cityNights', 
-            color: 'indigo', 
-            mode: 'dark', 
+        {
+            id: 'cityNights',
+            color: 'indigo',
+            mode: 'dark',
             sidebar: 'dark',
             topbar: 'dark',
             card: 'soft',
             bgAnim: true,
-            previewGradient: 'from-blue-800 to-indigo-900' 
+            previewGradient: 'from-blue-800 to-indigo-900'
         },
-        { 
-            id: 'royalTurquoise', 
-            color: 'teal', 
-            mode: 'dark', 
-            sidebar: 'gradient',
-            topbar: 'dark',
+        {
+            id: 'royalTurquoise',
+            color: 'teal',
+            mode: 'light',
+            sidebar: 'brand', // Brand sidebar for complete look but avoiding dark gradient
+            topbar: 'brand', // Brand topbar for complete look
             card: 'glass',
             bgAnim: true,
-            previewGradient: 'from-teal-800 to-emerald-900' 
+            previewGradient: 'from-teal-300 to-cyan-300' // Lighter preview
         },
-        { 
-            id: 'modernDesert', 
-            color: 'amber', 
-            mode: 'light', 
+        {
+            id: 'modernDesert',
+            color: 'amber',
+            mode: 'light',
             sidebar: 'light',
             topbar: 'light',
             card: 'solid',
             bgAnim: true,
-            previewGradient: 'from-amber-200 to-orange-100' 
+            previewGradient: 'from-amber-200 to-orange-100'
         },
     ];
 
@@ -164,7 +163,7 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
             </button>
 
             {isOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]"
                     onClick={() => setIsOpen(false)}
                 ></div>
@@ -172,17 +171,16 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
 
             <div
                 ref={panelRef}
-                className={`fixed top-0 h-full w-80 sm:w-96 bg-white dark:bg-slate-900 shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out overflow-y-auto ${
-                    isOpen ? 'translate-x-0' : (language === 'ar' ? '-translate-x-full' : 'translate-x-full')
-                } ${language === 'ar' ? 'left-0' : 'right-0'}`}
+                className={`fixed top-0 h-full w-80 sm:w-96 bg-white dark:bg-slate-900 shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out overflow-y-auto ${isOpen ? 'translate-x-0' : (language === 'ar' ? '-translate-x-full' : 'translate-x-full')
+                    } ${language === 'ar' ? 'left-0' : 'right-0'}`}
             >
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-10">
                     <div>
                         <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">{t('themeCustomizer.title')}</h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('themeCustomizer.subtitle')}</p>
                     </div>
-                    <button 
-                        onClick={() => setIsOpen(false)} 
+                    <button
+                        onClick={() => setIsOpen(false)}
                         className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
                     >
                         <XMarkIcon className="w-5 h-5" />
@@ -213,9 +211,9 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                             ))}
                         </div>
                     </SettingsSection>
-                    
+
                     {/* Custom Colors (Moved up) */}
-                     <SettingsSection title={t('settings.colorScheme')}>
+                    <SettingsSection title={t('settings.colorScheme')}>
                         <div className="grid grid-cols-4 gap-3">
                             {colors.map(c => (
                                 <button
@@ -223,16 +221,16 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                                     onClick={() => updateSetting('themeColor', c.id)}
                                     className={`relative w-full h-10 rounded-full overflow-hidden transition-transform shadow-sm ${settings.themeColor === c.id ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-500 dark:ring-offset-slate-900 scale-110' : 'hover:scale-105'}`}
                                 >
-                                    <div 
-                                        className="w-full h-full" 
-                                        style={{ 
+                                    <div
+                                        className="w-full h-full"
+                                        style={{
                                             background: `linear-gradient(135deg, ${c.color} 50%, ${c.pair} 50%)`
                                         }}
                                     ></div>
                                     {settings.themeColor === c.id && (
                                         <div className="absolute inset-0 flex items-center justify-center">
                                             <div className="bg-white/30 rounded-full p-0.5">
-                                                 <CheckIcon className="w-4 h-4 text-white drop-shadow-md" />
+                                                <CheckIcon className="w-4 h-4 text-white drop-shadow-md" />
                                             </div>
                                         </div>
                                     )}
@@ -253,8 +251,8 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                         />
                     </SettingsSection>
 
-                     {/* Color Mode */}
-                     <SettingsSection title={t('themeCustomizer.colorMode')}>
+                    {/* Color Mode */}
+                    <SettingsSection title={t('themeCustomizer.colorMode')}>
                         <ToggleGroup
                             options={[
                                 { value: 'light', label: t('themeCustomizer.lightMode') },
@@ -267,7 +265,7 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
 
                     {/* Header Color */}
                     <SettingsSection title={t('themeCustomizer.headerColor')}>
-                         <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                             {[
                                 { value: 'light', label: t('themeCustomizer.light'), class: 'bg-white border-slate-200 text-slate-800' },
                                 { value: 'dark', label: t('themeCustomizer.dark'), class: 'bg-slate-800 border-slate-700 text-white' },
@@ -281,12 +279,12 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                                     {opt.label}
                                 </button>
                             ))}
-                         </div>
+                        </div>
                     </SettingsSection>
 
                     {/* Sidebar Color */}
                     <SettingsSection title={t('themeCustomizer.sidebarColors')}>
-                         <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                             {[
                                 { value: 'light', label: t('themeCustomizer.neutralLight'), class: 'bg-white border-slate-200 text-slate-800' },
                                 { value: 'dark', label: t('themeCustomizer.contrastDark'), class: 'bg-slate-800 border-slate-700 text-white' },
@@ -301,11 +299,11 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                                     {opt.label}
                                 </button>
                             ))}
-                         </div>
+                        </div>
                     </SettingsSection>
-                    
+
                     {/* Sidebar Density */}
-                     <SettingsSection title={t('themeCustomizer.sidebarDensity')}>
+                    <SettingsSection title={t('themeCustomizer.sidebarDensity')}>
                         <ToggleGroup
                             options={[
                                 { value: 'default', label: t('themeCustomizer.standard') },
@@ -332,7 +330,7 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                                 <span className="text-sm text-slate-700 dark:text-slate-300">{t('themeCustomizer.animatedBackground')}</span>
                                 <Switch id="animBg" checked={!!settings.animatedBackground} onChange={(c) => updateSetting('animatedBackground', c)} />
                             </div>
-                             {/* Card Style */}
+                            {/* Card Style */}
                             <div className="pt-2">
                                 <p className="text-xs text-slate-500 mb-2">{t('themeCustomizer.cardStyle')}</p>
                                 <ToggleGroup
@@ -351,12 +349,12 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                     {/* Reset */}
                     <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
                         <button
-                            onClick={() => setSettings({ 
-                                ...settings, 
-                                colorScheme: 'light', 
-                                sidebarColor: 'brand', 
-                                topbarColor: 'light', 
-                                themeColor: 'blue', 
+                            onClick={() => setSettings({
+                                ...settings,
+                                colorScheme: 'light',
+                                sidebarColor: 'brand',
+                                topbarColor: 'light',
+                                themeColor: 'blue',
                                 layoutWidth: 'full',
                                 sidebarSize: 'condensed',
                                 showUserInfo: false,

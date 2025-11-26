@@ -429,3 +429,151 @@ export interface HotelCondition {
     created_at: string;
     updated_at: string;
 }
+
+// ---------- Reports & Reservations ----------
+
+export interface ReportFilterOption {
+    id: string | number;
+    name: string;
+}
+
+export interface DailyBookingItem {
+    id: string | number;
+    booking_number: string;
+    guest?: { name?: string; phone_number?: string };
+    apartment?: { name?: string };
+    check_in_date?: string;
+    check_out_date?: string;
+    time?: string;
+    status?: string;
+    rental_type?: string;
+    period?: number | string;
+    price?: number | string;
+    discount_value?: number | string;
+    tax?: number | string;
+    total?: number | string;
+    paid?: number | string;
+    balance?: number | string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface BaladyItem {
+    id: string | number;
+    contract_number: string;
+    guest_name: string;
+    national_id: string;
+    mobile: string;
+    check_in: string;
+    check_out: string;
+    unit_number: string;
+    contract_date?: string;
+}
+
+export interface FundReportItem {
+    id: string | number;
+    date: string;
+    type: string;
+    number: string;
+    description: string;
+    debit: number;
+    credit: number;
+    balance: number;
+    payment_method?: string;
+}
+
+export interface DataTableResponse<T> {
+    data: T[];
+    recordsFiltered: number;
+    recordsTotal?: number;
+}
+
+export interface PaymentMethodAPI {
+    id: string | number;
+    name?: string;
+    name_en?: string;
+    name_ar?: string;
+}
+
+export interface ReceiptType {
+    id: string | number;
+    name?: string;
+    name_en?: string;
+    name_ar?: string;
+}
+
+export interface Reservation {
+    id: number | string;
+    number: string;
+    guest: string | Record<string, unknown>;
+    apartment: string | Record<string, unknown>;
+    check_in_date: string;
+    check_out_date: string;
+    time?: string;
+    status: string;
+    rental_type: string;
+    period: number;
+    rent: number | string;
+    amount: number | string;
+    discount?: number | string;
+    discount_value?: number | string;
+    subtotal: number | string;
+    tax: number | string;
+    total: number | string;
+    payments?: number | string;
+    paid?: number | string;
+    balance?: number | string;
+    created_at: string;
+    updated_at: string;
+    [key: string]: any;
+}
+
+export interface ReservationListResponse {
+    count: number;
+    results: Reservation[];
+}
+
+export interface ReservationStatistics {
+    [key: string]: number;
+}
+
+export type StatusCountResponse = Record<string, number>;
+
+export interface TimelineResponse {
+    results?: Reservation[];
+    timeline?: any[];
+    [key: string]: any;
+}
+
+export interface RentalCalculationRequest {
+    reservation?: number | string;
+    check_in_date?: string;
+    check_out_date?: string;
+    rent?: number | string;
+    discount_value?: number | string;
+    rental_type?: string;
+    [key: string]: any;
+}
+
+export interface RentalCalculationResponse {
+    amount: number;
+    subtotal?: number;
+    tax?: number;
+    total?: number;
+    discount?: number;
+    [key: string]: any;
+}
+
+export interface CheckoutRequest {
+    reservation: number | string;
+    [key: string]: any;
+}
+
+export interface Apartment {
+    id: string | number;
+    name?: string;
+    apartment_type?: string;
+    floor?: string | number;
+    status?: string;
+    [key: string]: any;
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Booking, RentType } from '../types';
+import { calculateRental } from '../services/reservations';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import DatePicker from './DatePicker';
@@ -16,7 +17,8 @@ interface AddBookingPanelProps {
     isEditing: boolean;
     isOpen: boolean;
     onClose: () => void;
-    onSave: (booking: Booking | Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>) => void;
+    onSave: (booking: Booking | Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>) => Promise<void> | void;
+    isSaving?: boolean;
 }
 
 const SectionHeader: React.FC<{ title: string; }> = ({ title }) => (
@@ -40,9 +42,11 @@ const EditButton: React.FC<{ label: string, onClick?: () => void }> = ({ label, 
 );
 
 
-const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave }) => {
+const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave, isSaving }) => {
     const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState(initialData);
+    const [calcLoading, setCalcLoading] = useState(false);
+    const [calcError, setCalcError] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -57,12 +61,12 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
         const totalOrders = formData.totalOrders || 0;
 
         const subtotal = value - discount;
-        const total = subtotal + totalOrders;
+        const total = subtotal + (formData.tax || 0) + totalOrders;
         const balance = payments - total;
 
         setFormData(prev => ({ ...prev, value, subtotal, total, balance }));
 
-    }, [formData.rent, formData.discount, formData.payments, formData.totalOrders]);
+    }, [formData.rent, formData.discount, formData.payments, formData.totalOrders, formData.tax]);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -79,15 +83,73 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
         setFormData(prev => ({ ...prev, [name]: date }));
     };
 
-    const handleSaveClick = () => {
-        onSave(formData);
+    const handleSaveClick = async () => {
+        if (isSaving) return;
+        await onSave(formData);
     };
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const apartmentId = Number(formData.unitName);
+        if (!formData.checkInDate || !formData.rentType || !formData.duration || !formData.rent || Number.isNaN(apartmentId)) {
+            return;
+        }
+
+        const controller = new AbortController();
+        const runCalculation = async () => {
+            setCalcLoading(true);
+            setCalcError(null);
+            try {
+                const response = await calculateRental({
+                    hotel: 1,
+                    rental_type: formData.rentType,
+                    check_in_date: formData.checkInDate,
+                    check_out_date: formData.checkOutDate,
+                    period: formData.duration,
+                    apartment: apartmentId,
+                    rent: formData.rent,
+                    discount_type: formData.discountType === 'percentage' ? 'percent' : formData.discountType === 'fixed' ? 'fixed' : undefined,
+                    discount_value: formData.discount,
+                    reservation: 'id' in formData ? (formData as any).id : null,
+                });
+
+                setFormData(prev => ({
+                    ...prev,
+                    checkOutDate: response.check_out_date,
+                    rent: parseFloat(response.rent) || prev.rent,
+                    discount: response.discount ? parseFloat(response.discount) : prev.discount,
+                    subtotal: parseFloat(response.subtotal) || prev.subtotal,
+                    tax: parseFloat(response.tax) || prev.tax,
+                    total: parseFloat(response.total) || prev.total,
+                    balance: parseFloat(response.balance) || prev.balance,
+                    value: parseFloat(response.amount) || prev.value,
+                }));
+            } catch (err) {
+                if (!controller.signal.aborted) {
+                    setCalcError(err instanceof Error ? err.message : 'Calculation failed');
+                }
+            } finally {
+                if (!controller.signal.aborted) {
+                    setCalcLoading(false);
+                }
+            }
+        };
+
+        runCalculation();
+        return () => controller.abort();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formData.rentType, formData.checkInDate, formData.checkOutDate, formData.duration, formData.unitName, formData.rent, formData.discount, formData.discountType, isOpen]);
 
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
     const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
 
     const bookingSources = [t('bookings.booking_source_airbnb'), t('bookings.booking_source_booking'), t('bookings.booking_source_almosafer'), t('bookings.booking_source_agoda'), t('bookings.booking_source_websites'), t('bookings.booking_source_reception')];
-    const rentTypeOptions = [{ value: 'hourly', label: t('bookings.rent_hourly') }, { value: 'daily', label: t('bookings.rent_daily') }, { value: 'monthly', label: t('bookings.rent_monthly') }];
+    const rentTypeOptions = [
+        { value: 'hourly', label: t('bookings.rent_hourly') },
+        { value: 'daily', label: t('bookings.rent_daily') },
+        { value: 'weekly', label: t('bookings.rent_weekly') },
+        { value: 'monthly', label: t('bookings.rent_monthly') },
+    ];
     const bookingReasonOptions = [t('bookings.guest_type_health_employee'), t('bookings.guest_type_quarantine'), t('bookings.guest_type_court_employee'), t('bookings.guest_type_recreational'), t('bookings.guest_type_sports'), t('bookings.guest_type_family_visit'), t('bookings.guest_type_tourism')];
     const guestTypeOptions = [t('bookings.guest_type_clients'), t('bookings.guest_type_booking_agencies')];
 
@@ -263,6 +325,8 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                         </div>
                                     </div>
                                     <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-md space-y-2 text-sm">
+                                        {calcLoading && <p className="text-blue-600 font-semibold text-xs">{t('bookings.calculating') ?? 'Calculating...'}</p>}
+                                        {calcError && <p className="text-red-500 font-semibold text-xs">{calcError}</p>}
                                         {([
                                             { label: t('bookings.value'), value: formData.value.toFixed(2) },
                                             { label: t('bookings.subtotal'), value: formData.subtotal.toFixed(2) },
@@ -294,9 +358,13 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                 </div>
 
                 <footer className="flex items-center justify-start p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-800 rounded-b-lg">
-                    <button onClick={handleSaveClick} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
+                    <button
+                        onClick={handleSaveClick}
+                        disabled={isSaving}
+                        className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
                         <CheckCircleIcon className="w-5 h-5" />
-                        <span>{t('bookings.saveBooking')}</span>
+                        <span>{isSaving ? t('bookings.saving') ?? 'Saving...' : t('bookings.saveBooking')}</span>
                     </button>
                     <button onClick={onClose} className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200">
                         {t('bookings.cancel')}

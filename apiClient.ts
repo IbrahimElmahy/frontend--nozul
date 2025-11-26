@@ -1,7 +1,7 @@
 import { User } from './types';
 
 interface ApiClientOptions {
-    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
     body?: any;
 }
 

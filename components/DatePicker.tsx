@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
@@ -14,8 +15,9 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
     const [viewDate, setViewDate] = useState(new Date(value || Date.now()));
     const datepickerRef = useRef<HTMLDivElement>(null);
 
-    const MONTH_NAMES = translationData.datepicker.months;
-    const DAYS_OF_WEEK = translationData.datepicker.days;
+    // Safe access with fallback to English/Default if translation is missing to prevent crash
+    const MONTH_NAMES = translationData?.datepicker?.months || ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const DAYS_OF_WEEK = translationData?.datepicker?.days || ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -39,7 +41,10 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
 
     const handleDateSelect = (day: number) => {
         const selected = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-        onChange(selected.toISOString().split('T')[0]);
+        const dateString = new Date(selected.getTime() - (selected.getTimezoneOffset() * 60000))
+            .toISOString()
+            .split('T')[0];
+        onChange(dateString);
         setIsOpen(false);
     };
 
@@ -47,7 +52,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
         const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1);
         setViewDate(newDate);
     };
-    
+
     const changeYear = (offset: number) => {
         const newDate = new Date(viewDate.getFullYear() + offset, viewDate.getMonth(), 1);
         setViewDate(newDate);
@@ -58,7 +63,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
         const month = viewDate.getMonth();
         const firstDayOfMonth = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
+
         const selectedDate = new Date(value);
         const selectedDay = !isNaN(selectedDate.getTime()) ? selectedDate.getDate() : -1;
         const selectedMonth = !isNaN(selectedDate.getTime()) ? selectedDate.getMonth() : -1;
@@ -88,7 +93,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
         return (
             <div className="p-1">
                 <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 dark:text-gray-400 mb-2">
-                    {DAYS_OF_WEEK.map(day => <div key={day}>{day}</div>)}
+                    {DAYS_OF_WEEK.map((day, i) => <div key={i}>{day}</div>)}
                 </div>
                 <div className="grid grid-cols-7 gap-1">
                     {blanks}
@@ -117,9 +122,9 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
                         <button onClick={() => changeMonth(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
                     </div>
                     <div className="flex justify-between items-center mb-2 px-2">
-                         <button onClick={() => changeYear(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                        <button onClick={() => changeYear(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
                         <div className="font-semibold text-gray-800 dark:text-gray-200">{viewDate.getFullYear()}</div>
-                         <button onClick={() => changeYear(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                        <button onClick={() => changeYear(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
                     </div>
                     {renderCalendar()}
                 </div>

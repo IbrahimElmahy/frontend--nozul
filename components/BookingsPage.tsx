@@ -1,12 +1,13 @@
-import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { Booking, BookingStatus, RentType } from '../types';
+import { Booking, BookingStatus, RentType, Reservation } from '../types';
 import UnitStatusCard from './UnitStatusCard';
 import AddBookingPanel from './AddBookingPanel';
 import BookingDetailsModal from './BookingDetailsModal';
 import ConfirmationModal from './ConfirmationModal';
 import BookingCard from './BookingCard';
 import AddGroupBookingPanel from './AddGroupBookingPanel';
+import { listReservations, deleteReservation, createReservation, updateReservation } from '../services/reservations';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -29,33 +30,6 @@ import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 import UsersIcon from './icons-redesign/UsersIcon';
 
-// FIX: Removed .map() call and ensured mock data aligns with the Booking type.
-const mockBookings: Booking[] = [
-    { id: 1, bookingNumber: '0000000200', guestName: 'حملة محمد', unitName: '870', checkInDate: '2025-10-08 00:00:00', checkOutDate: '2025-10-09 00:00:00', time: '13:56:54', status: 'check-in', rentType: 'daily', duration: 1, rent: 111, value: 111, discount: 0, subtotal: 111, tax: 14.48, total: 111, payments: 0.0, balance: -111.0, createdAt: '2025-10-08 13:56:54', updatedAt: '2025-10-08 13:56:54' },
-    { id: 2, bookingNumber: '0000000199', guestName: 'حملة محمد', unitName: '1', checkInDate: '2025-10-07 00:00:00', checkOutDate: '2025-10-09 00:00:00', time: '13:47:59', status: 'check-out', rentType: 'daily', duration: 2, rent: 0, value: 0, discount: 0, subtotal: 0, tax: 0, total: 0, payments: 0.0, balance: 0.0, createdAt: '2025-10-07 13:47:59', updatedAt: '2025-10-07 13:49:33' },
-    { id: 3, bookingNumber: '0000000198', guestName: 'حملة محمد', unitName: '2', checkInDate: '2025-09-26 00:00:00', checkOutDate: '2025-09-27 00:00:00', time: '23:20:39', status: 'check-out', rentType: 'daily', duration: 1, rent: 0, value: 0, discount: 0, subtotal: 0, tax: 0, total: 0, payments: 0.0, balance: 0.0, createdAt: '2025-09-26 23:20:39', updatedAt: '2025-10-07 13:50:08' },
-    { id: 4, bookingNumber: '0000000197', guestName: 'فيصل الجهني', unitName: '2', checkInDate: '2025-08-28 00:00:00', checkOutDate: '2025-08-29 00:00:00', time: '12:11:27', status: 'check-out', rentType: 'daily', duration: 1, rent: 500, value: 500, discount: 0, subtotal: 500, tax: 65.22, total: 500, payments: 0.0, balance: -500.0, createdAt: '2025-08-28 12:11:27', updatedAt: '2025-08-28 12:12:51' },
-    { id: 5, bookingNumber: '0000000196', guestName: 'حملة محمد', unitName: 'حملة محمد', checkInDate: '2025-08-23 00:00:00', checkOutDate: '2025-08-24 00:00:00', time: '19:33:30', status: 'check-in', rentType: 'daily', duration: 1, rent: 25000, value: 25000, discount: 0, subtotal: 25000, tax: 3260.86, total: 25000, payments: 8000.0, balance: -17000.0, createdAt: '2025-08-23 19:33:30', updatedAt: '2025-08-23 19:34:23' },
-    { id: 6, bookingNumber: '0000000195', guestName: 'محمد سالم', unitName: 'شاع', checkInDate: '2025-08-23 00:00:00', checkOutDate: '2025-08-24 00:00:00', time: '18:53:30', status: 'check-in', rentType: 'daily', duration: 1, rent: 200, value: 200, discount: 0, subtotal: 200, tax: 26.09, total: 200, payments: 100.0, balance: -100.0, createdAt: '2025-08-23 18:53:30', updatedAt: '2025-08-23 19:21:09' },
-    { id: 7, bookingNumber: '0000000194', guestName: 'محمد سالم', unitName: '1', checkInDate: '2025-08-23 00:00:00', checkOutDate: '2025-08-24 00:00:00', time: '16:38:39', status: 'check-out', rentType: 'daily', duration: 1, rent: 0, value: 0, discount: 0, subtotal: 0, tax: 0, total: 0, payments: 0.0, balance: 0.0, createdAt: '2025-08-23 16:38:39', updatedAt: '2025-08-23 16:43:55' },
-    { id: 8, bookingNumber: '0000000193', guestName: 'محمد سالم', unitName: '2', checkInDate: '2025-08-23 00:00:00', checkOutDate: '2025-08-24 00:00:00', time: '16:37:32', status: 'check-out', rentType: 'daily', duration: 1, rent: 50, value: 50, discount: 0, subtotal: 50, tax: 6.53, total: 50, payments: 0.0, balance: -50.0, createdAt: '2025-08-23 16:37:32', updatedAt: '2025-08-23 16:37:55' },
-    { id: 9, bookingNumber: '0000000192', guestName: 'محمد احمد', unitName: 'A111', checkInDate: '2025-08-23 00:00:00', checkOutDate: '2025-08-24 00:00:00', time: '16:30:13', status: 'check-out', rentType: 'daily', duration: 1, rent: 100, value: 100, discount: 0, subtotal: 100, tax: 13.04, total: 100, payments: 100.0, balance: 0.0, createdAt: '2025-08-23 16:30:13', updatedAt: '2025-08-23 16:32:36' },
-    { id: 10, bookingNumber: '0000000191', guestName: 'احمد', unitName: '1', checkInDate: '2025-08-04 00:00:00', checkOutDate: '2025-08-05 00:00:00', time: '12:26:55', status: 'check-out', rentType: 'daily', duration: 1, rent: 0, value: 0, discount: 0, subtotal: 0, tax: 0, total: 0, payments: 0.0, balance: 0.0, createdAt: '2025-08-04 12:26:55', updatedAt: '2025-08-06 15:56:49' },
-    { id: 11, bookingNumber: '0000000190', guestName: 'حنكش المصري', unitName: '2', checkInDate: '2025-07-30 00:00:00', checkOutDate: '2025-07-31 00:00:00', time: '17:59:27', status: 'check-out', rentType: 'daily', duration: 1, rent: 100, value: 100, discount: 0, subtotal: 100, tax: 13.04, total: 100, payments: 0.0, balance: -100.0, createdAt: '2025-07-30 17:59:27', updatedAt: '2025-08-06 15:56:38' },
-    { id: 12, bookingNumber: '0000000189', guestName: 'حنكش المصري', unitName: 'شالية 1', checkInDate: '2025-07-30 00:00:00', checkOutDate: '2025-07-31 00:00:00', time: '02:06:16', status: 'check-out', rentType: 'daily', duration: 1, rent: 2000, value: 2000, discount: 0, subtotal: 2000, tax: 260.86, total: 2000, payments: 0.0, balance: -2000.0, createdAt: '2025-07-30 02:06:16', updatedAt: '2025-08-06 15:58:04' },
-    { id: 13, bookingNumber: '0000000188', guestName: 'راشد عمر', unitName: '3', checkInDate: '2025-07-30 00:00:00', checkOutDate: '2025-07-31 00:00:00', time: '02:02:07', status: 'check-out', rentType: 'daily', duration: 1, rent: 1600, value: 1600, discount: 0, subtotal: 1600, tax: 208.7, total: 1600, payments: 0.0, balance: -1600.0, createdAt: '2025-07-30 02:02:07', updatedAt: '2025-08-06 15:57:00' },
-    { id: 14, bookingNumber: '0000000187', guestName: 'نادر حواش', unitName: '6', checkInDate: '2025-07-29 00:00:00', checkOutDate: '2025-07-30 00:00:00', time: '15:51:57', status: 'check-out', rentType: 'daily', duration: 1, rent: 1400, value: 1400, discount: 0, subtotal: 1400, tax: 182.6, total: 1400, payments: 0.0, balance: -1400.0, createdAt: '2025-07-29 15:51:57', updatedAt: '2025-08-06 15:57:34' },
-    { id: 15, bookingNumber: '0000000186', guestName: 'مختار المختار', unitName: 'ذوى الهمم', checkInDate: '2025-07-29 00:00:00', checkOutDate: '2025-07-30 00:00:00', time: '15:43:18', status: 'check-out', rentType: 'daily', duration: 1, rent: 750, value: 750, discount: 0, subtotal: 750, tax: 97.83, total: 750, payments: 0.0, balance: -750.0, createdAt: '2025-07-29 15:43:18', updatedAt: '2025-08-06 15:57:52' },
-    { id: 16, bookingNumber: '0000000185', guestName: 'مشعل القرم', unitName: '3', checkInDate: '2025-07-29 00:00:00', checkOutDate: '2025-07-30 00:00:00', time: '15:24:27', status: 'check-out', rentType: 'daily', duration: 1, rent: 1400, value: 1400, discount: 0, subtotal: 1400, tax: 182.6, total: 1400, payments: 0.0, balance: -1400.0, createdAt: '2025-07-29 15:24:27', updatedAt: '2025-07-29 15:57:19' },
-    { id: 17, bookingNumber: '0000000184', guestName: 'نايف القحطاني', unitName: '1', checkInDate: '2025-07-29 00:00:00', checkOutDate: '2025-07-30 00:00:00', time: '15:19:32', status: 'check-out', rentType: 'daily', duration: 1, rent: 400, value: 400, discount: 0, subtotal: 400, tax: 52.18, total: 400, payments: 0.0, balance: -400.0, createdAt: '2025-07-29 15:19:32', updatedAt: '2025-07-30 19:06:11' },
-    { id: 18, bookingNumber: '0000000183', guestName: 'احمد مفلح البلوى', unitName: '870', checkInDate: '2025-06-28 00:00:00', checkOutDate: '2025-06-30 00:00:00', time: '10:17:05', status: 'check-out', rentType: 'daily', duration: 2, rent: 350, value: 700, discount: 0, subtotal: 700, tax: 45.66, total: 700, payments: 0.0, balance: -700.0, createdAt: '2025-06-28 10:17:05', updatedAt: '2025-06-28 10:19:12' },
-    { id: 19, bookingNumber: '0000000182', guestName: 'محمد جعفر', unitName: 'ذوى الهمم', checkInDate: '2025-06-26 00:00:00', checkOutDate: '2025-06-27 00:00:00', time: '18:56:31', status: 'check-out', rentType: 'daily', duration: 1, rent: 250, value: 250, discount: 0, subtotal: 250, tax: 32.61, total: 250, payments: 250.0, balance: -12.0, createdAt: '2025-06-26 18:56:31', updatedAt: '2025-06-28 10:26:17' },
-    { id: 20, bookingNumber: '0000000181', guestName: 'محمد المصري', unitName: '1', checkInDate: '2025-06-11 00:00:00', checkOutDate: '2025-06-12 00:00:00', time: '15:01:42', status: 'check-out', rentType: 'daily', duration: 1, rent: 100, value: 100, discount: 0, subtotal: 100, tax: 13.04, total: 100, payments: 0.0, balance: -100.0, createdAt: '2025-06-11 15:01:42', updatedAt: '2025-06-27 09:50:50' },
-    { id: 21, bookingNumber: '0000000180', guestName: 'KHAMIDA NARZIEVA', unitName: '2', checkInDate: '2025-06-07 00:00:00', checkOutDate: '2025-06-21 00:00:00', time: '02:42:16', status: 'check-out', rentType: 'daily', duration: 14, rent: 199, value: 2786, discount: 0, subtotal: 2786, tax: 25.96, total: 2786, payments: 0.0, balance: -2788.0, createdAt: '2025-06-09 02:42:16', updatedAt: '2025-06-28 10:05:33' },
-    { id: 22, bookingNumber: '0000000179', guestName: 'محمد المصري', unitName: 'A111', checkInDate: '2025-06-06 00:00:00', checkOutDate: '2025-06-06 00:00:00', time: '15:18:01', status: 'check-out', rentType: 'hourly', duration: 4, rent: 50, value: 200, discount: 0, subtotal: 200, tax: 6.53, total: 200, payments: 0.0, balance: -200.0, createdAt: '2025-06-07 15:18:01', updatedAt: '2025-06-07 15:18:23' },
-    { id: 23, bookingNumber: '0000000177', guestName: 'المعز احمد سليمان احمد', unitName: '116', checkInDate: '2025-06-06 00:00:00', checkOutDate: '2025-06-07 00:00:00', time: '13:49:21', status: 'check-out', rentType: 'daily', duration: 1, rent: 150, value: 150, discount: 0, subtotal: 150, tax: 3.75, total: 150, payments: 150.0, balance: 0.0, createdAt: '2025-06-07 13:49:21', updatedAt: '2025-07-30 02:10:11' },
-    { id: 24, bookingNumber: '0000000173', guestName: 'مريم', unitName: 'A213', checkInDate: '2025-06-01 00:00:00', checkOutDate: '2025-06-02 00:00:00', time: '11:03:29', status: 'check-out', rentType: 'daily', duration: 1, rent: 0, value: 0, discount: 0, subtotal: 0, tax: 0, total: 0, payments: 0.0, balance: -30.0, createdAt: '2025-06-01 11:03:29', updatedAt: '2025-06-01 11:10:54' },
-];
 
 // FIX: Update template to include all required fields and adjust type.
 const newBookingTemplate: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'> = {
@@ -89,10 +63,78 @@ const newBookingTemplate: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | '
     order: '',
 };
 
+const normalizeStatus = (status: Reservation['status']): BookingStatus => {
+    if (status === 'checked_in') return 'check-in';
+    if (status === 'checked_out') return 'check-out';
+    return 'check-in';
+};
+
+const normalizeRentType = (type: Reservation['rental_type']): RentType => {
+    if (type === 'hourly' || type === 'daily' || type === 'weekly' || type === 'monthly') return type;
+    return 'daily';
+};
+
+const mapReservationToBooking = (reservation: Reservation): Booking => ({
+    id: reservation.id,
+    bookingNumber: reservation.number,
+    guestName: typeof reservation.guest === 'string' ? reservation.guest : String(reservation.guest),
+    unitName: typeof reservation.apartment === 'string' ? reservation.apartment : String(reservation.apartment),
+    checkInDate: reservation.check_in_date,
+    checkOutDate: reservation.check_out_date,
+    time: reservation.time,
+    status: normalizeStatus(reservation.status),
+    rentType: normalizeRentType(reservation.rental_type),
+    duration: reservation.period,
+    rent: parseFloat(reservation.rent) || 0,
+    value: parseFloat(reservation.amount) || 0,
+    discount: reservation.discount ? parseFloat(reservation.discount) : parseFloat(reservation.discount_value || '0') || 0,
+    subtotal: parseFloat(reservation.subtotal) || 0,
+    tax: parseFloat(reservation.tax) || 0,
+    total: parseFloat(reservation.total) || 0,
+    payments: parseFloat(reservation.paid) || 0,
+    balance: parseFloat(reservation.balance) || 0,
+    createdAt: reservation.created_at,
+    updatedAt: reservation.updated_at,
+    // UI-only helpers/fallbacks
+    bookingSource: reservation.source ? reservation.source.toString() : '',
+    bookingReason: reservation.reason ? reservation.reason.toString() : '',
+    totalOrders: reservation.total_orders ? parseFloat(reservation.total_orders) || 0 : 0,
+    notes: reservation.note || '',
+    price: reservation.apartment_price ? parseFloat(reservation.apartment_price) : 0,
+    guestType: '',
+    companions: 0,
+    discountType: reservation.discount_type === 'percent' ? 'percentage' : reservation.discount_type === 'fixed' ? 'fixed' : '',
+    receiptVoucher: '',
+    returnVouchers: '',
+    invoices: '',
+    order: '',
+});
+
+const toReservationPayload = (booking: Booking): Partial<Reservation> => ({
+    hotel: 1, // Default hotel id; adjust when multi-hotel context is available
+    rental_type: booking.rentType,
+    check_in_date: booking.checkInDate.split(' ')[0],
+    check_out_date: booking.checkOutDate.split(' ')[0],
+    period: booking.duration,
+    apartment: Number(booking.unitName) || booking.unitName,
+    guest: Number(booking.guestName) || booking.guestName,
+    status: booking.status === 'check-out' ? 'checked_out' : 'checked_in',
+    source: 1,
+    reason: 1,
+    rent: booking.rent.toString(),
+    discount_type: booking.discountType === 'percentage' ? 'percent' : booking.discountType === 'fixed' ? 'fixed' : null,
+    discount_value: booking.discount?.toString() || '0',
+    total_orders: booking.totalOrders?.toString() || '0',
+    note: booking.notes,
+});
+
 
 const BookingsPage: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
-    const [bookings, setBookings] = useState<Booking[]>(mockBookings);
+    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -103,6 +145,29 @@ const BookingsPage: React.FC = () => {
     const [sortConfig, setSortConfig] = useState<{ key: keyof Booking | null; direction: 'ascending' | 'descending' }>({ key: 'id', direction: 'descending' });
     const [viewingBooking, setViewingBooking] = useState<Booking | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+
+    useEffect(() => {
+        const fetchReservations = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await listReservations();
+                const items = Array.isArray(response)
+                    ? response
+                    : // support paginated and datatable shapes
+                      (response as any)?.results ||
+                      (response as any)?.data ||
+                      [];
+                setBookings(items.map(mapReservationToBooking));
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Unknown error');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchReservations();
+    }, [t]);
 
     const formatDate = (dateString: string) => dateString.split(' ')[0];
 
@@ -150,21 +215,27 @@ const BookingsPage: React.FC = () => {
         setEditingBooking(null);
     };
 
-    const handleSaveBooking = (bookingData: Booking | Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>) => {
-        if (editingBooking) {
-            const updatedBooking = { ...bookingData, id: editingBooking.id, updatedAt: new Date().toISOString() } as Booking;
-            setBookings(bookings.map(b => b.id === updatedBooking.id ? updatedBooking : b));
-        } else {
-            const newBooking: Booking = {
-                ...(bookingData as Omit<Booking, 'id'>),
-                id: Math.max(...bookings.map(b => b.id), 0) + 1,
-                bookingNumber: `0000000${Math.max(...bookings.map(b => b.id), 0) + 1}`,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setBookings(prev => [newBooking, ...prev]);
+    const handleSaveBooking = async (bookingData: Booking | Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>) => {
+        setIsSaving(true);
+        setError(null);
+        try {
+            const payload = toReservationPayload(bookingData as Booking);
+            let saved: Reservation;
+            if (editingBooking) {
+                saved = await updateReservation(editingBooking.id, payload);
+                const updated = mapReservationToBooking(saved);
+                setBookings(prev => prev.map(b => (b.id === updated.id ? updated : b)));
+            } else {
+                saved = await createReservation(payload);
+                const created = mapReservationToBooking(saved);
+                setBookings(prev => [created, ...prev]);
+            }
+            handleClosePanel();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setIsSaving(false);
         }
-        handleClosePanel();
     };
 
     const handleSaveGroupBooking = (newBookings: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>[]) => {
@@ -195,10 +266,18 @@ const BookingsPage: React.FC = () => {
         setBookingToDeleteId(bookingId);
     };
 
-    const handleConfirmDelete = () => {
-        if (bookingToDeleteId) {
+    const handleConfirmDelete = async () => {
+        if (!bookingToDeleteId) return;
+        setLoading(true);
+        setError(null);
+        try {
+            await deleteReservation(bookingToDeleteId);
             setBookings(bookings.filter(b => b.id !== bookingToDeleteId));
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        } finally {
             setBookingToDeleteId(null);
+            setLoading(false);
         }
     };
 
@@ -278,9 +357,23 @@ const BookingsPage: React.FC = () => {
         </div>
     );
 
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
 
     return (
         <div className="space-y-6">
+            {error && (
+                <div className="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
+                    <span className="font-semibold">Error: </span>
+                    <span>{error}</span>
+                </div>
+            )}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('bookings.manageBookings')}</h2>
                 <div className="flex flex-wrap items-center gap-2">
@@ -454,6 +547,7 @@ const BookingsPage: React.FC = () => {
                 isOpen={isAddPanelOpen}
                 onClose={handleClosePanel}
                 onSave={handleSaveBooking}
+                isSaving={isSaving}
             />
 
             <AddGroupBookingPanel
