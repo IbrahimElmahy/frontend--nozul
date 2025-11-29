@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+﻿import React, { useContext, useState, useEffect } from 'react';
 import StatCard from './StatCard';
 import DonutChartCard from './DonutChartCard';
 import BarChartCard from './BarChartCard';
@@ -14,20 +14,20 @@ import ArrowRightOnRectangleIcon from './icons-redesign/ArrowRightOnRectangleIco
 
 // API Response Interfaces
 interface NumericStatsResponse {
-  reservations: number;
-  arrivals: number;
-  occupied: number;
-  departures: number;
-  departed: number;
+    reservations: number;
+    arrivals: number;
+    occupied: number;
+    departures: number;
+    departed: number;
 }
 
 interface LabelValueResponse {
-  label: string;
-  value: number;
+    label: string;
+    value: number;
 }
 
 interface TimeSeriesResponse {
-  [key: string]: number[];
+    [key: string]: number[];
 }
 
 
@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
                     color: item.label === 'متاحة' ? '#14b8a6' : '#f43f5e',
                 }));
                 setApartmentAvailability(availabilityChartData);
-                
+
                 const cleanlinessChartData: DonutChartData[] = cleanlinessData.map(item => ({
                     name: item.label === 'نظيفة' ? t('dashboard.clean') : t('dashboard.notClean'),
                     value: item.value,
@@ -116,7 +116,7 @@ const Dashboard: React.FC = () => {
 
     const apartmentAvailabilityTotal = apartmentAvailability.reduce((sum, item) => sum + item.value, 0);
 
-    const weeklyDays = [ t('dashboard.sunday'), t('dashboard.monday'), t('dashboard.tuesday'), t('dashboard.wednesday'), t('dashboard.thursday'), t('dashboard.friday'), t('dashboard.saturday')];
+    const weeklyDays = [t('dashboard.sunday'), t('dashboard.monday'), t('dashboard.tuesday'), t('dashboard.wednesday'), t('dashboard.thursday'), t('dashboard.friday'), t('dashboard.saturday')];
     const weeklyStatsData: ChartData[] = apartmentTimeSeries?.apartment_this_week
         ? apartmentTimeSeries.apartment_this_week.map((value, index) => ({ name: weeklyDays[index], value }))
         : [];
@@ -124,12 +124,12 @@ const Dashboard: React.FC = () => {
     const apartmentAnnualTotal = apartmentTimeSeries?.apartment_this_year?.reduce((a, b) => a + b, 0) || 0;
     const apartmentMonthlyTotal = apartmentTimeSeries?.apartment_this_month?.reduce((a, b) => a + b, 0) || 0;
     const apartmentWeeklyTotal = apartmentTimeSeries?.apartment_this_week?.reduce((a, b) => a + b, 0) || 0;
-    
+
     const yearlyMonths = [t('dashboard.january'), t('dashboard.february'), t('dashboard.march'), t('dashboard.april'), t('dashboard.may'), t('dashboard.june'), t('dashboard.july'), t('dashboard.august'), t('dashboard.september'), t('dashboard.october'), t('dashboard.november'), t('dashboard.december')];
     const monthlyStatsData: ChartData[] = reservationTimeSeries?.reservation_this_year
         ? reservationTimeSeries.reservation_this_year.map((value, index) => ({ name: yearlyMonths[index], value }))
         : [];
-        
+
     const reservationAnnualTotal = reservationTimeSeries?.reservation_this_year?.reduce((a, b) => a + b, 0) || 0;
     const reservationMonthlyTotal = reservationTimeSeries?.reservation_this_month?.reduce((a, b) => a + b, 0) || 0;
     const reservationWeeklyTotal = reservationTimeSeries?.reservation_this_week?.reduce((a, b) => a + b, 0) || 0;
@@ -137,7 +137,7 @@ const Dashboard: React.FC = () => {
     const bookingStatusTotal = reservationStatus.reduce((sum, item) => sum + item.value, 0);
     const checkinValue = reservationStatus.find(d => d.name === t('dashboard.checkin'))?.value ?? 0;
     const checkoutValue = reservationStatus.find(d => d.name === t('dashboard.checkout'))?.value ?? 0;
-    
+
     const apartmentCleaningTotal = apartmentCleanliness.reduce((sum, item) => sum + item.value, 0);
     const notCleanValue = apartmentCleanliness.find(d => d.name === t('dashboard.notClean'))?.value ?? 0;
     const cleanValue = apartmentCleanliness.find(d => d.name === t('dashboard.clean'))?.value ?? 0;
@@ -170,7 +170,7 @@ const Dashboard: React.FC = () => {
             ))}
 
             <div className="md:col-span-2 lg:col-span-2">
-                <DonutChartCard 
+                <DonutChartCard
                     title={t('dashboard.apartmentAvailability')}
                     data={apartmentAvailability}
                     centerLabel={t('dashboard.available')}
@@ -178,59 +178,59 @@ const Dashboard: React.FC = () => {
                     total={apartmentAvailabilityTotal}
                 />
             </div>
-            
+
             <div className="md:col-span-2 lg:col-span-2">
-                 <BarChartCard 
+                <BarChartCard
                     title={t('dashboard.apartmentStats')}
                     data={weeklyStatsData}
                     barColor="#38bdf8"
                     stats={[
-                        {label: t('dashboard.annualStats'), value: apartmentAnnualTotal},
-                        {label: t('dashboard.monthlyStats'), value: apartmentMonthlyTotal},
-                        {label: t('dashboard.weeklyStats'), value: apartmentWeeklyTotal},
+                        { label: t('dashboard.annualStats'), value: apartmentAnnualTotal },
+                        { label: t('dashboard.monthlyStats'), value: apartmentMonthlyTotal },
+                        { label: t('dashboard.weeklyStats'), value: apartmentWeeklyTotal },
                     ]}
                 />
             </div>
 
-             <div className="md:col-span-2 lg:col-span-4">
-                 <BarChartCard 
+            <div className="md:col-span-2 lg:col-span-4">
+                <BarChartCard
                     title={t('dashboard.bookingStats')}
                     data={monthlyStatsData}
                     barColor="#f43f5e"
                     stats={[
-                        {label: t('dashboard.annualStats'), value: reservationAnnualTotal},
-                        {label: t('dashboard.monthlyStats'), value: reservationMonthlyTotal},
-                        {label: t('dashboard.weeklyStats'), value: reservationWeeklyTotal},
+                        { label: t('dashboard.annualStats'), value: reservationAnnualTotal },
+                        { label: t('dashboard.monthlyStats'), value: reservationMonthlyTotal },
+                        { label: t('dashboard.weeklyStats'), value: reservationWeeklyTotal },
                     ]}
                 />
             </div>
 
             <div className="md:col-span-2 lg:col-span-2">
-                <DonutChartCard 
+                <DonutChartCard
                     title={t('dashboard.bookingStatus')}
                     data={reservationStatus}
                     centerLabel={t('dashboard.checkout')}
                     centerValue={checkoutValue}
                     total={bookingStatusTotal}
                     stats={[
-                        {label: t('dashboard.checkout'), value: checkoutValue},
-                        {label: t('dashboard.checkin'), value: checkinValue},
-                        {label: t('dashboard.dash'), value: 0},
+                        { label: t('dashboard.checkout'), value: checkoutValue },
+                        { label: t('dashboard.checkin'), value: checkinValue },
+                        { label: t('dashboard.dash'), value: 0 },
                     ]}
                 />
             </div>
-            
+
             <div className="md:col-span-2 lg:col-span-2">
-                 <DonutChartCard 
+                <DonutChartCard
                     title={t('dashboard.apartmentCleaning')}
                     data={apartmentCleanliness}
                     centerLabel={t('dashboard.notClean')}
                     centerValue={notCleanValue}
                     total={apartmentCleaningTotal}
-                     stats={[
-                        {label: t('dashboard.notClean'), value: notCleanValue},
-                        {label: t('dashboard.clean'), value: cleanValue},
-                        {label: t('dashboard.dash'), value: 0},
+                    stats={[
+                        { label: t('dashboard.notClean'), value: notCleanValue },
+                        { label: t('dashboard.clean'), value: cleanValue },
+                        { label: t('dashboard.dash'), value: 0 },
                     ]}
                 />
             </div>

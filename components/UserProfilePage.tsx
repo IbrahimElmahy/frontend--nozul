@@ -12,6 +12,8 @@ import ArrowRightCircleIcon from './icons-redesign/ArrowRightCircleIcon';
 import ArrowLeftCircleIcon from './icons-redesign/ArrowLeftCircleIcon';
 import DesktopComputerIcon from './icons-redesign/DesktopComputerIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
+import IntegrationRequestModal from './IntegrationRequestModal';
+import PaperAirplaneIcon from './icons-redesign/PaperAirplaneIcon';
 
 interface UserProfilePageProps {
     user: User | null;
@@ -28,7 +30,8 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
         phoneNumber: '',
         email: '',
     });
-    
+    const [showIntegrationModal, setShowIntegrationModal] = useState(false);
+
     useEffect(() => {
         if (user) {
             setProfileData({
@@ -45,7 +48,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setProfileData(prev => ({...prev, [name]: value}));
+        setProfileData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleDateChange = (date: string) => {
@@ -55,14 +58,24 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
     const handlePhoneChange = (newNumber: string) => {
         setProfileData(prev => ({ ...prev, phoneNumber: newNumber }));
     };
-    
+
     const textAlignClass = language === 'ar' ? 'text-right' : 'text-left';
     const labelAlignClass = `block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ${textAlignClass}`;
     const inputBaseClass = `w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200`;
     const fileInputClass = `block w-full text-sm text-slate-500 dark:text-slate-400 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-500/10 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-500/20 cursor-pointer ${language === 'ar' ? 'file:ml-4' : 'file:mr-4'}`;
-    
+
     return (
         <div className="space-y-6">
+            <div className={`flex ${language === 'ar' ? 'justify-end' : 'justify-end'} mb-2`}>
+                <button
+                    onClick={() => setShowIntegrationModal(true)}
+                    className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors ${language === 'ar' ? 'flex-row-reverse' : ''}`}
+                >
+                    <PaperAirplaneIcon className="w-5 h-5" />
+                    <span>{language === 'ar' ? 'طلب الربط مع الأنظمة' : 'Request Integration'}</span>
+                </button>
+            </div>
+
             {/* Top Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <ProfileStatCard
@@ -126,7 +139,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                                 <option>{t('profilePage.female')}</option>
                             </select>
                         </div>
-                        
+
                         {/* Date of Birth */}
                         <div>
                             {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
@@ -136,12 +149,12 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
 
                         {/* Photo */}
                         <div>
-                             {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
-                             <label htmlFor="photo" className={labelAlignClass}>{t('profilePage.photo')}</label>
-                             <input type="file" id="photo" className={fileInputClass}/>
+                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
+                            <label htmlFor="photo" className={labelAlignClass}>{t('profilePage.photo')}</label>
+                            <input type="file" id="photo" className={fileInputClass} />
                         </div>
                     </div>
-                    
+
                     {/* Notes */}
                     <div>
                         {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
@@ -151,36 +164,36 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                         {/* Username */}
+                        {/* Username */}
                         <div>
                             {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="username" className={labelAlignClass}>{t('profilePage.username')}</label>
                             <input type="text" id="username" name="username" value={profileData.username} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`} />
                         </div>
 
-                         {/* Mobile Number */}
+                        {/* Mobile Number */}
                         <div>
                             {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="phoneNumber" className={labelAlignClass}>{t('profilePage.mobileNumber')}</label>
                             <PhoneNumberInput value={profileData.phoneNumber} onChange={handlePhoneChange} />
                         </div>
 
-                         {/* Email */}
+                        {/* Email */}
                         <div>
                             {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="email" className={labelAlignClass}>{t('profilePage.email')}</label>
                             <input type="email" id="email" name="email" value={profileData.email} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`} />
                         </div>
-                        
-                         {/* User Role */}
-                         <div>
+
+                        {/* User Role */}
+                        <div>
                             {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="role" className={labelAlignClass}>{t('profilePage.userRole')}</label>
                             {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <input type="text" id="role" name="role" value={user?.role_name || t('profilePage.hotel')} className={`w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-gray-500 dark:text-slate-400 ${textAlignClass}`} readOnly />
                         </div>
                     </div>
-                    
+
                     <div className={`flex ${language === 'ar' ? 'justify-start' : 'justify-start'} pt-4`}>
                         <button type="submit" className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
                             <CheckCircleIcon className="w-5 h-5" />
@@ -190,6 +203,16 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                     </div>
                 </form>
             </div>
+
+            <IntegrationRequestModal
+                isOpen={showIntegrationModal}
+                onClose={() => setShowIntegrationModal(false)}
+                hotelData={{
+                    name: profileData.name,
+                    email: profileData.email,
+                    phone: profileData.phoneNumber
+                }}
+            />
         </div>
     );
 };

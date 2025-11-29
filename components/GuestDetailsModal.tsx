@@ -27,7 +27,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 
 const GuestDetailsModal: React.FC<GuestDetailsModalProps> = ({ guest, onClose }) => {
     const { t } = useContext(LanguageContext);
-    
+
     if (!guest) return null;
 
     const isOpen = !!guest;
@@ -77,7 +77,7 @@ const GuestDetailsModal: React.FC<GuestDetailsModalProps> = ({ guest, onClose })
                                 <DetailItem label={t('guests.street')} value={guest.street} />
                                 <DetailItem label={t('guests.postalCode')} value={guest.postal_code} />
                             </Section>
-                            
+
                             <Section title={t('guests.idInfo')}>
                                 <DetailItem label={t('guests.th_guestType')} value={guest.guest_type} />
                                 <DetailItem label={t('guests.th_idType')} value={guest.ids} />
@@ -90,11 +90,11 @@ const GuestDetailsModal: React.FC<GuestDetailsModalProps> = ({ guest, onClose })
                     </div>
 
                     <div className="py-4 border-b dark:border-slate-700 last:border-b-0">
-                      <h3 className="text-base font-semibold text-blue-600 dark:text-blue-400 mb-3">{t('guests.notes')}</h3>
-                      <p className="text-sm text-slate-700 dark:text-slate-300">{guest.note || '---'}</p>
+                        <h3 className="text-base font-semibold text-blue-600 dark:text-blue-400 mb-3">{t('guests.notes')}</h3>
+                        <p className="text-sm text-slate-700 dark:text-slate-300">{guest.note || '---'}</p>
                     </div>
 
-                     <Section title={t('bookings.details.timestamps')}>
+                    <Section title={t('bookings.details.timestamps')}>
                         <DetailItem label={t('guests.th_createdAt')} value={new Date(guest.created_at).toLocaleString()} />
                         <DetailItem label={t('guests.th_updatedAt')} value={new Date(guest.updated_at).toLocaleString()} />
                     </Section>

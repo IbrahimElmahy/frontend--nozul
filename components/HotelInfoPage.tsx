@@ -35,7 +35,7 @@ interface HotelInfoPageProps {
 
 const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
     const { t, language } = useContext(LanguageContext);
-    
+
     const [formData, setFormData] = useState({
         englishName: '',
         arabicName: '',
@@ -67,7 +67,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
 
     const [countries, setCountries] = useState<[string, string][]>([]);
     const [timezones, setTimezones] = useState<string[]>([]);
-    
+
     useEffect(() => {
         const fetchHotelData = async () => {
             setLoading(true);
@@ -102,7 +102,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                     fax: hotelData.fax_number || '',
                     description: hotelData.description || '',
                 });
-                
+
                 if (hotelData.logo) {
                     setLogoPreview(hotelData.logo);
                 }
@@ -125,7 +125,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
-    
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
@@ -133,7 +133,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
             setLogoPreview(URL.createObjectURL(file));
         }
     };
-    
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
@@ -181,7 +181,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
 
     const inputClass = "w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-slate-200 text-sm";
     const fileInputClass = `block w-full text-sm text-slate-500 dark:text-slate-400 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-500/10 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-500/20 cursor-pointer`;
-    
+
     if (loading) {
         return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div></div>;
     }
@@ -190,13 +190,15 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
         <div className="space-y-6">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('hotelInfo.pageTitle')}</h2>
-                <button
-                    onClick={() => setCurrentPage('hotel-settings')}
-                    className={`flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-2 px-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${language === 'ar' ? 'flex-row-reverse' : ''}`}
-                >
-                    <ChevronLeftIcon className={`w-5 h-5 transform ${language === 'ar' ? 'rotate-180' : ''}`} />
-                    <span>{t('buttons.back')}</span>
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setCurrentPage('hotel-settings')}
+                        className={`flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-2 px-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${language === 'ar' ? 'flex-row-reverse' : ''}`}
+                    >
+                        <ChevronLeftIcon className={`w-5 h-5 transform ${language === 'ar' ? 'rotate-180' : ''}`} />
+                        <span>{t('buttons.back')}</span>
+                    </button>
+                </div>
             </div>
 
             {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert">{error}</div>}
@@ -216,38 +218,38 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                     <FormField label={t('hotelInfo.poBox')}><input name="poBox" value={formData.poBox} onChange={handleInputChange} className={inputClass} /></FormField>
                     <FormField label={"Website"}><input name="website" value={formData.website} onChange={handleInputChange} className={inputClass} /></FormField>
                 </Section>
-    
+
                 <Section title={t('hotelInfo.addressInfo')}>
-                    <FormField label={t('hotelInfo.country')}><SearchableSelect id="country" options={countries.map(c => c[1])} value={countries.find(c => c[0] === formData.country)?.[1] || ''} onChange={val => setFormData(p => ({...p, country: countries.find(c => c[1] === val)?.[0] || ''}))} /></FormField>
+                    <FormField label={t('hotelInfo.country')}><SearchableSelect id="country" options={countries.map(c => c[1])} value={countries.find(c => c[0] === formData.country)?.[1] || ''} onChange={val => setFormData(p => ({ ...p, country: countries.find(c => c[1] === val)?.[0] || '' }))} /></FormField>
                     <FormField label={t('hotelInfo.city')}><input name="city" value={formData.city} onChange={handleInputChange} className={inputClass} /></FormField>
                     <FormField label={t('hotelInfo.district')}><input name="district" value={formData.district} onChange={handleInputChange} className={inputClass} /></FormField>
                     <FormField label={t('hotelInfo.street')}><input name="street" value={formData.street} onChange={handleInputChange} className={inputClass} /></FormField>
-                    <FormField label={t('hotelInfo.timeZone')}><SearchableSelect id="timezone" options={timezones} value={formData.timeZone} onChange={val => setFormData(p => ({...p, timeZone: val}))} /></FormField>
+                    <FormField label={t('hotelInfo.timeZone')}><SearchableSelect id="timezone" options={timezones} value={formData.timeZone} onChange={val => setFormData(p => ({ ...p, timeZone: val }))} /></FormField>
                     <FormField label={t('hotelInfo.postalCode')}><input name="postalCode" value={formData.postalCode} onChange={handleInputChange} className={inputClass} /></FormField>
                 </Section>
-    
+
                 <Section title={t('hotelInfo.companyInfo')}>
                     <FormField label={t('hotelInfo.taxNumber')}><input name="taxNumber" value={formData.taxNumber} onChange={handleInputChange} className={inputClass} /></FormField>
                     <FormField label={t('hotelInfo.commercialRegNo')}><input name="commercialRegNo" value={formData.commercialRegNo} onChange={handleInputChange} className={inputClass} /></FormField>
                 </Section>
-                
+
                 <Section title={t('hotelInfo.contactInfo')}>
-                    <FormField label={t('hotelInfo.mobileNumber')}><PhoneNumberInput value={formData.mobileNumber} onChange={val => setFormData(p => ({...p, mobileNumber: val}))} /></FormField>
-                    <FormField label={t('hotelInfo.phoneNumber')}><PhoneNumberInput value={formData.phoneNumber} onChange={val => setFormData(p => ({...p, phoneNumber: val}))} /></FormField>
-                    <FormField label={t('hotelInfo.quickContact')}><PhoneNumberInput value={formData.quickContact} onChange={val => setFormData(p => ({...p, quickContact: val}))} /></FormField>
-                    <FormField label={t('hotelInfo.fax')}><PhoneNumberInput value={formData.fax} onChange={val => setFormData(p => ({...p, fax: val}))} /></FormField>
+                    <FormField label={t('hotelInfo.mobileNumber')}><PhoneNumberInput value={formData.mobileNumber} onChange={val => setFormData(p => ({ ...p, mobileNumber: val }))} /></FormField>
+                    <FormField label={t('hotelInfo.phoneNumber')}><PhoneNumberInput value={formData.phoneNumber} onChange={val => setFormData(p => ({ ...p, phoneNumber: val }))} /></FormField>
+                    <FormField label={t('hotelInfo.quickContact')}><PhoneNumberInput value={formData.quickContact} onChange={val => setFormData(p => ({ ...p, quickContact: val }))} /></FormField>
+                    <FormField label={t('hotelInfo.fax')}><PhoneNumberInput value={formData.fax} onChange={val => setFormData(p => ({ ...p, fax: val }))} /></FormField>
                 </Section>
-                
-                 <Section title={t('hotelInfo.description')}>
+
+                <Section title={t('hotelInfo.description')}>
                     <FormField label="" className="md:col-span-2">
                         <textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} placeholder={t('hotelInfo.descriptionPlaceholder')} className={inputClass}></textarea>
                     </FormField>
                 </Section>
-                
+
                 <div className="flex justify-start">
                     <button type="submit" disabled={isSaving} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed">
                         {isSaving ? (
-                             <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         ) : (
                             <CheckCircleIcon className="w-5 h-5" />
                         )}
