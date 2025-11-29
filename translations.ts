@@ -886,6 +886,10 @@ export const translations = {
                 deactivate_users: "السماح بالغاء تنشيط المستخدمين",
             }
         },
+        usersPage: {
+            pageTitle: "إدارة المستخدمين",
+            breadcrumb: "المستخدمين",
+        },
         userDetailsModal: {
             title: "تفاصيل المستخدم",
             activity: "النشاط",

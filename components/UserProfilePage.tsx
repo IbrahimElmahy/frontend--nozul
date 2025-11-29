@@ -2,18 +2,16 @@ import React, { useState, useContext, useEffect } from 'react';
 import ProfileStatCard from './ProfileStatCard';
 import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
 import DatePicker from './DatePicker';
-import PhoneNumberInput from './PhoneNumberInput'; // Import the new component
+import PhoneNumberInput from './PhoneNumberInput';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { User } from '../types';
 
-// Icons for stat cards
+// Icons
 import HeartIcon from './icons-redesign/HeartIcon';
 import ArrowRightCircleIcon from './icons-redesign/ArrowRightCircleIcon';
 import ArrowLeftCircleIcon from './icons-redesign/ArrowLeftCircleIcon';
 import DesktopComputerIcon from './icons-redesign/DesktopComputerIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
-import IntegrationRequestModal from './IntegrationRequestModal';
-import PaperAirplaneIcon from './icons-redesign/PaperAirplaneIcon';
 
 interface UserProfilePageProps {
     user: User | null;
@@ -30,14 +28,13 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
         phoneNumber: '',
         email: '',
     });
-    const [showIntegrationModal, setShowIntegrationModal] = useState(false);
 
     useEffect(() => {
         if (user) {
             setProfileData({
                 name: user.name || '',
-                gender: 'ذكر', // This info is not in the user object
-                dob: '2000-02-29', // This info is not in the user object
+                gender: 'ذكر',
+                dob: '2000-02-29',
                 notes: '',
                 username: user.username || '',
                 phoneNumber: user.phone_number || '',
@@ -66,20 +63,9 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
 
     return (
         <div className="space-y-6">
-            <div className={`flex ${language === 'ar' ? 'justify-end' : 'justify-end'} mb-2`}>
-                <button
-                    onClick={() => setShowIntegrationModal(true)}
-                    className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors ${language === 'ar' ? 'flex-row-reverse' : ''}`}
-                >
-                    <PaperAirplaneIcon className="w-5 h-5" />
-                    <span>{language === 'ar' ? 'طلب الربط مع الأنظمة' : 'Request Integration'}</span>
-                </button>
-            </div>
-
             {/* Top Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <ProfileStatCard
-                    // FIX: Changed translation key to 'profilePage.*' to avoid conflict
                     title={t('profilePage.planA')}
                     subtitle={t('profilePage.plan')}
                     icon={HeartIcon}
@@ -87,21 +73,18 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                 />
                 <ProfileStatCard
                     title="09 ديسمبر 2024"
-                    // FIX: Changed translation key to 'profilePage.*' to avoid conflict
                     subtitle={t('profilePage.subscriptionDate')}
                     icon={ArrowRightCircleIcon}
                     iconBgColor="bg-cyan-500"
                 />
                 <ProfileStatCard
                     title="09 ديسمبر 2025"
-                    // FIX: Changed translation key to 'profilePage.*' to avoid conflict
                     subtitle={t('profilePage.subscriptionEndDate')}
                     icon={ArrowLeftCircleIcon}
                     iconBgColor="bg-red-500"
                 />
                 <ProfileStatCard
                     title="131"
-                    // FIX: Changed translation key to 'profilePage.*' to avoid conflict
                     subtitle={t('profilePage.messageBalance')}
                     icon={DesktopComputerIcon}
                     iconBgColor="bg-slate-700"
@@ -113,7 +96,6 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                 <div className={`p-4 border-b dark:border-slate-700`}>
                     <h3 className={`text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         <InformationCircleIcon className="w-6 h-6 text-slate-500" />
-                        {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                         <span>{t('profilePage.accountInfo')}</span>
                     </h3>
                 </div>
@@ -121,35 +103,28 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         {/* Name */}
                         <div>
-                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="name" className={labelAlignClass}>{t('profilePage.name')}</label>
                             <input type="text" id="name" name="name" value={profileData.name} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`} />
                         </div>
 
                         {/* Gender */}
                         <div>
-                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="gender" className={labelAlignClass}>{t('profilePage.gender')}</label>
                             <select id="gender" name="gender" value={profileData.gender} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`}>
-                                {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                                 <option>{t('profilePage.genderSelect')}</option>
-                                {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                                 <option>{t('profilePage.male')}</option>
-                                {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                                 <option>{t('profilePage.female')}</option>
                             </select>
                         </div>
 
                         {/* Date of Birth */}
                         <div>
-                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="dob" className={labelAlignClass}>{t('profilePage.dob')}</label>
                             <DatePicker value={profileData.dob} onChange={handleDateChange} />
                         </div>
 
                         {/* Photo */}
                         <div>
-                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="photo" className={labelAlignClass}>{t('profilePage.photo')}</label>
                             <input type="file" id="photo" className={fileInputClass} />
                         </div>
@@ -157,39 +132,32 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
 
                     {/* Notes */}
                     <div>
-                        {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                         <label htmlFor="notes" className={labelAlignClass}>{t('profilePage.notes')}</label>
-                        {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                         <textarea id="notes" name="notes" rows={4} placeholder={t('profilePage.notesPlaceholder')} value={profileData.notes} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`}></textarea>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         {/* Username */}
                         <div>
-                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="username" className={labelAlignClass}>{t('profilePage.username')}</label>
                             <input type="text" id="username" name="username" value={profileData.username} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`} />
                         </div>
 
                         {/* Mobile Number */}
                         <div>
-                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="phoneNumber" className={labelAlignClass}>{t('profilePage.mobileNumber')}</label>
                             <PhoneNumberInput value={profileData.phoneNumber} onChange={handlePhoneChange} />
                         </div>
 
                         {/* Email */}
                         <div>
-                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="email" className={labelAlignClass}>{t('profilePage.email')}</label>
                             <input type="email" id="email" name="email" value={profileData.email} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`} />
                         </div>
 
                         {/* User Role */}
                         <div>
-                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <label htmlFor="role" className={labelAlignClass}>{t('profilePage.userRole')}</label>
-                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <input type="text" id="role" name="role" value={user?.role_name || t('profilePage.hotel')} className={`w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-gray-500 dark:text-slate-400 ${textAlignClass}`} readOnly />
                         </div>
                     </div>
@@ -197,22 +165,11 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                     <div className={`flex ${language === 'ar' ? 'justify-start' : 'justify-start'} pt-4`}>
                         <button type="submit" className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
                             <CheckCircleIcon className="w-5 h-5" />
-                            {/* FIX: Changed translation key to 'profilePage.*' to avoid conflict */}
                             <span>{t('profilePage.save')}</span>
                         </button>
                     </div>
                 </form>
             </div>
-
-            <IntegrationRequestModal
-                isOpen={showIntegrationModal}
-                onClose={() => setShowIntegrationModal(false)}
-                hotelData={{
-                    name: profileData.name,
-                    email: profileData.email,
-                    phone: profileData.phoneNumber
-                }}
-            />
         </div>
     );
 };
