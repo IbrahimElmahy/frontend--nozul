@@ -618,6 +618,12 @@ const BookingsPage: React.FC = () => {
             <BookingDetailsModal
                 booking={viewingBooking}
                 onClose={() => setViewingBooking(null)}
+                onEdit={() => {
+                    if (viewingBooking) {
+                        setViewingBooking(null);
+                        handleEditClick(viewingBooking);
+                    }
+                }}
             />
             <ConfirmationModal
                 isOpen={!!bookingToDeleteId}

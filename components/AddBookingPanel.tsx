@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { Booking, RentType } from '../types';
+import { Booking, RentType, Unit, Guest, GuestTypeAPI, IdTypeAPI, CountryAPI, Receipt, Order } from '../types';
 import { calculateRental } from '../services/reservations';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
@@ -10,7 +10,15 @@ import PlusIcon from './icons-redesign/PlusIcon';
 import PencilIcon from './icons-redesign/PencilIcon';
 import MinusIcon from './icons-redesign/MinusIcon';
 import EyeIcon from './icons-redesign/EyeIcon';
-
+import UnitEditPanel from './UnitEditPanel';
+import AddGuestPanel from './AddGuestPanel';
+import GuestDetailsModal from './GuestDetailsModal';
+import AddReceiptPanel from './AddReceiptPanel';
+import ReceiptDetailsModal from './ReceiptDetailsModal';
+import AddOrderPanel from './AddOrderPanel';
+import OrderDetailsModal from './OrderDetailsModal';
+import { apiClient } from '../apiClient';
+import { mapApiUnitToUnit, mapUnitToFormData } from './data/apiMappers';
 
 interface AddBookingPanelProps {
     initialData: Booking | Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>;
@@ -41,6 +49,28 @@ const EditButton: React.FC<{ label: string, onClick?: () => void }> = ({ label, 
     </button>
 );
 
+// Templates for new items
+const newUnitTemplate: Unit = {
+    id: '',
+    unitNumber: '',
+    unitName: '',
+    status: 'free',
+    unitType: '8e27565c-dcd0-47d0-a119-63f97d47fe3f',
+    cleaningStatus: 'clean',
+    isAvailable: true,
+    floor: 1,
+    rooms: 1,
+    bathrooms: 1,
+    beds: 1,
+    doubleBeds: 0,
+    wardrobes: 1,
+    tvs: 1,
+    coolingType: 'split',
+    notes: '',
+    features: [],
+    price: 0
+};
+
 
 const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave, isSaving }) => {
     const { t, language } = useContext(LanguageContext);
@@ -48,11 +78,223 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
     const [calcLoading, setCalcLoading] = useState(false);
     const [calcError, setCalcError] = useState<string | null>(null);
 
+    // Data Lists
+    const [units, setUnits] = useState<Unit[]>([]);
+    const [guests, setGuests] = useState<Guest[]>([]);
+
+    // Options for Sub-panels
+    const [unitTypeOptions, setUnitTypeOptions] = useState<{ id: string, name: string }[]>([]);
+    const [coolingTypeOptions, setCoolingTypeOptions] = useState<[string, string][]>([]);
+    const [allApiFeatures, setAllApiFeatures] = useState<any[]>([]);
+    const [guestTypes, setGuestTypes] = useState<GuestTypeAPI[]>([]);
+    const [idTypes, setIdTypes] = useState<IdTypeAPI[]>([]);
+    const [countries, setCountries] = useState<CountryAPI>({});
+
+    // Sub-panel States
+    // Unit
+    const [isUnitPanelOpen, setIsUnitPanelOpen] = useState(false);
+    const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+    const [isAddingUnit, setIsAddingUnit] = useState(false);
+
+    // Guest
+    const [isGuestPanelOpen, setIsGuestPanelOpen] = useState(false);
+    const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
+    const [viewingGuest, setViewingGuest] = useState<Guest | null>(null);
+
+    // Financials (Placeholders for now, as they might need Booking ID)
+    const [isReceiptPanelOpen, setIsReceiptPanelOpen] = useState(false);
+    const [isOrderPanelOpen, setIsOrderPanelOpen] = useState(false);
+    const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null); // For future use
+    const [editingOrder, setEditingOrder] = useState<Order | null>(null); // For future use
+
+
     useEffect(() => {
         if (isOpen) {
             setFormData(JSON.parse(JSON.stringify(initialData)));
+            fetchData();
         }
     }, [isOpen, initialData]);
+
+    const fetchData = useCallback(async () => {
+        try {
+            // Fetch Units
+            const unitsRes = await apiClient<{ data: any[] }>('/ar/apartment/api/apartments/?length=1000'); // Fetch all for dropdown
+            setUnits(unitsRes.data.map(mapApiUnitToUnit));
+
+            // Fetch Guests
+            const guestsRes = await apiClient<{ data: Guest[] }>('/ar/guest/api/guests/?length=1000');
+            setGuests(guestsRes.data);
+
+            // Fetch Options if not already loaded (could be optimized)
+            if (unitTypeOptions.length === 0) {
+                const [typesRes, coolingRes, featuresRes, gTypesRes, idTypesRes, countriesRes] = await Promise.all([
+                    apiClient<{ data: any[] }>('/ar/apartment/api/apartments-types/'),
+                    apiClient<[string, string][]>('/ar/apartment/api/apartments/cooling-types/'),
+                    apiClient<{ data: any[] }>('/ar/feature/api/features/?length=50'),
+                    apiClient<{ data: GuestTypeAPI[] }>('/ar/guest/api/guests-types/'),
+                    apiClient<{ data: IdTypeAPI[] }>('/ar/guest/api/ids/'),
+                    apiClient<CountryAPI>('/ar/country/api/countries/'),
+                ]);
+                setUnitTypeOptions(typesRes.data.map(t => ({ id: t.id, name: t.name })));
+                setCoolingTypeOptions(coolingRes);
+                setAllApiFeatures(featuresRes.data);
+                setGuestTypes(gTypesRes.data);
+                setIdTypes(idTypesRes.data);
+                setCountries(countriesRes);
+            }
+
+        } catch (err) {
+            console.error("Error fetching data for booking panel", err);
+        }
+    }, [unitTypeOptions.length]);
+
+    // Unit Handlers
+    const handleAddUnitClick = () => {
+        const newTemplate = { ...newUnitTemplate, unitType: unitTypeOptions[0]?.id || '' };
+        setEditingUnit(newTemplate);
+        setIsAddingUnit(true);
+        setIsUnitPanelOpen(true);
+    };
+
+    const handleEditUnitClick = () => {
+        const unitId = formData.unitName; // Assuming unitName holds the ID
+        const unit = units.find(u => u.id.toString() === unitId?.toString());
+        if (unit) {
+            setEditingUnit(unit);
+            setIsAddingUnit(false);
+            setIsUnitPanelOpen(true);
+        } else {
+            alert(t('bookings.alerts.selectUnitFirst'));
+        }
+    };
+
+    const handleViewUnitClick = () => {
+        const unitId = formData.unitName;
+        const unit = units.find(u => u.id.toString() === unitId?.toString());
+        if (unit) {
+            // Re-using edit panel for view, maybe add read-only mode later
+            setEditingUnit(unit);
+            setIsAddingUnit(false);
+            setIsUnitPanelOpen(true);
+        } else {
+            alert(t('bookings.alerts.selectUnitFirst'));
+        }
+    };
+
+    const handleSaveUnit = async (updatedUnit: Unit) => {
+        const unitFormData = mapUnitToFormData(updatedUnit);
+        try {
+            let savedUnit: Unit;
+            if (isAddingUnit) {
+                const newApiUnit = await apiClient('/ar/apartment/api/apartments/', { method: 'POST', body: unitFormData });
+                savedUnit = mapApiUnitToUnit(newApiUnit);
+                setUnits(prev => [savedUnit, ...prev]);
+            } else {
+                const updatedApiUnit = await apiClient(`/ar/apartment/api/apartments/${updatedUnit.id}/`, { method: 'PUT', body: unitFormData });
+                savedUnit = mapApiUnitToUnit(updatedApiUnit);
+                setUnits(prev => prev.map(u => u.id === savedUnit.id ? savedUnit : u));
+            }
+
+            // Auto-select the unit
+            setFormData(prev => ({ ...prev, unitName: savedUnit.id, price: savedUnit.price || prev.price, rent: savedUnit.price || prev.rent }));
+            setIsUnitPanelOpen(false);
+        } catch (err) {
+            alert(`Error saving unit: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
+    };
+
+
+    // Guest Handlers
+    const handleAddGuestClick = () => {
+        setEditingGuest(null); // Add mode
+        setIsGuestPanelOpen(true);
+    };
+
+    const handleEditGuestClick = () => {
+        // guestName in formData might be the ID or Name depending on implementation.
+        // Assuming it stores the ID for now based on typical select behavior, 
+        // BUT SearchableSelect usually stores the value. 
+        // If formData.guestName stores the name string, we need to find the guest by name.
+        // If it stores ID, we find by ID.
+        // Let's assume it stores the ID or we try to find by both.
+
+        // Actually, looking at existing code: `value={formData.guestName}`. 
+        // And `options={['حملة محمد', 'محمد سالم']}`. It seems it was storing names.
+        // We should switch to storing IDs for robust linking.
+
+        // For now, let's try to find the guest object.
+        const guestIdOrName = formData.guestName;
+        const guest = guests.find(g => g.id.toString() === guestIdOrName || g.name === guestIdOrName);
+
+        if (guest) {
+            setEditingGuest(guest);
+            setIsGuestPanelOpen(true);
+        } else {
+            alert(t('bookings.alerts.selectGuestFirst'));
+        }
+    };
+
+    const handleViewGuestClick = () => {
+        const guestIdOrName = formData.guestName;
+        const guest = guests.find(g => g.id.toString() === guestIdOrName || g.name === guestIdOrName);
+        if (guest) {
+            setViewingGuest(guest);
+        } else {
+            alert(t('bookings.alerts.selectGuestFirst'));
+        }
+    };
+
+    const handleSaveGuest = async (guestFormData: FormData) => {
+        const isEditing = !!editingGuest;
+        const endpoint = isEditing ? `/ar/guest/api/guests/${editingGuest.id}/` : '/ar/guest/api/guests/';
+        const method = isEditing ? 'PUT' : 'POST';
+
+        try {
+            const res = await apiClient<{ data: Guest }>(endpoint, { method, body: guestFormData });
+            // API might return the guest object directly or wrapped in data
+            // Adjust based on actual API response structure if needed.
+            // Assuming standard response structure based on other calls.
+            // Wait, `apiClient` returns parsed JSON. If it returns {data: ...}, we use that.
+            // If it returns the object directly (some create endpoints might), we check.
+
+            // Let's assume it follows the pattern.
+            // We need to refresh the guest list.
+            const newGuest = (res as any).data || res; // Fallback
+
+            if (isEditing) {
+                setGuests(prev => prev.map(g => g.id === newGuest.id ? newGuest : g));
+            } else {
+                setGuests(prev => [newGuest, ...prev]);
+            }
+
+            // Auto-select
+            setFormData(prev => ({ ...prev, guestName: newGuest.id })); // Storing ID
+            setIsGuestPanelOpen(false);
+            setEditingGuest(null);
+        } catch (err) {
+            alert(`Error saving guest: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
+    };
+
+    // Financial Handlers (Placeholder/Basic)
+    const handleAddReceiptClick = () => {
+        // Ideally we pass the booking ID, but for new bookings we might not have it.
+        // Alert user if booking not saved?
+        if (!('id' in formData)) {
+            alert(t('bookings.alerts.saveBookingFirst'));
+            return;
+        }
+        setIsReceiptPanelOpen(true);
+    };
+
+    const handleAddOrderClick = () => {
+        if (!('id' in formData)) {
+            alert(t('bookings.alerts.saveBookingFirst'));
+            return;
+        }
+        setIsOrderPanelOpen(true);
+    };
+
 
     useEffect(() => {
         const value = formData.rent || 0;
@@ -221,11 +463,11 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                     <label htmlFor="unitName" className={labelBaseClass}>{t('bookings.apartments')}</label>
                                     <div className="flex items-center gap-2">
                                         <div className="flex-grow">
-                                            <SearchableSelect id="unitName" options={['101', '102', '103']} value={formData.unitName} onChange={(val) => setFormData(p => ({ ...p, unitName: val }))} placeholder="Select Apartment" />
+                                            <SearchableSelect id="unitName" options={units.map(u => u.unitNumber)} value={units.find(u => u.id.toString() === formData.unitName?.toString())?.unitNumber || formData.unitName || ''} onChange={(val) => { const u = units.find(unit => unit.unitNumber === val); setFormData(p => ({ ...p, unitName: u ? u.id : val, price: u ? u.price : p.price, rent: u ? u.price : p.rent })) }} placeholder={t('bookings.selectUnit')} />
                                         </div>
-                                        <ActionButton icon={PlusIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.addingNewApartment'))} />
-                                        <ActionButton icon={PencilIcon} color="bg-yellow-400" onClick={() => alert(t('bookings.alerts.editingApartment', formData.unitName))} disabled={!formData.unitName} />
-                                        <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.previewingApartment', formData.unitName))} disabled={!formData.unitName} />
+                                        <ActionButton icon={PlusIcon} color="bg-blue-500" onClick={handleAddUnitClick} />
+                                        <ActionButton icon={PencilIcon} color="bg-yellow-400" onClick={handleEditUnitClick} disabled={!formData.unitName} />
+                                        <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={handleViewUnitClick} disabled={!formData.unitName} />
                                     </div>
                                 </div>
                                 <div>
@@ -246,11 +488,11 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                     <label htmlFor="guestName" className={labelBaseClass}>{t('bookings.guest')}</label>
                                     <div className="flex items-center gap-2">
                                         <div className="flex-grow">
-                                            <SearchableSelect id="guestName" options={['حملة محمد', 'محمد سالم']} value={formData.guestName} onChange={(val) => setFormData(p => ({ ...p, guestName: val }))} placeholder="Select Guest" />
+                                            <SearchableSelect id="guestName" options={guests.map(g => g.name)} value={guests.find(g => g.id.toString() === formData.guestName?.toString())?.name || formData.guestName || ''} onChange={(val) => { const g = guests.find(guest => guest.name === val); setFormData(p => ({ ...p, guestName: g ? g.id : val })) }} placeholder={t('bookings.selectGuest')} />
                                         </div>
-                                        <ActionButton icon={PlusIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.addingNewGuest'))} />
-                                        <ActionButton icon={PencilIcon} color="bg-yellow-400" onClick={() => alert(t('bookings.alerts.editingGuest', formData.guestName))} disabled={!formData.guestName} />
-                                        <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.previewingGuest', formData.guestName))} disabled={!formData.guestName} />
+                                        <ActionButton icon={PlusIcon} color="bg-blue-500" onClick={handleAddGuestClick} />
+                                        <ActionButton icon={PencilIcon} color="bg-yellow-400" onClick={handleEditGuestClick} disabled={!formData.guestName} />
+                                        <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={handleViewGuestClick} disabled={!formData.guestName} />
                                     </div>
                                 </div>
                                 <div>
@@ -275,9 +517,9 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                             <div className="flex-grow">
                                                 <SearchableSelect id="receiptVoucher" options={[]} value={formData.receiptVoucher || ''} onChange={(val) => setFormData(p => ({ ...p, receiptVoucher: val }))} placeholder="" />
                                             </div>
-                                            <ActionButton icon={PlusIcon} color="bg-green-500" onClick={() => alert(t('bookings.alerts.addingNewReceipt'))} />
-                                            <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.editingReceipt', formData.receiptVoucher))} disabled={!formData.receiptVoucher} />
-                                            <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.previewingReceipt', formData.receiptVoucher))} disabled={!formData.receiptVoucher} />
+                                            <ActionButton icon={PlusIcon} color="bg-green-500" onClick={handleAddReceiptClick} />
+                                            <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => { }} disabled={!formData.receiptVoucher} />
+                                            <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => { }} disabled={!formData.receiptVoucher} />
                                         </div>
                                     </div>
                                     <div>
@@ -308,9 +550,9 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                             <div className="flex-grow">
                                                 <SearchableSelect id="order" options={[]} value={formData.order || ''} onChange={(val) => setFormData(p => ({ ...p, order: val }))} placeholder="" />
                                             </div>
-                                            <ActionButton icon={PlusIcon} color="bg-green-500" onClick={() => alert(t('bookings.alerts.addingNewOrder'))} />
-                                            <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.editingOrder', formData.order))} disabled={!formData.order} />
-                                            <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.previewingOrder', formData.order))} disabled={!formData.order} />
+                                            <ActionButton icon={PlusIcon} color="bg-green-500" onClick={handleAddOrderClick} />
+                                            <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => { }} disabled={!formData.order} />
+                                            <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => { }} disabled={!formData.order} />
                                         </div>
                                     </div>
 
@@ -371,6 +613,53 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                     </button>
                 </footer>
             </div>
+
+            {/* Sub-panels */}
+            <UnitEditPanel
+                unit={editingUnit}
+                isOpen={isUnitPanelOpen}
+                onClose={() => setIsUnitPanelOpen(false)}
+                onSave={handleSaveUnit}
+                isAdding={isAddingUnit}
+                unitTypeOptions={unitTypeOptions}
+                coolingTypeOptions={coolingTypeOptions}
+                allApiFeatures={allApiFeatures}
+            />
+
+            <AddGuestPanel
+                initialData={editingGuest}
+                isEditing={!!editingGuest}
+                isOpen={isGuestPanelOpen}
+                onClose={() => setIsGuestPanelOpen(false)}
+                onSave={handleSaveGuest}
+                guestTypes={guestTypes}
+                idTypes={idTypes}
+                countries={countries}
+            />
+
+            <GuestDetailsModal
+                guest={viewingGuest}
+                onClose={() => setViewingGuest(null)}
+            />
+
+            <AddReceiptPanel
+                isOpen={isReceiptPanelOpen}
+                onClose={() => setIsReceiptPanelOpen(false)}
+                onSave={() => { setIsReceiptPanelOpen(false); /* Refresh logic if needed */ }}
+                initialData={{ ...formData, bookingNumber: formData.bookingNumber } as any} // Pass basic data
+                isEditing={false}
+                voucherType="receipt"
+                user={null} // Pass user if available
+            />
+
+            <AddOrderPanel
+                initialData={{ ...formData, bookingNumber: formData.bookingNumber } as any}
+                isEditing={false}
+                isOpen={isOrderPanelOpen}
+                onClose={() => setIsOrderPanelOpen(false)}
+                onSave={() => { setIsOrderPanelOpen(false); /* Refresh logic if needed */ }}
+            />
+
         </div>
     );
 };
