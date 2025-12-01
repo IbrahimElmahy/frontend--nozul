@@ -24,7 +24,8 @@ export const mapApiUnitToUnit = (apiUnit: any): Unit => {
         checkOut: apiUnit.reservation?.check_out_date,
         price: parseFloat(apiUnit.apartment_price?.price_per_day) || 0,
         remaining: apiUnit.reservation?.balance ? -apiUnit.reservation.balance : 0,
-        unitType: typeof apiUnit.apartment_type === 'object' ? apiUnit.apartment_type?.name : apiUnit.apartment_type,
+        unitType: typeof apiUnit.apartment_type === 'object' ? apiUnit.apartment_type?.id : apiUnit.apartment_type,
+        unitTypeName: typeof apiUnit.apartment_type === 'object' ? apiUnit.apartment_type?.name : '',
         cleaningStatus: cleaningStatus,
         isAvailable: apiUnit.availability === 'available',
         floor: parseInt(apiUnit.floor, 10) || 0,
@@ -36,7 +37,7 @@ export const mapApiUnitToUnit = (apiUnit: any): Unit => {
         tvs: apiUnit.tvs || 0,
         coolingType: (apiUnit.cooling_type as CoolingType) || '',
         notes: apiUnit.description || apiUnit.note || '',
-        features: apiUnit.features || []
+        features: Array.isArray(apiUnit.features) ? apiUnit.features.map((f: any) => typeof f === 'object' ? f.id : f) : []
     };
 };
 
@@ -55,7 +56,7 @@ export const mapUnitToFormData = (unit: Unit): FormData => {
     formData.append('tvs', unit.tvs.toString());
     formData.append('cooling_type', unit.coolingType);
     formData.append('description', unit.notes);
-    
+
     // API uses 'dirty', 'clean', 'maintenance'
     let cleanlinessApiValue = 'clean';
     if (unit.cleaningStatus === 'not-clean') {
