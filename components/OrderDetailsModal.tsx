@@ -3,6 +3,8 @@ import React, { useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Order } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
+import PrinterIcon from './icons-redesign/PrinterIcon';
+import PrintableOrder from './PrintableOrder';
 
 interface OrderDetailsModalProps {
     order: Order | null;
@@ -28,10 +30,14 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 
 const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose }) => {
     const { t } = useContext(LanguageContext);
-    
+
     if (!order) return null;
 
     const isOpen = !!order;
+
+    const handlePrint = () => {
+        window.print();
+    };
 
     return (
         <div
@@ -47,9 +53,19 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
                     <h2 id="order-details-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">
                         {t('orders.detailsTitle')} - {order.orderNumber}
                     </h2>
-                    <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
-                        <XMarkIcon className="w-6 h-6" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handlePrint}
+                            className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 flex items-center gap-2"
+                            title={t('receipts.print')}
+                        >
+                            <PrinterIcon className="w-5 h-5" />
+                            <span>{t('receipts.print')}</span>
+                        </button>
+                        <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
+                            <XMarkIcon className="w-6 h-6" />
+                        </button>
+                    </div>
                 </header>
 
                 <div className="flex-grow p-6 overflow-y-auto">
@@ -98,18 +114,19 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose })
                     </Section>
 
                     {order.notes && (
-                         <div className="py-4 border-b dark:border-slate-700 last:border-b-0">
+                        <div className="py-4 border-b dark:border-slate-700 last:border-b-0">
                             <h3 className="text-base font-semibold text-blue-600 dark:text-blue-400 mb-3">{t('orders.notes')}</h3>
                             <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{order.notes}</p>
                         </div>
                     )}
-                    
-                     <Section title={t('bookings.details.timestamps')}>
+
+                    <Section title={t('bookings.details.timestamps')}>
                         <DetailItem label={t('orders.th_createdAt')} value={new Date(order.createdAt).toLocaleString()} />
                         <DetailItem label={t('orders.th_updatedAt')} value={new Date(order.updatedAt).toLocaleString()} />
                     </Section>
                 </div>
             </div>
+            {order && <PrintableOrder order={order} />}
         </div>
     );
 };

@@ -22,6 +22,8 @@ import TrashIcon from './icons-redesign/TrashIcon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 import Switch from './Switch';
+import PrinterIcon from './icons-redesign/PrinterIcon';
+import PrintableOrder from './PrintableOrder';
 
 
 const newOrderTemplate: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -35,7 +37,7 @@ const newOrderTemplate: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
     total: 0,
     items: [],
     notes: '',
-    isActive: true,
+
 };
 
 
@@ -47,13 +49,14 @@ const OrdersPage: React.FC = () => {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
     const [totalRecords, setTotalRecords] = useState(0);
-    
+
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingOrder, setEditingOrder] = useState<Order | null>(null);
     const [orderToDeleteId, setOrderToDeleteId] = useState<string | null>(null);
     const [sortConfig, setSortConfig] = useState<{ key: keyof Order | null; direction: 'ascending' | 'descending' }>({ key: 'createdAt', direction: 'descending' });
     const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+    const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
 
     const fetchOrders = useCallback(async () => {
@@ -65,13 +68,14 @@ const OrdersPage: React.FC = () => {
             if (searchTerm) params.append('search', searchTerm);
 
             const response = await apiClient<{ data: any[], recordsFiltered: number }>(`/ar/order/api/orders/?${params.toString()}`);
-            
+
             const mappedOrders: Order[] = response.data.map((o: any) => ({
                 id: o.id,
                 orderNumber: o.number, // API field is 'number'
-                // Try to get a readable booking number if available, otherwise ID
-                bookingNumber: o.reservation ? (o.reservation.booking_number || o.reservation.id) : '', 
-                apartmentName: o.reservation && o.reservation.apartment ? o.reservation.apartment : '',
+                // API returns reservation number as a string directly
+                bookingNumber: o.reservation || '',
+                // API returns apartment name as a string directly
+                apartmentName: o.apartment || '',
                 value: parseFloat(o.amount),
                 discount: parseFloat(o.discount || 0),
                 subtotal: parseFloat(o.subtotal),
@@ -80,11 +84,11 @@ const OrdersPage: React.FC = () => {
                 createdAt: o.created_at,
                 updatedAt: o.updated_at,
                 notes: o.note,
-                isActive: o.is_active,
                 items: o.order_items ? o.order_items.map((item: any) => ({
                     id: item.id,
-                    service: item.service?.name_ar ?? item.service?.name_en ?? '', 
-                    category: item.category?.name_ar ?? item.category?.name_en ?? '',
+                    // Service and Category might be strings or objects depending on API version, handling both
+                    service: typeof item.service === 'string' ? item.service : (item.service?.name_ar ?? item.service?.name_en ?? ''),
+                    category: typeof item.category === 'string' ? item.category : (item.category?.name_ar ?? item.category?.name_en ?? ''),
                     quantity: item.quantity,
                     price: parseFloat(item.price)
                 })) : []
@@ -113,11 +117,11 @@ const OrdersPage: React.FC = () => {
     const handleSaveOrder = async (orderData: any) => {
         // orderData comes from AddOrderPanel state. 
         // It contains 'items', 'reservation' ID (passed in bookingNumber field temporarily), 'notes'
-        
+
         try {
             const formData = new FormData();
             // Use the reservation ID stored in bookingNumber field from the panel
-            formData.append('reservation', orderData.bookingNumber); 
+            formData.append('reservation', orderData.bookingNumber);
             formData.append('note', orderData.notes);
 
             if (orderData.items) {
@@ -148,19 +152,6 @@ const OrdersPage: React.FC = () => {
         }
     };
 
-    const handleToggleStatus = async (order: Order, newStatus: boolean) => {
-        try {
-            const action = newStatus ? 'active' : 'disable';
-            await apiClient(`/ar/order/api/orders/${order.id}/${action}/`, { method: 'POST' });
-            
-            // Optimistically update
-            setOrders(prev => prev.map(o => o.id === order.id ? { ...o, isActive: newStatus } : o));
-        } catch (err) {
-             alert(`Error changing status: ${err instanceof Error ? err.message : 'Unknown error'}`);
-             fetchOrders(); // Revert on error
-        }
-    };
-
     const handleAddNewClick = () => {
         setEditingOrder(null);
         setIsAddPanelOpen(true);
@@ -185,8 +176,17 @@ const OrdersPage: React.FC = () => {
                 alert(`Error deleting order: ${err instanceof Error ? err.message : 'Unknown error'}`);
             }
         }
+    }
+
+
+    const handlePrintClick = (order: Order) => {
+        setPrintingOrder(order);
+        setTimeout(() => {
+            window.print();
+            // setPrintingOrder(null); // Optional: clear after print if needed, but might flash
+        }, 100);
     };
-    
+
     const requestSort = (key: keyof Order) => {
         let direction: 'ascending' | 'descending' = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -205,12 +205,11 @@ const OrdersPage: React.FC = () => {
         { key: 'subtotal', labelKey: 'orders.th_subtotal' },
         { key: 'tax', labelKey: 'orders.th_tax' },
         { key: 'total', labelKey: 'orders.th_total' },
-        { key: 'isActive', labelKey: 'agencies.th_status' },
         { key: 'createdAt', labelKey: 'orders.th_createdAt' },
         { key: 'updatedAt', labelKey: 'orders.th_updatedAt' },
         { key: 'actions', labelKey: 'orders.th_actions' },
     ];
-    
+
     const showingEntriesControls = (
         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
             <span>{t('units.showing')}</span>
@@ -239,7 +238,7 @@ const OrdersPage: React.FC = () => {
                     className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
                 />
             </div>
-             <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
                 <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg transition-colors ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`} aria-label="Table View">
                     <TableCellsIcon className="w-5 h-5" />
                 </button>
@@ -249,9 +248,9 @@ const OrdersPage: React.FC = () => {
             </div>
         </div>
     );
-    
+
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
-    
+
     const formatDateTime = (dateString: string) => {
         if (!dateString) return '-';
         const d = new Date(dateString);
@@ -264,8 +263,8 @@ const OrdersPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('orders.manageOrders')}</h2>
-                 <div className="flex flex-wrap items-center gap-2">
-                    <button 
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
                         onClick={handleAddNewClick}
                         className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
                     >
@@ -276,7 +275,7 @@ const OrdersPage: React.FC = () => {
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
                     {language === 'ar' ? (
                         <>
                             {searchAndViewsControls}
@@ -311,9 +310,9 @@ const OrdersPage: React.FC = () => {
                                 <tr>
                                     {tableHeaders.map(header => (
                                         <th key={header.key} scope="col" className={`px-4 py-3 whitespace-nowrap ${header.className || ''}`}>
-                                             {header.key !== 'actions' ? (
-                                                <button 
-                                                    className="flex items-center gap-1.5 group" 
+                                            {header.key !== 'actions' ? (
+                                                <button
+                                                    className="flex items-center gap-1.5 group"
                                                     onClick={() => requestSort(header.key as keyof Order)}
                                                 >
                                                     <span>{t(header.labelKey as any)}</span>
@@ -325,9 +324,9 @@ const OrdersPage: React.FC = () => {
                                                         )}
                                                     </span>
                                                 </button>
-                                             ) : (
-                                                 <span>{t(header.labelKey as any)}</span>
-                                             )}
+                                            ) : (
+                                                <span>{t(header.labelKey as any)}</span>
+                                            )}
                                         </th>
                                     ))}
                                 </tr>
@@ -335,11 +334,12 @@ const OrdersPage: React.FC = () => {
                             <tbody>
                                 {orders.map((order, index) => (
                                     <tr key={order.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                       {tableHeaders.map(header => (
+                                        {tableHeaders.map(header => (
                                             <td key={`${order.id}-${header.key}`} className={`px-4 py-3 whitespace-nowrap ${header.className || ''}`}>
                                                 {header.key === 'actions' ? (
                                                     <div className="flex items-center gap-1">
                                                         <button onClick={() => setViewingOrder(order)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
+                                                        <button onClick={() => handlePrintClick(order)} className="p-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" title={t('receipts.print')}><PrinterIcon className="w-5 h-5" /></button>
                                                         <button onClick={() => handleEditClick(order)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
                                                         <button onClick={() => handleDeleteClick(order.id)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
                                                     </div>
@@ -352,41 +352,37 @@ const OrdersPage: React.FC = () => {
                                                     <span className="bg-cyan-400 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
                                                         {(order.discount || 0).toFixed(1)}%
                                                     </span>
-                                                ) : header.key === 'isActive' ? (
-                                                     <Switch 
-                                                        id={`status-${order.id}`} 
-                                                        checked={!!order.isActive} 
-                                                        onChange={(c) => handleToggleStatus(order, c)} 
-                                                    />
                                                 ) : (
                                                     (order[header.key as keyof Order] as string | number) || '-'
                                                 )}
                                             </td>
-                                       ))}
+                                        ))}
                                     </tr>
                                 ))}
-                                {orders.length === 0 && (
-                                     <tr><td colSpan={tableHeaders.length} className="text-center py-8">{t('orders.noData')}</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                {
+                                    orders.length === 0 && (
+                                        <tr><td colSpan={tableHeaders.length} className="text-center py-8">{t('orders.noData')}</td></tr>
+                                    )
+                                }
+                            </tbody >
+                        </table >
+                    </div >
                 )}
-                
+
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
                         {`${t('units.showing')} ${orders.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, totalRecords)} ${t('units.of')} ${totalRecords} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <nav className="flex items-center gap-1" aria-label="Pagination">
                             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
+                            <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
                             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
                         </nav>
                     )}
                 </div>
-            </div>
-            
+            </div >
+
             <AddOrderPanel
                 initialData={editingOrder || newOrderTemplate}
                 isEditing={!!editingOrder}
@@ -407,7 +403,9 @@ const OrdersPage: React.FC = () => {
                 title={t('orders.deleteOrderTitle')}
                 message={t('orders.confirmDeleteMessage')}
             />
-        </div>
+
+            {printingOrder && <PrintableOrder order={printingOrder} />}
+        </div >
     );
 };
 

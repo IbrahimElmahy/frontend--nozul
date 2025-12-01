@@ -27,15 +27,15 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice }) => {
     const formatFullDate = (dateString: string) => new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', {
         year: 'numeric', month: 'long', day: 'numeric',
     });
-    
+
     const formatFullDateTime = (dateString: string) => new Date(dateString).toLocaleString(language === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', {
         year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
     });
 
     return (
-        <div className="printable-invoice-container">
+        <div className="printable-invoice-container hidden print:block">
             <div className="p-6 bg-white text-gray-800 font-sans text-xs" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-                
+
                 {/* Header */}
                 <header className="grid grid-cols-2 gap-4 pb-4 border-b-2 border-gray-800">
                     <div>
@@ -47,12 +47,9 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice }) => {
                     <div className="text-left">
                         <h1 className="text-2xl font-bold uppercase mb-2">فاتورة ضريبية</h1>
                         <div className="grid grid-cols-2">
-                             {/* FIX: Use correct property 'created_at' */}
-                             <span className="font-bold">تاريخ الفاتورة :</span><span>{formatFullDate(invoice.created_at)}</span>
-                             {/* FIX: Use correct property 'created_at' */}
-                             <span className="font-bold">انشأت في :</span><span>{formatFullDateTime(invoice.created_at)}</span>
-                             {/* FIX: Use correct property 'number' */}
-                             <span className="font-bold">رقم الفاتورة :</span><span>{invoice.number}</span>
+                            <span className="font-bold">تاريخ الفاتورة :</span><span>{formatFullDate(invoice.created_at)}</span>
+                            <span className="font-bold">انشأت في :</span><span>{formatFullDateTime(invoice.created_at)}</span>
+                            <span className="font-bold">رقم الفاتورة :</span><span>{invoice.number}</span>
                         </div>
                     </div>
                 </header>
@@ -61,34 +58,9 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice }) => {
                     {/* Booking and Tenant Info */}
                     <div className="grid grid-cols-2 gap-6">
                         <InfoBlock title="معلومات الحجز">
-                            {/* FIX: Use correct property 'reservation' */}
                             <DetailRow label="رقم الحجز">{invoice.reservation}</DetailRow>
-                            <DetailRow label="حالة الحجز">تسجيل الدخول</DetailRow>
-                            <DetailRow label="فترة الحجز">2025-10-08 - 2025-10-09</DetailRow>
-                            <DetailRow label="رقم الوحدة">roomtest</DetailRow>
-                        </InfoBlock>
-                        <InfoBlock title="بيانات المستأجر">
-                            <DetailRow label="الاسم">ahmed</DetailRow>
-                            <DetailRow label="الجنسية">السعودية (المملكة العربية)</DetailRow>
-                            <DetailRow label="نوع الهوية">جواز سفر</DetailRow>
-                            <DetailRow label="رقم بطاقة الهوية">0999999</DetailRow>
-                            <DetailRow label="رقم الجوال">+966567289000</DetailRow>
-                            <DetailRow label="البريد الإلكتروني">1ms19cs333@gmail.com</DetailRow>
                         </InfoBlock>
                     </div>
-
-                    {/* Address Info */}
-                     <InfoBlock title="معلومات العنوان">
-                        <div className="grid grid-cols-3 gap-x-4 gap-y-1">
-                           <DetailRow label="الدولة">السعودية (المملكة العربية)</DetailRow>
-                           <DetailRow label="المدينة">الرياض</DetailRow>
-                           <DetailRow label="الحيّ">حي السلام</DetailRow>
-                           <DetailRow label="الرمز بريدي">13786</DetailRow>
-                           <div className="col-span-3">
-                              <DetailRow label="الشارع">عنيزة 7029 ,حي ضهرة لبن الرياض</DetailRow>
-                           </div>
-                        </div>
-                    </InfoBlock>
 
                     {/* Line Items Table */}
                     <div>
@@ -96,41 +68,31 @@ const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({ invoice }) => {
                             <thead className="bg-gray-100 font-bold">
                                 <tr>
                                     <th className="p-2 border">#</th>
-                                    <th className="p-2 border text-right">الخدمة</th>
-                                    <th className="p-2 border">الكمية</th>
-                                    <th className="p-2 border">السعر</th>
-                                    <th className="p-2 border">المجموع</th>
+                                    <th className="p-2 border text-right">الوصف</th>
+                                    <th className="p-2 border">المبلغ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr className="border-b">
                                     <td className="p-2 border">1</td>
-                                    {/* FIX: Use correct property 'reservation' */}
-                                    <td className="p-2 border text-right">الحجز ({invoice.reservation})</td>
-                                    <td className="p-2 border">1</td>
-                                    {/* FIX: Use correct property 'amount' */}
-                                    <td className="p-2 border">{invoice.amount.toFixed(2)}</td>
-                                    {/* FIX: Use correct property 'amount' */}
+                                    <td className="p-2 border text-right">فاتورة حجز {invoice.reservation}</td>
                                     <td className="p-2 border">{invoice.amount.toFixed(2)}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    
+
                     {/* Financial Summary */}
                     <div className="flex justify-end">
                         <div className="w-full max-w-sm space-y-1">
-                             {/* FIX: Use correct property 'amount' */}
-                             <DetailRow label="القيمة">{invoice.amount.toFixed(2)}</DetailRow>
-                             <DetailRow label="الخصم">{invoice.discount?.toFixed(2) ?? '0.00'}</DetailRow>
-                             <DetailRow label="المجموع قبل الضريبة">1702.12</DetailRow>
-                             <DetailRow label="ضريبة القمية المضافة">255.31</DetailRow>
-                             <DetailRow label="مرافق الإيواء">42.55</DetailRow>
-                             <DetailRow label="الضريبة">297.86</DetailRow>
-                             <div className="border-t-2 my-1"></div>
-                             <DetailRow label="المجموع شامل الضريبة">
+                            <DetailRow label="القيمة">{invoice.amount.toFixed(2)}</DetailRow>
+                            <DetailRow label="الخصم">{invoice.discount?.toFixed(2) || '0.00'}</DetailRow>
+                            <DetailRow label="المجموع الفرعي">{invoice.subtotal?.toFixed(2) || invoice.amount.toFixed(2)}</DetailRow>
+                            <DetailRow label="الضريبة">{invoice.tax?.toFixed(2) || '0.00'}</DetailRow>
+                            <div className="border-t-2 my-1"></div>
+                            <DetailRow label="المجموع شامل الضريبة">
                                 <span className="text-lg font-bold">{invoice.total.toFixed(2)}</span>
-                             </DetailRow>
+                            </DetailRow>
                         </div>
                     </div>
 

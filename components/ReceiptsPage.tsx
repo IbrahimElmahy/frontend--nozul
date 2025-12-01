@@ -13,6 +13,7 @@ import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
 import PrinterIcon from './icons-redesign/PrinterIcon';
 import InvoiceDetailsModal from './InvoiceDetailsModal';
 import InvoicePrintPreview from './InvoicePrintPreview';
+import PrintableReceipt from './PrintableReceipt';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
@@ -42,11 +43,11 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
     const [receipts, setReceipts] = useState<Receipt[]>([]);
     const [paymentVouchers, setPaymentVouchers] = useState<Receipt[]>([]);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
-    
+
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [totalRecords, setTotalRecords] = useState(0);
-    const [voucherType, setVoucherType] = useState<VoucherType>('receipt'); 
+    const [voucherType, setVoucherType] = useState<VoucherType>('receipt');
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -55,10 +56,11 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
     const [editingVoucher, setEditingVoucher] = useState<Receipt | null>(null);
     const [voucherToDelete, setVoucherToDelete] = useState<Receipt | null>(null);
     const [viewingVoucher, setViewingVoucher] = useState<Receipt | null>(null);
-    
+
     const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
     const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
     const [invoiceForPreview, setInvoiceForPreview] = useState<Invoice | null>(null);
+    const [printingReceipt, setPrintingReceipt] = useState<Receipt | null>(null);
 
     const isPaymentView = voucherType === 'payment';
     const isInvoiceView = voucherType === 'invoice';
@@ -83,7 +85,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
             const response = await apiClient<{ data: any[], recordsFiltered: number }>(`${endpoint}?${params.toString()}`);
 
             if (voucherType === 'invoice') {
-                 setInvoices(response.data as Invoice[]);
+                setInvoices(response.data as Invoice[]);
             } else {
                 // Map transaction response to Receipt type
                 const mappedData: Receipt[] = response.data.map((item: any) => ({
@@ -148,7 +150,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
             }
         }
     };
-    
+
     const handleClosePanel = () => {
         setIsAddPanelOpen(false);
         setEditingVoucher(null);
@@ -163,6 +165,13 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
     const handlePrintInvoice = (invoice: Invoice) => {
         setViewingInvoice(null);
         setInvoiceForPreview(invoice);
+    };
+
+    const handlePrintReceipt = (receipt: Receipt) => {
+        setPrintingReceipt(receipt);
+        setTimeout(() => {
+            window.print();
+        }, 500);
     };
 
     const handleConfirmDeleteInvoice = async () => {
@@ -188,7 +197,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
         { key: 'th_createdAt', className: 'hidden 2xl:table-cell' },
         { key: 'th_actions', className: '' }
     ];
-    
+
     const invoiceTableHeaders = [
         { key: 'th_id', className: 'hidden sm:table-cell' },
         { key: 'th_invoiceNumber', className: '' },
@@ -198,7 +207,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
         { key: 'th_createdAt', className: 'hidden 2xl:table-cell' },
         { key: 'th_actions', className: '' }
     ];
-    
+
     const currentTableHeaders = isInvoiceView ? invoiceTableHeaders : receiptTableHeaders;
 
     const filterButtons = [
@@ -206,7 +215,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
         { key: 'payment', label: 'receipts.paymentVouchers' },
         { key: 'invoice', label: 'receipts.invoices' },
     ];
-    
+
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
     const displayData = isInvoiceView ? invoices : (isPaymentView ? paymentVouchers : receipts);
 
@@ -216,7 +225,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
                     {isInvoiceView ? t('receipts.manageInvoices') : isPaymentView ? t('receipts.managePaymentVouchers') : t('receipts.manageReceipts')}
                 </h2>
-                 <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                     {!isInvoiceView && (
                         <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
                             <PlusCircleIcon className="w-5 h-5" />
@@ -228,7 +237,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
 
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
                 {filterButtons.map(btn => (
-                     <button 
+                    <button
                         key={btn.key}
                         onClick={() => {
                             setVoucherType(btn.key as VoucherType);
@@ -237,12 +246,12 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                         }}
                         className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${voucherType === btn.key ? 'bg-blue-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                     >
-                         {t(btn.label as any)}
-                     </button>
+                        {t(btn.label as any)}
+                    </button>
                 ))}
             </div>
 
-             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 pb-4 border-b dark:border-slate-700">
                     <div className="relative w-full sm:w-auto sm:flex-grow max-w-lg">
                         <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
@@ -284,7 +293,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                             </tr>
                         </thead>
                         <tbody>
-                             {loading ? (
+                            {loading ? (
                                 <tr><td colSpan={currentTableHeaders.length} className="text-center py-10">Loading...</td></tr>
                             ) : displayData.length > 0 ? (
                                 isInvoiceView ? (
@@ -298,9 +307,9 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                                             <td className="px-6 py-4 hidden 2xl:table-cell">{new Date(invoice.created_at).toLocaleDateString()}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1">
-                                                    <button onClick={() => setViewingInvoice(invoice)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5"/></button>
-                                                    <button onClick={() => handlePrintInvoice(invoice)} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700" aria-label={t('receipts.print')}><PrinterIcon className="w-5 h-5"/></button>
-                                                    <button onClick={() => setInvoiceToDelete(invoice)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" aria-label={t('bookings.delete')}><TrashIcon className="w-5 h-5"/></button>
+                                                    <button onClick={() => setViewingInvoice(invoice)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5" /></button>
+                                                    <button onClick={() => handlePrintInvoice(invoice)} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700" aria-label={t('receipts.print')}><PrinterIcon className="w-5 h-5" /></button>
+                                                    <button onClick={() => setInvoiceToDelete(invoice)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" aria-label={t('bookings.delete')}><TrashIcon className="w-5 h-5" /></button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -318,9 +327,10 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                                             <td className="px-6 py-4 hidden 2xl:table-cell">{new Date(voucher.createdAt).toLocaleDateString()}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1">
-                                                    <button onClick={() => setViewingVoucher(voucher)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5"/></button>
-                                                    <button onClick={() => handleEditClick(voucher)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10" aria-label={t('bookings.edit')}><PencilSquareIcon className="w-5 h-5"/></button>
-                                                    <button onClick={() => handleDeleteClick(voucher)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" aria-label={t('bookings.delete')}><TrashIcon className="w-5 h-5"/></button>
+                                                    <button onClick={() => setViewingVoucher(voucher)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10" aria-label={t('bookings.view')}><EyeIcon className="w-5 h-5" /></button>
+                                                    <button onClick={() => handlePrintReceipt(voucher)} className="p-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label={t('receipts.print')}><PrinterIcon className="w-5 h-5" /></button>
+                                                    <button onClick={() => handleEditClick(voucher)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10" aria-label={t('bookings.edit')}><PencilSquareIcon className="w-5 h-5" /></button>
+                                                    <button onClick={() => handleDeleteClick(voucher)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" aria-label={t('bookings.delete')}><TrashIcon className="w-5 h-5" /></button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -337,21 +347,21 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                     </table>
                 </div>
 
-                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                       {`${t('units.showing')} ${displayData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, totalRecords)} ${t('units.of')} ${totalRecords} ${t('units.entries')}`}
+                        {`${t('units.showing')} ${displayData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, totalRecords)} ${t('units.of')} ${totalRecords} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <nav className="flex items-center gap-1" aria-label="Pagination">
                             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
+                            <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
                             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
                         </nav>
                     )}
                 </div>
             </div>
-            
-            <AddReceiptPanel 
+
+            <AddReceiptPanel
                 isOpen={isAddPanelOpen}
                 onClose={handleClosePanel}
                 onSave={handleSaveVoucher}
@@ -361,7 +371,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 user={user}
             />
 
-            <ReceiptDetailsModal 
+            <ReceiptDetailsModal
                 receipt={viewingVoucher}
                 onClose={() => setViewingVoucher(null)}
                 voucherType={voucherType as 'receipt' | 'payment'}
@@ -374,10 +384,10 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 title={isPaymentView ? t('receipts.deletePaymentVoucherTitle') : t('receipts.deleteReceiptTitle')}
                 message={t('receipts.confirmDeleteMessage')}
             />
-            
-            <InvoiceDetailsModal 
-                invoice={viewingInvoice} 
-                onClose={() => setViewingInvoice(null)} 
+
+            <InvoiceDetailsModal
+                invoice={viewingInvoice}
+                onClose={() => setViewingInvoice(null)}
                 onPrint={handlePrintInvoice}
             />
 
@@ -394,6 +404,8 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 invoice={invoiceForPreview}
                 onClose={() => setInvoiceForPreview(null)}
             />
+
+            {printingReceipt && <PrintableReceipt receipt={printingReceipt} />}
         </div>
     );
 };
