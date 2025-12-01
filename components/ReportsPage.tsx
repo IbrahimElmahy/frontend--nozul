@@ -9,10 +9,11 @@ import ReportDailyBookings from './ReportDailyBookings';
 import ReportBalady from './ReportBalady';
 import ReportFinancial from './ReportFinancial';
 import ReportFundMovement from './ReportFundMovement';
+import ReportAccountStatement from './ReportAccountStatement';
 
 const reportsData = [
     { id: 'cash_flow', category: 'financial', component: ReportFundMovement },
-    { id: 'account_statement', category: 'financial', component: ReportFinancial },
+    { id: 'account_statement', category: 'financial', component: ReportAccountStatement },
     { id: 'balady', category: 'operational', component: ReportBalady },
     { id: 'daily_bookings', category: 'operational', component: ReportDailyBookings },
 ];
@@ -31,8 +32,8 @@ const ReportsPage: React.FC = () => {
 
     const handleToggleFavorite = (e: React.MouseEvent, reportId: string) => {
         e.stopPropagation();
-        setFavorites(prev => 
-            prev.includes(reportId) 
+        setFavorites(prev =>
+            prev.includes(reportId)
                 ? prev.filter(id => id !== reportId)
                 : [...prev, reportId]
         );
@@ -43,14 +44,14 @@ const ReportsPage: React.FC = () => {
             const title = t(`reportsPage.reports.${report.id}.title` as any).toLowerCase();
             const description = t(`reportsPage.reports.${report.id}.description` as any).toLowerCase();
             const lowerSearchTerm = searchTerm.toLowerCase();
-            
+
             const matchesSearch = title.includes(lowerSearchTerm) || description.includes(lowerSearchTerm);
             const matchesCategory = activeCategory === 'all' || report.category === activeCategory || (activeCategory === 'favorites' && favorites.includes(report.id));
 
             return matchesSearch && matchesCategory;
         });
     }, [searchTerm, activeCategory, favorites, t]);
-    
+
     const sidebarCategories = [
         { id: 'favorites', nameKey: 'reportsPage.favorites', icon: StarIcon },
         { id: 'all', nameKey: 'reportsPage.allReports', icon: ArchiveBoxIcon },
@@ -66,7 +67,7 @@ const ReportsPage: React.FC = () => {
             <div className="space-y-6">
                 <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                     <div className="flex items-center gap-4">
-                        <button 
+                        <button
                             onClick={() => setActiveReportId(null)}
                             className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                         >
@@ -89,7 +90,7 @@ const ReportsPage: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-6">
             {/* Main Content */}
             <main className="flex-grow w-full md:w-2/3">
-                 <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm h-full">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm h-full">
                     <div className="relative mb-6">
                         <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
                         <input
@@ -100,9 +101,9 @@ const ReportsPage: React.FC = () => {
                             className={`w-full py-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
                         />
                     </div>
-                    
+
                     <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4">{t('reportsPage.allReports')}</h2>
-                    
+
                     <div className="space-y-6">
                         {categoryData.map(category => {
                             const reportsInCategory = filteredReports.filter(r => r.category === category.id);
@@ -113,8 +114,8 @@ const ReportsPage: React.FC = () => {
                                     <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300 mb-2 border-b dark:border-slate-700 pb-2">{t(category.nameKey as any)}</h3>
                                     <div className="space-y-2">
                                         {reportsInCategory.map(report => (
-                                            <div 
-                                                key={report.id} 
+                                            <div
+                                                key={report.id}
                                                 onClick={() => setActiveReportId(report.id)}
                                                 className="flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors duration-150 cursor-pointer group"
                                             >
@@ -132,7 +133,7 @@ const ReportsPage: React.FC = () => {
                             );
                         })}
                     </div>
-                 </div>
+                </div>
             </main>
 
             {/* Right Sidebar */}
@@ -144,11 +145,10 @@ const ReportsPage: React.FC = () => {
                             <button
                                 key={cat.id}
                                 onClick={() => setActiveCategory(cat.id)}
-                                className={`w-full flex items-center gap-3 p-3 rounded-lg text-sm font-medium transition-colors duration-150 ${
-                                    activeCategory === cat.id
-                                        ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                                }`}
+                                className={`w-full flex items-center gap-3 p-3 rounded-lg text-sm font-medium transition-colors duration-150 ${activeCategory === cat.id
+                                    ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                    }`}
                             >
                                 <cat.icon className="w-5 h-5" />
                                 <span>{t(cat.nameKey as any)}</span>

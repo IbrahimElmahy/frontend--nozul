@@ -38,21 +38,20 @@ export const exportStatementAccount = (payload?: Record<string, any>) =>
     apiClient<Blob>('/ar/report/api/statement-account/export-excel-file/', {
         method: payload ? 'POST' : 'GET',
         body: payload ? toFormData(payload) : undefined,
+        responseType: 'blob',
     });
 
 // Balady
 export const fetchBalady = (query?: Query) =>
     apiClient<DataTableResponse<any>>(`/ar/report/api/balady/${buildQueryString(query)}`);
 
-export const exportBalady = (payload?: Record<string, any>) =>
-    apiClient<Blob>('/ar/report/api/balady/export-excel-file/', {
-        method: payload ? 'POST' : 'GET',
-        body: payload ? toFormData(payload) : undefined,
-    });
+
+
+import { DailyBookingItem } from '../types';
 
 // Daily reservation movements
 export const fetchDailyReservationsMovements = (query?: Query) =>
-    apiClient<DataTableResponse<Reservation>>(`/ar/report/api/daily_reservations_movements/${buildQueryString(query)}`);
+    apiClient<DataTableResponse<DailyBookingItem>>(`/ar/report/api/daily_reservations_movements/${buildQueryString(query)}`);
 
 export const fetchAllReservationsMovements = (query?: Query) =>
     apiClient<Reservation[]>(`/ar/report/api/daily_reservations_movements/get-all-reservation/${buildQueryString(query)}`);
@@ -61,6 +60,7 @@ export const exportReservationsMovements = (payload?: Record<string, any>) =>
     apiClient<Blob>('/ar/reservation/api/reservations/export-excel-file/', {
         method: payload ? 'POST' : 'GET',
         body: payload ? toFormData(payload) : undefined,
+        responseType: 'blob',
     });
 
 // Helpers used by the report filters
@@ -75,3 +75,7 @@ export const fetchReservationStatuses = () =>
 
 export const fetchRentalTypes = () =>
     apiClient<string[]>('/ar/reservation/api/reservations/rental-types/');
+
+export const fetchAccountTree = () =>
+    apiClient<any[]>('/ar/account/api/accounts/tree/');
+
