@@ -61,6 +61,8 @@ export const translations = {
             bookingStats: "إحصائيات الحجوزات",
             bookingStatus: "حالة الحجز",
             checkin: "الدخول",
+            pending: "قيد الانتظار",
+            total: "المجموع",
             dash: "-",
             notClean: "غير نظيف",
             clean: "نظيف",
@@ -316,6 +318,9 @@ export const translations = {
             th_actions: "الإجراءات",
             status_check_in: "تم الوصول",
             status_check_out: "تم المغادرة",
+            status_pending: "قيد الانتظار",
+            status_confirmed: "مؤكد",
+            status_cancelled: "ملغي",
             booking_source_airbnb: "Airbnb",
             booking_source_booking: "Booking.com",
             booking_source_almosafer: "المسافر",
@@ -324,6 +329,7 @@ export const translations = {
             booking_source_reception: "الاستقبال",
             rent_hourly: "بالساعة",
             rent_daily: "يومي",
+            rent_weekly: "أسبوعي",
             rent_monthly: "شهري",
             guest_type_health_employee: "موظف وزارة الصحة",
             guest_type_quarantine: "عمل نزيل حجر",
@@ -646,6 +652,7 @@ export const translations = {
                     title: "تقرير كشف الحساب",
                     description: "يقوم هذا التقرير بتقييم حركات الحسابات المحاسبية في شجرة الحسابات، ويقدم إمكانات تصفية البيانات على أساس الوقت مع امكانية تصديرها."
                 },
+
                 balady: {
                     title: "تقرير بلدي",
                     description: "يقوم التقرير بتقييم حركات الحجز والتصفية على أساس الوقت وتصدير البيانات إلى منصة بلدي."
@@ -654,7 +661,9 @@ export const translations = {
                     title: "تقرير حركة الحجوزات اليومية",
                     description: "يقوم التقرير بتقييم حركات الحجز اليومية والتصفية على أساس الوقت وتصدير البيانات."
                 }
-            }
+            },
+            exportFailed: "فشل التصدير",
+
         },
         archivesPage: {
             title: "الأرشيفات",
@@ -768,7 +777,7 @@ export const translations = {
             poBox: "رقم صندوق البريد",
             location: "الموقع",
             photo: "الصورة",
-            noFileChosen: "لم يتم اختيار ملف",
+
             gender: "الجنس",
             selectGender: "اختر الجنس",
             male: "ذكر",
@@ -776,7 +785,7 @@ export const translations = {
             dob: "تاريخ الميلاد",
             loginInfo: "معلومات تسجيل الدخول",
             username: "اسم المستخدم",
-            email: "عنوان البريد الإلكتروني",
+
             mobile: "رقم الجوال",
             isHotelManager: "هل هو مدير للفندق",
             passwordInfo: "معلومات كلمة المرور",
@@ -1116,6 +1125,7 @@ export const translations = {
             applyTo_bookings: "الحجوزات",
             applyTo_services: "الخدمات",
         },
+
     },
     en: {
         buttons: {
@@ -1431,6 +1441,9 @@ export const translations = {
             th_actions: "Actions",
             status_check_in: "Checked In",
             status_check_out: "Checked Out",
+            status_pending: "Pending",
+            status_confirmed: "Confirmed",
+            status_cancelled: "Cancelled",
             booking_source_airbnb: "Airbnb",
             booking_source_booking: "Booking.com",
             booking_source_almosafer: "Almosafer",
@@ -1769,7 +1782,9 @@ export const translations = {
                     title: "Daily Bookings Report",
                     description: "Evaluates daily booking movements."
                 }
-            }
+            },
+            exportFailed: "Export Failed",
+
         },
         archivesPage: {
             title: "Archives",

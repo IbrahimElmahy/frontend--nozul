@@ -2,10 +2,17 @@ import { apiClient } from '../apiClient';
 import {
     Apartment,
     CheckoutRequest,
+    Country,
+    DiscountType,
+    Guest,
+    GuestCategory,
     RentalCalculationRequest,
     RentalCalculationResponse,
+    RentalType,
     Reservation,
     ReservationListResponse,
+    ReservationReason,
+    ReservationSource,
     ReservationStatistics,
     StatusCountResponse,
     TimelineResponse,
@@ -40,6 +47,9 @@ const RESERVATIONS_ENDPOINT = '/reservation/api/reservations/';
 export const listReservations = (query?: Query) =>
     apiClient<ReservationListResponse>(`${RESERVATIONS_ENDPOINT}${buildQueryString(query)}`);
 
+export const getReservation = (id: number | string) =>
+    apiClient<Reservation>(`${RESERVATIONS_ENDPOINT}${id}/`);
+
 export const createReservation = (payload: Partial<Reservation>) =>
     apiClient<Reservation>(RESERVATIONS_ENDPOINT, { method: 'POST', body: toFormData(payload) });
 
@@ -72,3 +82,27 @@ export const getReservationStatusCount = (query?: Query) =>
 
 export const listApartments = (query?: Query) =>
     apiClient<{ count: number; results: Apartment[] }>(`/apartment/api/apartments/${buildQueryString(query)}`);
+
+export const getRentalTypes = () =>
+    apiClient<RentalType[]>('/reservation/api/reservations/rental-types/');
+
+export const getReservationSources = (query?: Query) =>
+    apiClient<{ count: number; results: ReservationSource[] }>(`/reservation/api/reservation-sources/${buildQueryString(query)}`);
+
+export const getReservationReasons = (query?: Query) =>
+    apiClient<{ count: number; results: ReservationReason[] }>(`/reservation/api/reservation-reasons/${buildQueryString(query)}`);
+
+export const getDiscountTypes = () =>
+    apiClient<DiscountType[]>('/discount/api/discount-types/');
+
+export const getCountries = () =>
+    apiClient<Record<string, string>>('/country/api/countries/');
+
+export const getGuestCategories = () =>
+    apiClient<GuestCategory[]>('/guest/api/guests/categories/');
+
+export const searchAvailableApartments = (query: Query) =>
+    apiClient<{ count: number; results: Apartment[] }>(`/apartment/api/apartments/${buildQueryString(query)}`);
+
+export const searchGuests = (query: Query) =>
+    apiClient<{ count: number; results: Guest[] }>(`/guest/api/guests/${buildQueryString(query)}`);

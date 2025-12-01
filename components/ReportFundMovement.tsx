@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { apiClient } from '../apiClient';
 import { FundReportItem, ReportFilterOption } from '../types';
@@ -38,27 +37,46 @@ const ReportFundMovement: React.FC = () => {
         const fetchOptions = async () => {
             try {
                 const [typesRes, cashRes, currRes, payRes, userRes] = await Promise.all([
-                    apiClient<{ data: any[] }>('/ar/transaction/api/transactions/receipt-types/'),
-                    apiClient<{ data: any[] }>('/ar/cash/api/cash/'),
-                    apiClient<{ data: any[] }>('/ar/currency/api/currencies/'),
-                    apiClient<{ data: any[] }>('/ar/payment/api/payments-methods/'),
-                    apiClient<{ data: any[] }>('/ar/user/api/users/'),
+                    apiClient<{ data: any[] }>('/ar/transaction/api/transactions/receipt-types/?length=1000'),
+                    apiClient<{ data: any[] }>('/ar/cash/api/cash/?category=cash&is_active=true&length=1000'),
+                    apiClient<{ data: any[] }>('/ar/currency/api/currencies/?length=1000'),
+                    apiClient<{ data: any[] }>('/ar/payment/api/payments-methods/?length=1000'),
+                    apiClient<{ data: any[] }>('/ar/user/api/users/?length=1000'),
                 ]);
 
                 // Helper to map name based on language
-                const mapOptions = (list: any) => {
-                    const arr = Array.isArray(list) ? list : Array.isArray(list?.data) ? list.data : [];
-                    return arr.map(item => ({
+                const mapOptions = (response: any) => {
+                    // Handle different response structures:
+                    // 1. Direct array: response
+                    // 2. { data: [...] }: response.data
+                    // 3. { results: [...] }: response.results (DRF pagination)
+                    // 4. { data: { results: [...] } }: response.data.results
+
+                    let list: any[] = [];
+
+                    if (Array.isArray(response)) {
+                        list = response;
+                    } else if (response?.results && Array.isArray(response.results)) {
+                        list = response.results;
+                    } else if (response?.data) {
+                        if (Array.isArray(response.data)) {
+                            list = response.data;
+                        } else if (response.data.results && Array.isArray(response.data.results)) {
+                            list = response.data.results;
+                        }
+                    }
+
+                    return list.map(item => ({
                         id: item.id?.toString() || item.account?.toString(),
                         name: language === 'ar' ? (item.name_ar || item.name) : (item.name_en || item.name)
                     }));
                 };
 
-                setAccountTypes(mapOptions(typesRes.data));
-                setCashAccounts(mapOptions(cashRes.data));
-                setCurrencies(mapOptions(currRes.data));
-                setPaymentMethods(mapOptions(payRes.data));
-                setUsers(mapOptions(userRes.data));
+                setAccountTypes(mapOptions(typesRes));
+                setCashAccounts(mapOptions(cashRes));
+                setCurrencies(mapOptions(currRes));
+                setPaymentMethods(mapOptions(payRes));
+                setUsers(mapOptions(userRes));
 
             } catch (error) {
                 console.error("Failed to fetch report options", error);
@@ -78,32 +96,35 @@ const ReportFundMovement: React.FC = () => {
             if (filters.userId) params.append('created_by', filters.userId);
             if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
             if (filters.paymentMethod) params.append('payment_method', filters.paymentMethod);
-            if (filters.accountType) params.append('payment_type', filters.accountType);
+            if (filters.accountType) params.append('account_type', filters.accountType);
 
             const response = await apiClient<any>('/ar/report/api/statement-account/?' + params.toString());
-            
-            // Map response to FundReportItem
-            const raw = Array.isArray(response) ? response : Array.isArray(response?.data) ? response.data : Array.isArray(response?.results) ? response.results : [];
-            const mappedData: FundReportItem[] = raw.map((item: any) => ({
-                id: item.id,
+
+            // Map response
+            // API returns { data: { legs: [], credit: ..., debit: ..., balance: ... } }
+            const responseData = response.data || {};
+            const rawLegs = responseData.legs || [];
+
+            const mappedData: FundReportItem[] = rawLegs.map((item: any) => ({
+                id: item.id || Math.random().toString(), // Fallback ID if missing
                 date: item.date,
-                type: item.type_display || item.type, // e.g. Receipt, Payment
+                type: item.type,
                 number: item.number,
                 description: item.description,
                 debit: parseFloat(item.debit || 0),
                 credit: parseFloat(item.credit || 0),
                 balance: parseFloat(item.balance || 0),
-                payment_method: item.payment_method_display || item.payment_method
+                payment_method: item.category // Using category as payment method/type display based on example
             }));
 
             setData(mappedData);
 
-            // Calculate Summary
-            const totalDebit = mappedData.reduce((sum, item) => sum + item.debit, 0);
-            const totalCredit = mappedData.reduce((sum, item) => sum + item.credit, 0);
-            const netBalance = totalDebit - totalCredit; 
-
-            setSummary({ totalDebit, totalCredit, netBalance });
+            // Set Summary from API response
+            setSummary({
+                totalDebit: parseFloat(responseData.debit || 0),
+                totalCredit: parseFloat(responseData.credit || 0),
+                netBalance: parseFloat(responseData.balance || 0)
+            });
 
         } catch (error) {
             console.error("Search failed", error);
@@ -114,19 +135,145 @@ const ReportFundMovement: React.FC = () => {
         }
     };
 
-    const handleExport = () => {
+    const fetchFullData = async () => {
         const params = new URLSearchParams();
+        if (filters.account) params.append('account', filters.account);
+        if (filters.currency) params.append('currency', filters.currency);
         if (filters.startDate) params.append('start_date', filters.startDate);
         if (filters.endDate) params.append('end_date', filters.endDate);
-        if (filters.account) params.append('account', filters.account);
-        // Add other filters...
-        
-        const url = `https://www.osusideas.online/ar/report/api/statement-account/export-excel-file/?${params.toString()}`;
-        window.open(url, '_blank');
+        if (filters.userId) params.append('created_by', filters.userId);
+        if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
+        if (filters.paymentMethod) params.append('payment_method', filters.paymentMethod);
+        if (filters.accountType) params.append('account_type', filters.accountType);
+        params.append('is_export', 'true');
+
+        const response = await apiClient<any>('/ar/report/api/statement-account/?' + params.toString());
+        return response.data || {};
     };
 
-    const handlePrint = () => {
-        window.open('https://www.osusideas.online/ar/hpanel/reports/fund_movement/print/', '_blank', 'width=800,height=600');
+    const handleExport = async () => {
+        try {
+            setLoading(true);
+            const data = await fetchFullData();
+            const legs = data.legs || [];
+
+            // Convert to CSV
+            const headers = [
+                t('receipts.th_date'),
+                t('receipts.addReceiptPanel.voucher'),
+                t('receipts.th_transactionNumber'),
+                t('receipts.addReceiptPanel.description'),
+                t('receipts.addReceiptPanel.debitAccount'),
+                t('receipts.addReceiptPanel.creditAccount'),
+                t('bookings.balance')
+            ];
+
+            const csvContent = [
+                headers.join(','),
+                ...legs.map((item: any) => [
+                    item.date,
+                    item.type,
+                    item.number,
+                    `"${(item.description || '').replace(/"/g, '""')}"`, // Escape quotes
+                    item.debit,
+                    item.credit,
+                    item.balance
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `fund_movement_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Export failed", error);
+            alert("Export failed");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePrint = async () => {
+        try {
+            setLoading(true);
+            const data = await fetchFullData();
+            const legs = data.legs || [];
+            const summary = {
+                debit: data.debit,
+                credit: data.credit,
+                balance: data.balance
+            };
+
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>Fund Movement Report</title>
+                            <style>
+                                body { font-family: sans-serif; direction: ${language === 'ar' ? 'rtl' : 'ltr'}; }
+                                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                                th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+                                th { background-color: #f2f2f2; }
+                                .header { text-align: center; margin-bottom: 20px; }
+                                .summary { margin-top: 20px; display: flex; justify-content: flex-end; gap: 20px; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <h2>${t('receipts.searchInfo')}</h2>
+                                <p>${filters.startDate} - ${filters.endDate}</p>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>${t('receipts.th_date')}</th>
+                                        <th>${t('receipts.addReceiptPanel.voucher')}</th>
+                                        <th>${t('receipts.th_transactionNumber')}</th>
+                                        <th>${t('receipts.addReceiptPanel.description')}</th>
+                                        <th>${t('receipts.addReceiptPanel.debitAccount')}</th>
+                                        <th>${t('receipts.addReceiptPanel.creditAccount')}</th>
+                                        <th>${t('bookings.balance')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${legs.map((item: any) => `
+                                        <tr>
+                                            <td>${item.date}</td>
+                                            <td>${item.type}</td>
+                                            <td>${item.number}</td>
+                                            <td>${item.description}</td>
+                                            <td>${item.debit}</td>
+                                            <td>${item.credit}</td>
+                                            <td>${item.balance}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="4"><strong>Total</strong></td>
+                                        <td><strong>${summary.debit}</strong></td>
+                                        <td><strong>${summary.credit}</strong></td>
+                                        <td><strong>${summary.balance}</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.print();
+            }
+        } catch (error) {
+            console.error("Print failed", error);
+            alert("Print failed");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const labelClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 ${language === 'ar' ? 'text-right' : 'text-left'}`;
@@ -137,73 +284,73 @@ const ReportFundMovement: React.FC = () => {
             {/* Filter Section */}
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
                 <h3 className={`text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{t('receipts.searchInfo')}</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <div>
                         <label className={labelClass}>{t('receipts.addReceiptPanel.voucher')}</label>
-                        <SearchableSelect 
-                            id="accountType" 
-                            options={accountTypes.map(o => o.name)} 
-                            value={accountTypes.find(o => o.id === filters.accountType)?.name || ''} 
-                            onChange={val => { const f = accountTypes.find(o => o.name === val); if(f) setFilters(p => ({...p, accountType: f.id})) }} 
+                        <SearchableSelect
+                            id="accountType"
+                            options={accountTypes.map(o => o.name)}
+                            value={accountTypes.find(o => o.id === filters.accountType)?.name || ''}
+                            onChange={val => { const f = accountTypes.find(o => o.name === val); if (f) setFilters(p => ({ ...p, accountType: f.id })) }}
                             placeholder="Select Type"
                         />
                     </div>
                     <div>
                         <label className={labelClass}>{t('receipts.addReceiptPanel.paymentTo')}</label>
-                        <SearchableSelect 
-                            id="account" 
-                            options={cashAccounts.map(o => o.name)} 
-                            value={cashAccounts.find(o => o.id === filters.account)?.name || ''} 
-                            onChange={val => { const f = cashAccounts.find(o => o.name === val); if(f) setFilters(p => ({...p, account: f.id})) }} 
+                        <SearchableSelect
+                            id="account"
+                            options={cashAccounts.map(o => o.name)}
+                            value={cashAccounts.find(o => o.id === filters.account)?.name || ''}
+                            onChange={val => { const f = cashAccounts.find(o => o.name === val); if (f) setFilters(p => ({ ...p, account: f.id })) }}
                             placeholder="Select Account"
                         />
                     </div>
                     <div>
                         <label className={labelClass}>{t('receipts.addReceiptPanel.currency')}</label>
-                        <SearchableSelect 
-                            id="currency" 
-                            options={currencies.map(o => o.name)} 
-                            value={currencies.find(o => o.id === filters.currency)?.name || ''} 
-                            onChange={val => { const f = currencies.find(o => o.name === val); if(f) setFilters(p => ({...p, currency: f.id})) }} 
+                        <SearchableSelect
+                            id="currency"
+                            options={currencies.map(o => o.name)}
+                            value={currencies.find(o => o.id === filters.currency)?.name || ''}
+                            onChange={val => { const f = currencies.find(o => o.name === val); if (f) setFilters(p => ({ ...p, currency: f.id })) }}
                             placeholder="Select Currency"
                         />
                     </div>
                     <div>
                         <label className={labelClass}>{t('receipts.addReceiptPanel.paymentMethod')}</label>
-                        <SearchableSelect 
-                            id="paymentMethod" 
-                            options={paymentMethods.map(o => o.name)} 
-                            value={paymentMethods.find(o => o.id === filters.paymentMethod)?.name || ''} 
-                            onChange={val => { const f = paymentMethods.find(o => o.name === val); if(f) setFilters(p => ({...p, paymentMethod: f.id})) }} 
+                        <SearchableSelect
+                            id="paymentMethod"
+                            options={paymentMethods.map(o => o.name)}
+                            value={paymentMethods.find(o => o.id === filters.paymentMethod)?.name || ''}
+                            onChange={val => { const f = paymentMethods.find(o => o.name === val); if (f) setFilters(p => ({ ...p, paymentMethod: f.id })) }}
                             placeholder="Select Method"
                         />
                     </div>
                     <div>
                         <label className={labelClass}>{t('bookings.from')}</label>
-                        <DatePicker value={filters.startDate} onChange={d => setFilters(p => ({...p, startDate: d}))} />
+                        <DatePicker value={filters.startDate} onChange={d => setFilters(p => ({ ...p, startDate: d }))} />
                     </div>
                     <div>
                         <label className={labelClass}>{t('bookings.to')}</label>
-                        <DatePicker value={filters.endDate} onChange={d => setFilters(p => ({...p, endDate: d}))} />
+                        <DatePicker value={filters.endDate} onChange={d => setFilters(p => ({ ...p, endDate: d }))} />
                     </div>
                     <div>
                         <label className={labelClass}>{t('receipts.addReceiptPanel.accountant')}</label>
-                        <SearchableSelect 
-                            id="user" 
-                            options={users.map(o => o.name)} 
-                            value={users.find(o => o.id === filters.userId)?.name || ''} 
-                            onChange={val => { const f = users.find(o => o.name === val); if(f) setFilters(p => ({...p, userId: f.id})) }} 
+                        <SearchableSelect
+                            id="user"
+                            options={users.map(o => o.name)}
+                            value={users.find(o => o.id === filters.userId)?.name || ''}
+                            onChange={val => { const f = users.find(o => o.name === val); if (f) setFilters(p => ({ ...p, userId: f.id })) }}
                             placeholder="Select User"
                         />
                     </div>
                     <div>
                         <label className={labelClass}>{t('bookings.bookingNumber')}</label>
-                        <input 
-                            type="text" 
-                            value={filters.reservationNumber} 
-                            onChange={e => setFilters(p => ({...p, reservationNumber: e.target.value}))} 
-                            className={inputClass} 
+                        <input
+                            type="text"
+                            value={filters.reservationNumber}
+                            onChange={e => setFilters(p => ({ ...p, reservationNumber: e.target.value }))}
+                            className={inputClass}
                             placeholder="Reservation No."
                         />
                     </div>
@@ -261,7 +408,7 @@ const ReportFundMovement: React.FC = () => {
                                 </tr>
                             ))}
                         </tbody>
-                                                {!loading && data.length > 0 && (
+                        {!loading && data.length > 0 && (
                             <tfoot className="bg-slate-50 dark:bg-slate-700 font-bold text-slate-800 dark:text-slate-200">
                                 <tr>
                                     <td colSpan={5} className="px-4 py-3 text-end border-r dark:border-slate-600">Total debit</td>

@@ -85,11 +85,27 @@ const Dashboard: React.FC = () => {
                 }));
                 setApartmentCleanliness(cleanlinessChartData);
 
-                const statusCountChartData: DonutChartData[] = statusCountData.map(item => ({
-                    name: item.label === 'تسجيل الدخول' ? t('dashboard.checkin') : t('dashboard.checkout'),
-                    value: item.value,
-                    color: item.label === 'تسجيل الدخول' ? '#38bdf8' : '#f59e0b', // checkin: blue, checkout: amber
-                }));
+                const statusCountChartData: DonutChartData[] = statusCountData.map(item => {
+                    let name = item.label;
+                    let color = '#94a3b8'; // default slate
+
+                    if (item.label === 'تسجيل الدخول' || item.label === 'Check-in') {
+                        name = t('dashboard.checkin');
+                        color = '#38bdf8'; // blue
+                    } else if (item.label === 'مغادرة' || item.label === 'Check-out') {
+                        name = t('dashboard.checkout');
+                        color = '#f59e0b'; // amber
+                    } else if (item.label === 'قيد الانتظار' || item.label === 'Pending') {
+                        name = t('dashboard.pending'); // Ensure this key exists or use a fallback
+                        color = '#fbbf24'; // yellow
+                    }
+
+                    return {
+                        name,
+                        value: item.value,
+                        color,
+                    };
+                });
                 setReservationStatus(statusCountChartData);
 
             } catch (err) {
@@ -137,6 +153,7 @@ const Dashboard: React.FC = () => {
     const bookingStatusTotal = reservationStatus.reduce((sum, item) => sum + item.value, 0);
     const checkinValue = reservationStatus.find(d => d.name === t('dashboard.checkin'))?.value ?? 0;
     const checkoutValue = reservationStatus.find(d => d.name === t('dashboard.checkout'))?.value ?? 0;
+    const pendingValue = reservationStatus.find(d => d.name === t('dashboard.pending'))?.value ?? 0;
 
     const apartmentCleaningTotal = apartmentCleanliness.reduce((sum, item) => sum + item.value, 0);
     const notCleanValue = apartmentCleanliness.find(d => d.name === t('dashboard.notClean'))?.value ?? 0;
@@ -173,8 +190,8 @@ const Dashboard: React.FC = () => {
                 <DonutChartCard
                     title={t('dashboard.apartmentAvailability')}
                     data={apartmentAvailability}
-                    centerLabel={t('dashboard.available')}
-                    centerValue={apartmentAvailability.find(d => d.name === t('dashboard.available'))?.value ?? 0}
+                    centerLabel={t('dashboard.total')}
+                    centerValue={apartmentAvailabilityTotal}
                     total={apartmentAvailabilityTotal}
                 />
             </div>
@@ -209,13 +226,13 @@ const Dashboard: React.FC = () => {
                 <DonutChartCard
                     title={t('dashboard.bookingStatus')}
                     data={reservationStatus}
-                    centerLabel={t('dashboard.checkout')}
-                    centerValue={checkoutValue}
+                    centerLabel={t('dashboard.total')}
+                    centerValue={bookingStatusTotal}
                     total={bookingStatusTotal}
                     stats={[
                         { label: t('dashboard.checkout'), value: checkoutValue },
                         { label: t('dashboard.checkin'), value: checkinValue },
-                        { label: t('dashboard.dash'), value: 0 },
+                        { label: t('dashboard.pending'), value: pendingValue },
                     ]}
                 />
             </div>
@@ -224,8 +241,8 @@ const Dashboard: React.FC = () => {
                 <DonutChartCard
                     title={t('dashboard.apartmentCleaning')}
                     data={apartmentCleanliness}
-                    centerLabel={t('dashboard.notClean')}
-                    centerValue={notCleanValue}
+                    centerLabel={t('dashboard.total')}
+                    centerValue={apartmentCleaningTotal}
                     total={apartmentCleaningTotal}
                     stats={[
                         { label: t('dashboard.notClean'), value: notCleanValue },
