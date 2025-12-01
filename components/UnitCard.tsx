@@ -19,6 +19,7 @@ interface UnitCardProps {
     onViewClick: () => void;
     onEditClick: () => void;
     onDeleteClick: () => void;
+    onAddReservationClick: () => void;
 }
 
 const statusConfig = {
@@ -65,21 +66,22 @@ const cleaningStatusConfig = {
     }
 }
 
-const UnitCard: React.FC<UnitCardProps> = ({ unit, onViewClick, onEditClick, onDeleteClick }) => {
+const UnitCard: React.FC<UnitCardProps> = ({ unit, onViewClick, onEditClick, onDeleteClick, onAddReservationClick }) => {
     const { t } = useContext(LanguageContext);
-    const { 
-        status, 
-        cleaningStatus, 
-        unitNumber, 
-        id, 
-        unitType, 
-        customerName, 
-        checkIn, 
-        checkOut, 
-        price, 
-        remaining 
+    const {
+        status,
+        cleaningStatus,
+        unitNumber,
+        id,
+        unitType,
+        unitTypeName,
+        customerName,
+        checkIn,
+        checkOut,
+        price,
+        remaining
     } = unit;
-    
+
     const config = statusConfig[status];
     const cleanConfig = cleaningStatusConfig[cleaningStatus];
 
@@ -89,14 +91,14 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onViewClick, onEditClick, onD
     }
 
     return (
-        <div 
+        <div
             onClick={onViewClick}
             className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border-t-4 ${config.borderColor} flex flex-col h-full cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200`}
         >
             <div className="p-4 flex-grow">
                 <div className="flex items-start justify-between mb-2">
                     <div className="text-start">
-                        {unitType && <p className="font-bold text-blue-500 text-sm">{unitType}</p>}
+                        {(unitTypeName || unitType) && <p className="font-bold text-blue-500 text-sm">{unitTypeName || unitType}</p>}
                         <div className="flex items-end gap-2">
                             <p className="text-2xl font-bold text-slate-800 dark:text-slate-200">{unitNumber}</p>
                         </div>
@@ -105,14 +107,17 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onViewClick, onEditClick, onD
                         {t(cleanConfig.labelKey as any)}
                     </span>
                 </div>
-                
+
                 <div className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold ${config.textColor} ${config.bgColor} mb-4`}>
                     <config.Icon className="w-5 h-5" />
                     <span>{t(config.labelKey as any)}</span>
                 </div>
-                
+
                 {status === 'free' ? (
-                     <button className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-green-600 bg-green-100/80 rounded-lg hover:bg-green-200/80 transition-colors dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20 pointer-events-none">
+                    <button
+                        onClick={(e) => handleActionClick(e, onAddReservationClick)}
+                        className="w-full flex items-center justify-center gap-2 py-2 text-sm font-semibold text-green-600 bg-green-100/80 rounded-lg hover:bg-green-200/80 transition-colors dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20"
+                    >
                         <CalendarIcon className="w-5 h-5" />
                         <span>{t('units.addReservation')}</span>
                     </button>
@@ -122,11 +127,11 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onViewClick, onEditClick, onD
                             <UserIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
                             <span className="font-medium truncate">{customerName}</span>
                         </div>
-                         <div className="flex items-center justify-start gap-2">
+                        <div className="flex items-center justify-start gap-2">
                             <span className="font-semibold text-slate-500 dark:text-slate-400">{t('units.checkIn')}</span>
                             <span>{checkIn}</span>
                         </div>
-                         <div className="flex items-center justify-start gap-2">
+                        <div className="flex items-center justify-start gap-2">
                             <span className="font-semibold text-slate-500 dark:text-slate-400">{t('units.checkOut')}</span>
                             <span>{checkOut}</span>
                         </div>
@@ -144,7 +149,7 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onViewClick, onEditClick, onD
                         </div>
                     )}
                     {status === 'occupied' && remaining !== undefined && (
-                         <div className="flex items-center gap-1 text-sm">
+                        <div className="flex items-center gap-1 text-sm">
                             <span className="font-medium text-slate-500 dark:text-slate-400">{t('units.remainingForHim')}</span>
                             <span className="font-bold text-green-600 dark:text-green-400">{remaining.toFixed(2)}</span>
                         </div>
@@ -152,13 +157,13 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, onViewClick, onEditClick, onD
                 </div>
                 <div className="flex items-center gap-1 z-10">
                     <button onClick={(e) => handleActionClick(e, onViewClick)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10">
-                        <EyeIcon className="w-5 h-5"/>
+                        <EyeIcon className="w-5 h-5" />
                     </button>
                     <button onClick={(e) => handleActionClick(e, onEditClick)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10">
-                        <PencilSquareIcon className="w-5 h-5"/>
+                        <PencilSquareIcon className="w-5 h-5" />
                     </button>
                     <button onClick={(e) => handleActionClick(e, onDeleteClick)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10">
-                        <TrashIcon className="w-5 h-5"/>
+                        <TrashIcon className="w-5 h-5" />
                     </button>
                 </div>
             </div>
