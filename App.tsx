@@ -219,13 +219,13 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      document.title = "Hotel Dashboard";
+      document.title = "نزلكم";
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       }
     } else {
-      document.title = "Hotel Dashboard - Login";
+      document.title = "نزلكم - تسجيل الدخول";
       setUser(null);
     }
   }, [isAuthenticated]);
