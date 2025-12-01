@@ -32,6 +32,7 @@ export interface Unit {
 
     // Details
     unitType: string;
+    unitTypeName?: string; // For display purposes
     cleaningStatus: CleaningStatus;
     isAvailable: boolean;
     floor: number;
@@ -59,11 +60,11 @@ export interface User {
     role: string;
 }
 
-export type BookingStatus = 'check-in' | 'check-out';
-export type RentType = 'daily' | 'hourly' | 'monthly';
+export type BookingStatus = 'check-in' | 'check-out' | 'pending' | 'confirmed' | 'cancelled';
+export type RentType = 'daily' | 'hourly' | 'monthly' | 'weekly';
 
 export interface Booking {
-    id: number;
+    id: number | string;
     bookingNumber: string;
     guestName: string;
     unitName: string;
@@ -98,6 +99,19 @@ export interface Booking {
     returnVouchers?: string;
     invoices?: string;
     order?: string;
+
+    // New fields mapped from API
+    vatOnly?: number;
+    lodgingTax?: number;
+    payment?: number;
+    refund?: number;
+    checkedInAt?: string | null;
+    checkedOutAt?: string | null;
+    createdBy?: string;
+    updatedBy?: string;
+    statusDisplay?: string;
+    rentalDisplay?: string;
+    discountDisplay?: string;
 }
 
 export type GuestStatus = 'active' | 'inactive';
@@ -201,7 +215,6 @@ export interface Order {
     updatedAt: string;
     items?: OrderItem[];
     notes?: string;
-    isActive?: boolean;
 }
 
 export interface Receipt {
@@ -438,22 +451,25 @@ export interface ReportFilterOption {
 }
 
 export interface DailyBookingItem {
-    id: string | number;
-    booking_number: string;
-    guest?: { name?: string; phone_number?: string };
-    apartment?: { name?: string };
-    check_in_date?: string;
-    check_out_date?: string;
-    time?: string;
-    status?: string;
-    rental_type?: string;
-    period?: number | string;
-    price?: number | string;
-    discount_value?: number | string;
-    tax?: number | string;
-    total?: number | string;
-    paid?: number | string;
-    balance?: number | string;
+    id: string;
+    hotel: string;
+    guest: string; // Flat string as per API doc
+    number: string;
+    check_in_date: string;
+    check_out_date: string;
+    status: string;
+    rental_type: string;
+    apartment: string; // Flat string as per API doc
+    apartment_type: string;
+    amount: number;
+    total: number;
+    balance: string | number;
+    status_display: string;
+    rental_display: string;
+    // Additional fields that might be present or mapped
+    price?: number; // Mapped from amount?
+    tax?: number;
+    booking_number?: string; // Mapped from number?
     created_at?: string;
     updated_at?: string;
 }
@@ -525,6 +541,25 @@ export interface Reservation {
     balance?: number | string;
     created_at: string;
     updated_at: string;
+    // New fields from API
+    vat_only?: number;
+    lodging_tax?: number;
+    payment?: number;
+    refund?: number;
+    total_orders?: string | number;
+    note?: string;
+    checked_in_at?: string | null;
+    checked_out_at?: string | null;
+    created_by?: string;
+    updated_by?: string;
+    status_display?: string;
+    rental_display?: string;
+    discount_display?: string;
+    companions?: any[];
+    source?: string | number; // Can be string name or ID
+    reason?: string | number; // Can be string name or ID
+    apartment_price?: number;
+    tax_with_price?: number;
     [key: string]: any;
 }
 
@@ -576,4 +611,85 @@ export interface Apartment {
     floor?: string | number;
     status?: string;
     [key: string]: any;
+}
+
+export interface RentalType {
+    id: string;
+    name: string;
+    name_ar: string;
+    name_en: string;
+}
+
+export interface ReservationSource {
+    id: string;
+    name: string;
+    name_ar: string;
+    name_en: string;
+}
+
+export interface ReservationReason {
+    id: string;
+    name: string;
+    name_ar: string;
+    name_en: string;
+}
+
+export interface DiscountType {
+    id: string;
+    name: string;
+    name_ar: string;
+    name_en: string;
+}
+
+export interface Country {
+    code: string;
+    name: string;
+}
+
+export interface GuestCategory {
+    id: string;
+    name: string;
+    name_ar: string;
+    name_en: string;
+}
+
+export interface InvoiceItem {
+    id: string;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    amount: number;
+}
+
+export interface InvoiceListResponse {
+    count: number;
+    results: Invoice[];
+}
+
+export interface OrderCalculationRequest {
+    reservation: string;
+    note?: string;
+    order_items: {
+        service: string;
+        category: string;
+        quantity: number;
+    }[];
+}
+
+export interface OrderCalculationResponse {
+    total: number;
+    tax: number;
+    subtotal: number;
+    discount: number;
+    [key: string]: any;
+}
+
+export interface ServiceListResponse {
+    count: number;
+    results: Service[];
+}
+
+export interface OrderListResponse {
+    count: number;
+    results: Order[];
 }

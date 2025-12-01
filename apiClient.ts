@@ -3,10 +3,11 @@ import { User } from './types';
 interface ApiClientOptions {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
     body?: any;
+    responseType?: 'json' | 'blob';
 }
 
 export const apiClient = async <T>(endpoint: string, options: ApiClientOptions = {}): Promise<T> => {
-    const { method = 'GET', body = null } = options;
+    const { method = 'GET', body = null, responseType = 'json' } = options;
     const token = localStorage.getItem('accessToken');
     if (!token) {
         throw new Error('Authentication token not found. Please log in again.');
@@ -30,7 +31,7 @@ export const apiClient = async <T>(endpoint: string, options: ApiClientOptions =
     if (body) {
         config.body = isFormData ? body : JSON.stringify(body);
     }
-    
+
     // For GET request with body, we should not send it. Instead we handle it with query params.
     if (method === 'GET' && body) {
         delete config.body;
@@ -42,6 +43,13 @@ export const apiClient = async <T>(endpoint: string, options: ApiClientOptions =
 
         if (method === 'DELETE' && response.status === 204) {
             return Promise.resolve(null as unknown as T);
+        }
+
+        if (responseType === 'blob') {
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+            return await response.blob() as unknown as T;
         }
 
         const responseData = await response.json();

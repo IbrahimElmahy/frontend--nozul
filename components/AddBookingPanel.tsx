@@ -116,13 +116,13 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                 setFormData(prev => ({
                     ...prev,
                     checkOutDate: response.check_out_date,
-                    rent: parseFloat(response.rent) || prev.rent,
-                    discount: response.discount ? parseFloat(response.discount) : prev.discount,
-                    subtotal: parseFloat(response.subtotal) || prev.subtotal,
-                    tax: parseFloat(response.tax) || prev.tax,
-                    total: parseFloat(response.total) || prev.total,
-                    balance: parseFloat(response.balance) || prev.balance,
-                    value: parseFloat(response.amount) || prev.value,
+                    rent: Number(response.rent) || prev.rent,
+                    discount: response.discount ?? prev.discount,
+                    subtotal: response.subtotal ?? prev.subtotal,
+                    tax: response.tax ?? prev.tax,
+                    total: response.total ?? prev.total,
+                    balance: Number(response.balance) || prev.balance,
+                    value: response.amount ?? prev.value,
                 }));
             } catch (err) {
                 if (!controller.signal.aborted) {

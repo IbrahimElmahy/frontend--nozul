@@ -7,7 +7,7 @@ import BookingDetailsModal from './BookingDetailsModal';
 import ConfirmationModal from './ConfirmationModal';
 import BookingCard from './BookingCard';
 import AddGroupBookingPanel from './AddGroupBookingPanel';
-import { listReservations, deleteReservation, createReservation, updateReservation } from '../services/reservations';
+import { listReservations, deleteReservation, createReservation, updateReservation, getReservation, getReservationStatusCount } from '../services/reservations';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -29,6 +29,8 @@ import TrashIcon from './icons-redesign/TrashIcon';
 import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 import UsersIcon from './icons-redesign/UsersIcon';
+import PrinterIcon from './icons-redesign/PrinterIcon';
+import RentalContract from './RentalContract';
 
 
 // FIX: Update template to include all required fields and adjust type.
@@ -66,7 +68,10 @@ const newBookingTemplate: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | '
 const normalizeStatus = (status: Reservation['status']): BookingStatus => {
     if (status === 'checked_in') return 'check-in';
     if (status === 'checked_out') return 'check-out';
-    return 'check-in';
+    if (status === 'pending') return 'pending';
+    if (status === 'confirmed') return 'confirmed';
+    if (status === 'cancelled') return 'cancelled';
+    return 'check-in'; // Fallback
 };
 
 const normalizeRentType = (type: Reservation['rental_type']): RentType => {
@@ -75,32 +80,32 @@ const normalizeRentType = (type: Reservation['rental_type']): RentType => {
 };
 
 const mapReservationToBooking = (reservation: Reservation): Booking => ({
-    id: reservation.id,
+    id: reservation.id, // Use raw ID (string or number)
     bookingNumber: reservation.number,
     guestName: typeof reservation.guest === 'string' ? reservation.guest : String(reservation.guest),
     unitName: typeof reservation.apartment === 'string' ? reservation.apartment : String(reservation.apartment),
     checkInDate: reservation.check_in_date,
     checkOutDate: reservation.check_out_date,
-    time: reservation.time,
+    time: reservation.time || '',
     status: normalizeStatus(reservation.status),
     rentType: normalizeRentType(reservation.rental_type),
     duration: reservation.period,
-    rent: parseFloat(reservation.rent) || 0,
-    value: parseFloat(reservation.amount) || 0,
-    discount: reservation.discount ? parseFloat(reservation.discount) : parseFloat(reservation.discount_value || '0') || 0,
-    subtotal: parseFloat(reservation.subtotal) || 0,
-    tax: parseFloat(reservation.tax) || 0,
-    total: parseFloat(reservation.total) || 0,
-    payments: parseFloat(reservation.paid) || 0,
-    balance: parseFloat(reservation.balance) || 0,
+    rent: parseFloat(String(reservation.rent || 0)),
+    value: parseFloat(String(reservation.amount || 0)),
+    discount: reservation.discount ? parseFloat(String(reservation.discount)) : parseFloat(String(reservation.discount_value || '0')) || 0,
+    subtotal: parseFloat(String(reservation.subtotal || 0)),
+    tax: parseFloat(String(reservation.tax || 0)),
+    total: parseFloat(String(reservation.total || 0)),
+    payments: parseFloat(String(reservation.paid || 0)),
+    balance: parseFloat(String(reservation.balance || 0)),
     createdAt: reservation.created_at,
     updatedAt: reservation.updated_at,
     // UI-only helpers/fallbacks
     bookingSource: reservation.source ? reservation.source.toString() : '',
     bookingReason: reservation.reason ? reservation.reason.toString() : '',
-    totalOrders: reservation.total_orders ? parseFloat(reservation.total_orders) || 0 : 0,
+    totalOrders: reservation.total_orders ? parseFloat(String(reservation.total_orders)) || 0 : 0,
     notes: reservation.note || '',
-    price: reservation.apartment_price ? parseFloat(reservation.apartment_price) : 0,
+    price: reservation.apartment_price ? parseFloat(String(reservation.apartment_price)) : 0,
     guestType: '',
     companions: 0,
     discountType: reservation.discount_type === 'percent' ? 'percentage' : reservation.discount_type === 'fixed' ? 'fixed' : '',
@@ -108,6 +113,18 @@ const mapReservationToBooking = (reservation: Reservation): Booking => ({
     returnVouchers: '',
     invoices: '',
     order: '',
+    // Map new fields
+    vatOnly: reservation.vat_only,
+    lodgingTax: reservation.lodging_tax,
+    payment: reservation.payment,
+    refund: reservation.refund,
+    checkedInAt: reservation.checked_in_at,
+    checkedOutAt: reservation.checked_out_at,
+    createdBy: reservation.created_by,
+    updatedBy: reservation.updated_by,
+    statusDisplay: reservation.status_display,
+    rentalDisplay: reservation.rental_display,
+    discountDisplay: reservation.discount_display,
 });
 
 const toReservationPayload = (booking: Booking): Partial<Reservation> => ({
@@ -116,8 +133,8 @@ const toReservationPayload = (booking: Booking): Partial<Reservation> => ({
     check_in_date: booking.checkInDate.split(' ')[0],
     check_out_date: booking.checkOutDate.split(' ')[0],
     period: booking.duration,
-    apartment: Number(booking.unitName) || booking.unitName,
-    guest: Number(booking.guestName) || booking.guestName,
+    apartment: booking.unitName, // Assuming unitName holds the ID as string/number
+    guest: booking.guestName, // Assuming guestName holds the ID as string/number
     status: booking.status === 'check-out' ? 'checked_out' : 'checked_in',
     source: 1,
     reason: 1,
@@ -141,10 +158,12 @@ const BookingsPage: React.FC = () => {
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [isAddGroupPanelOpen, setIsAddGroupPanelOpen] = useState(false);
     const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
-    const [bookingToDeleteId, setBookingToDeleteId] = useState<number | null>(null);
+    const [bookingToDeleteId, setBookingToDeleteId] = useState<number | string | null>(null);
     const [sortConfig, setSortConfig] = useState<{ key: keyof Booking | null; direction: 'ascending' | 'descending' }>({ key: 'id', direction: 'descending' });
     const [viewingBooking, setViewingBooking] = useState<Booking | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+    const [printingReservation, setPrintingReservation] = useState<Reservation | null>(null);
+    const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
 
     useEffect(() => {
         const fetchReservations = async () => {
@@ -155,9 +174,9 @@ const BookingsPage: React.FC = () => {
                 const items = Array.isArray(response)
                     ? response
                     : // support paginated and datatable shapes
-                      (response as any)?.results ||
-                      (response as any)?.data ||
-                      [];
+                    (response as any)?.results ||
+                    (response as any)?.data ||
+                    [];
                 setBookings(items.map(mapReservationToBooking));
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Unknown error');
@@ -166,7 +185,24 @@ const BookingsPage: React.FC = () => {
             }
         };
 
+        const fetchStatusCounts = async () => {
+            try {
+                const response = await getReservationStatusCount();
+                // response is LabelValueResponse[]: [{label: "...", value: 1}, ...]
+                const counts: Record<string, number> = {};
+                if (Array.isArray(response)) {
+                    response.forEach((item: any) => {
+                        counts[item.label] = item.value;
+                    });
+                }
+                setStatusCounts(counts);
+            } catch (err) {
+                console.error("Failed to fetch status counts", err);
+            }
+        };
+
         fetchReservations();
+        fetchStatusCounts();
     }, [t]);
 
     const formatDate = (dateString: string) => dateString.split(' ')[0];
@@ -262,7 +298,7 @@ const BookingsPage: React.FC = () => {
         setIsAddPanelOpen(true);
     };
 
-    const handleDeleteClick = (bookingId: number) => {
+    const handleDeleteClick = (bookingId: number | string) => {
         setBookingToDeleteId(bookingId);
     };
 
@@ -281,6 +317,19 @@ const BookingsPage: React.FC = () => {
         }
     };
 
+    const handlePrintClick = async (booking: Booking) => {
+        try {
+            const fullReservation = await getReservation(booking.id);
+            setPrintingReservation(fullReservation);
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        } catch (err) {
+            console.error("Failed to fetch reservation for printing", err);
+            // alert(t('bookings.printError')); // Optional: add translation key if needed
+        }
+    };
+
     const requestSort = (key: keyof Booking) => {
         let direction: 'ascending' | 'descending' = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -291,7 +340,10 @@ const BookingsPage: React.FC = () => {
 
     const statusConfig: Record<BookingStatus, { labelKey: string, className: string }> = {
         'check-in': { labelKey: 'bookings.status_check_in', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' },
-        'check-out': { labelKey: 'bookings.status_check_out', className: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300' }
+        'check-out': { labelKey: 'bookings.status_check_out', className: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300' },
+        'pending': { labelKey: 'bookings.status_pending', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' },
+        'confirmed': { labelKey: 'bookings.status_confirmed', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' },
+        'cancelled': { labelKey: 'bookings.status_cancelled', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' },
     };
 
     const tableHeaders: { key: keyof Booking | 'actions', labelKey: string, numeric?: boolean, className?: string }[] = [
@@ -309,12 +361,12 @@ const BookingsPage: React.FC = () => {
     ];
 
     const statusCardsData = [
-        { labelKey: 'bookings.unconfirmed', value: 2, Icon: QuestionMarkCircleIcon, iconBg: 'bg-yellow-500' },
-        { labelKey: 'bookings.list', value: 3, Icon: ClipboardDocumentListIcon, iconBg: 'bg-sky-500' },
-        { labelKey: 'bookings.readyForCheckIn', value: 192, Icon: ArrowRightOnRectangleIcon, iconBg: 'bg-green-500' },
-        { labelKey: 'bookings.readyForCheckOut', value: 1, Icon: ArrowLeftOnRectangleIcon, iconBg: 'bg-orange-500' },
-        { labelKey: 'bookings.upcoming', value: 0, Icon: CalendarDaysIcon, iconBg: 'bg-indigo-500' },
-        { labelKey: 'bookings.allBookings', value: 335, Icon: BriefcaseIcon, iconBg: 'bg-slate-500' },
+        { labelKey: 'bookings.unconfirmed', value: statusCounts['قيد الانتظار'] || statusCounts['Pending'] || 0, Icon: QuestionMarkCircleIcon, iconBg: 'bg-yellow-500' },
+        { labelKey: 'bookings.list', value: bookings.length, Icon: ClipboardDocumentListIcon, iconBg: 'bg-sky-500' },
+        { labelKey: 'bookings.readyForCheckIn', value: statusCounts['تسجيل الدخول'] || statusCounts['Check-in'] || 0, Icon: ArrowRightOnRectangleIcon, iconBg: 'bg-green-500' },
+        { labelKey: 'bookings.readyForCheckOut', value: statusCounts['مغادرة'] || statusCounts['Check-out'] || 0, Icon: ArrowLeftOnRectangleIcon, iconBg: 'bg-orange-500' },
+        { labelKey: 'bookings.upcoming', value: 0, Icon: CalendarDaysIcon, iconBg: 'bg-indigo-500' }, // API doesn't seem to provide this yet
+        { labelKey: 'bookings.allBookings', value: bookings.length, Icon: BriefcaseIcon, iconBg: 'bg-slate-500' },
     ];
 
     const showingEntriesControls = (
@@ -433,10 +485,10 @@ const BookingsPage: React.FC = () => {
                             <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                                 <tr>
                                     {tableHeaders.map(header => (
-                                        <th key={header.key} scope="col" className={`px-4 py-3 ${header.numeric || header.key === 'actions' ? 'text-end' : 'text-start'} ${header.className || ''}`}>
+                                        <th key={header.key} scope="col" className={`px-4 py-3 text-center ${header.className || ''}`}>
                                             {header.key !== 'actions' ? (
                                                 <button
-                                                    className="flex items-center gap-1.5 group"
+                                                    className="flex items-center gap-1.5 group w-full justify-center"
                                                     onClick={() => requestSort(header.key as keyof Booking)}
                                                     aria-label={`Sort by ${t(header.labelKey as any)}`}
                                                 >
@@ -460,15 +512,22 @@ const BookingsPage: React.FC = () => {
                                 {paginatedBookings.map(booking => (
                                     <tr key={booking.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                         {tableHeaders.map(header => (
-                                            <td key={`${booking.id}-${header.key}`} className={`px-4 py-3 whitespace-nowrap ${header.numeric || header.key === 'actions' ? 'text-end' : 'text-start'} ${header.className || ''}`}>
+                                            <td key={`${booking.id}-${header.key}`} className={`px-4 py-3 whitespace-nowrap text-center ${header.className || ''}`}>
                                                 {header.key === 'actions' ? (
-                                                    <div className="flex items-center gap-1 justify-end">
+                                                    <div className="flex items-center gap-1 justify-center">
                                                         <button
                                                             onClick={() => setViewingBooking(booking)}
                                                             className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"
                                                             aria-label={`View details for booking ${booking.bookingNumber}`}
                                                         >
                                                             <EyeIcon className="w-5 h-5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handlePrintClick(booking)}
+                                                            className="p-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                                                            aria-label={`Print contract for booking ${booking.bookingNumber}`}
+                                                        >
+                                                            <PrinterIcon className="w-5 h-5" />
                                                         </button>
                                                         <button
                                                             onClick={() => handleEditClick(booking)}
@@ -567,6 +626,7 @@ const BookingsPage: React.FC = () => {
                 title={t('bookings.deleteBookingTitle')}
                 message={t('bookings.confirmDeleteMessage')}
             />
+            {printingReservation && <RentalContract reservation={printingReservation} />}
         </div>
     );
 };
