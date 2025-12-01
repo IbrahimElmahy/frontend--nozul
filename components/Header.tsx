@@ -246,7 +246,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                         </span>
                         <ChevronLeftIcon className={`w-4 h-4 text-gray-400 dark:text-gray-500 mx-1 transform ${language === 'en' ? 'rotate-180' : ''}`} />
                         <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                            {t(currentDetails.breadcrumb)}
+                            {currentDetails.breadcrumb === 'header.hotelName' && user?.name ? user.name : t(currentDetails.breadcrumb)}
                         </span>
                     </div>
                 </div>
