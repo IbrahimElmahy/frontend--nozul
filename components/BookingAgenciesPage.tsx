@@ -39,6 +39,12 @@ const newAgencyTemplate: Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'>
     neighborhood: '',
     street: '',
     postal_code: '',
+    work_number: '',
+    serial_number: '',
+    issue_date: '',
+    expiry_date: '',
+    issue_place: '',
+    notes: '',
 };
 
 const BookingAgenciesPage: React.FC = () => {
@@ -92,20 +98,20 @@ const BookingAgenciesPage: React.FC = () => {
 
                 if (aVal === null || aVal === undefined) return 1;
                 if (bVal === null || bVal === undefined) return -1;
-                
+
                 let comparison = 0;
                 if (typeof aVal === 'number' && typeof bVal === 'number') {
                     comparison = aVal - bVal;
                 } else {
                     comparison = String(aVal).localeCompare(String(bVal));
                 }
-                
+
                 return sortConfig.direction === 'ascending' ? comparison : -comparison;
             });
         }
         return sortableItems;
     }, [agencies, sortConfig]);
-    
+
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     const handleClosePanel = () => {
@@ -170,7 +176,7 @@ const BookingAgenciesPage: React.FC = () => {
             }
         }
     };
-    
+
     const requestSort = (key: keyof BookingAgency) => {
         let direction: 'ascending' | 'descending' = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -191,7 +197,7 @@ const BookingAgenciesPage: React.FC = () => {
         { key: 'is_active', labelKey: 'agencies.th_status' },
         { key: 'actions', labelKey: 'agencies.th_actions' },
     ];
-    
+
     const searchAndViewsControls = (
         <div className="flex items-center gap-4 w-full sm:w-auto">
             <div className="relative flex-grow sm:flex-grow-0 sm:w-96">
@@ -204,7 +210,7 @@ const BookingAgenciesPage: React.FC = () => {
                     className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
                 />
             </div>
-             <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
                 <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg transition-colors ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`} aria-label="Table View">
                     <TableCellsIcon className="w-5 h-5" />
                 </button>
@@ -235,8 +241,8 @@ const BookingAgenciesPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('agencies.manageAgencies')}</h2>
-                 <div className="flex flex-wrap items-center gap-2">
-                    <button 
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
                         onClick={handleAddNewClick}
                         className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
                     >
@@ -247,7 +253,7 @@ const BookingAgenciesPage: React.FC = () => {
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
                     {language === 'ar' ? (
                         <>
                             {searchAndViewsControls}
@@ -255,8 +261,8 @@ const BookingAgenciesPage: React.FC = () => {
                         </>
                     ) : (
                         <>
-                             {showingEntriesControls}
-                             {searchAndViewsControls}
+                            {showingEntriesControls}
+                            {searchAndViewsControls}
                         </>
                     )}
                 </div>
@@ -282,9 +288,9 @@ const BookingAgenciesPage: React.FC = () => {
                                 <tr>
                                     {tableHeaders.map(header => (
                                         <th key={header.key} scope="col" className={`px-6 py-3 ${header.className || ''}`}>
-                                             {header.key !== 'actions' ? (
-                                                <button 
-                                                    className="flex items-center gap-1.5 group" 
+                                            {header.key !== 'actions' ? (
+                                                <button
+                                                    className="flex items-center gap-1.5 group"
                                                     onClick={() => requestSort(header.key as keyof BookingAgency)}
                                                 >
                                                     <span>{t(header.labelKey as any)}</span>
@@ -306,7 +312,7 @@ const BookingAgenciesPage: React.FC = () => {
                             <tbody>
                                 {sortedAgencies.map(agency => (
                                     <tr key={agency.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                                       {tableHeaders.map(header => (
+                                        {tableHeaders.map(header => (
                                             <td key={`${agency.id}-${header.key}`} className={`px-6 py-4 whitespace-nowrap ${header.className || ''}`}>
                                                 {header.key === 'actions' ? (
                                                     <div className="flex items-center gap-1">
@@ -315,10 +321,10 @@ const BookingAgenciesPage: React.FC = () => {
                                                         <button onClick={() => handleDeleteClick(agency.id)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
                                                     </div>
                                                 ) : header.key === 'is_active' ? (
-                                                     <Switch 
-                                                        id={`status-${agency.id}`} 
-                                                        checked={!!agency.is_active} 
-                                                        onChange={(c) => handleToggleStatus(agency, c)} 
+                                                    <Switch
+                                                        id={`status-${agency.id}`}
+                                                        checked={!!agency.is_active}
+                                                        onChange={(c) => handleToggleStatus(agency, c)}
                                                     />
                                                 ) : header.key === 'created_at' ? (
                                                     new Date(agency.created_at).toLocaleDateString()
@@ -326,31 +332,31 @@ const BookingAgenciesPage: React.FC = () => {
                                                     (agency[header.key as keyof BookingAgency] as string) || '-'
                                                 )}
                                             </td>
-                                       ))}
+                                        ))}
                                     </tr>
                                 ))}
                                 {sortedAgencies.length === 0 && (
-                                     <tr><td colSpan={tableHeaders.length} className="text-center py-8">{t('orders.noData')}</td></tr>
+                                    <tr><td colSpan={tableHeaders.length} className="text-center py-8">{t('orders.noData')}</td></tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
                 )}
-                
+
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                         {`${t('units.showing')} ${sortedAgencies.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, totalRecords)} ${t('units.of')} ${totalRecords} ${t('units.entries')}`}
+                        {`${t('units.showing')} ${sortedAgencies.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, totalRecords)} ${t('units.of')} ${totalRecords} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <nav className="flex items-center gap-1" aria-label="Pagination">
                             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
+                            <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
                             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
                         </nav>
                     )}
                 </div>
             </div>
-            
+
             <AddAgencyPanel
                 initialData={editingAgency || newAgencyTemplate}
                 isEditing={!!editingAgency}

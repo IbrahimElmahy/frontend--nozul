@@ -17,7 +17,7 @@ interface AddOrderPanelProps {
     onSave: (order: Order | Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }
 
-const SectionHeader: React.FC<{ icon: React.ComponentType<{className?:string}>; title: string; }> = ({ icon: Icon, title }) => (
+const SectionHeader: React.FC<{ icon: React.ComponentType<{ className?: string }>; title: string; }> = ({ icon: Icon, title }) => (
     <div className="bg-slate-100 dark:bg-slate-900/50 p-3 my-4 rounded-md flex items-center gap-3">
         <Icon className="w-5 h-5 text-slate-500" />
         <h3 className="text-md font-semibold text-slate-700 dark:text-slate-300">{title}</h3>
@@ -26,13 +26,13 @@ const SectionHeader: React.FC<{ icon: React.ComponentType<{className?:string}>; 
 
 const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave }) => {
     const { t, language } = useContext(LanguageContext);
-    
+
     // Form state
     const [apartmentName, setApartmentName] = useState('');
     const [reservationId, setReservationId] = useState('');
     const [items, setItems] = useState<OrderItem[]>([]);
     const [notes, setNotes] = useState('');
-    
+
     // Financial state
     const [value, setValue] = useState(0);
     const [subtotal, setSubtotal] = useState(0);
@@ -40,9 +40,10 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
     const [total, setTotal] = useState(0);
 
     // Data options
-    const [apartmentOptions, setApartmentOptions] = useState<{name: string, reservationId: string}[]>([]);
-    const [services, setServices] = useState<Service[]>([]);
-    const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
+    const [apartmentOptions, setApartmentOptions] = useState<{ name: string, reservationId: string }[]>([]);
+    const [services, setServices] = useState<Record<string, Service[]>>({}); // Cache services by Category ID
+    const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
+    const [loadingServices, setLoadingServices] = useState<Record<string, boolean>>({}); // Track loading state per category
     const [calculating, setCalculating] = useState(false);
 
     useEffect(() => {
@@ -57,11 +58,11 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
             setSubtotal(initialData.subtotal || 0);
             setTax(initialData.tax || 0);
             setTotal(initialData.total || 0);
-            
+
             fetchData();
         }
     }, [isOpen, initialData]);
-    
+
     const fetchData = async () => {
         try {
             // Fetch Occupied Apartments
@@ -74,20 +75,8 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
                 }));
             setApartmentOptions(aptOptions);
 
-            // Fetch Services and Categories
-            const [servicesRes, categoriesRes] = await Promise.all([
-                apiClient<{ data: any[] }>('/ar/service/api/services/?length=100'),
-                apiClient<{ data: any[] }>('/ar/category/api/categories/?length=50')
-            ]);
-
-            setServices(servicesRes.data.map((s: any) => ({
-                ...s,
-                id: s.id,
-                name_ar: s.name_ar,
-                name_en: s.name_en,
-                price: parseFloat(s.price),
-                category: s.category && typeof s.category === 'object' ? s.category.id : s.category
-            })));
+            // Fetch Categories only (don't fetch all services at once)
+            const categoriesRes = await apiClient<{ data: any[] }>('/ar/category/api/categories/?is_active=true&length=1000');
 
             setCategories(categoriesRes.data.map((c: any) => ({
                 id: c.id,
@@ -112,29 +101,42 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
     }, [items, reservationId]);
 
     const calculateOrder = async () => {
+        // Filter out items that don't have a service selected yet
+        // The backend validation fails if service is null/empty string
+        const validItems = items.filter(item => item.service);
+
+        if (validItems.length === 0) {
+            setValue(0);
+            setSubtotal(0);
+            setTax(0);
+            setTotal(0);
+            return;
+        }
+
         setCalculating(true);
         try {
-            const formData = new FormData();
-            formData.append('reservation', reservationId);
-            items.forEach((item, index) => {
-                formData.append(`order_items[${index}]service`, item.service);
-                formData.append(`order_items[${index}]category`, item.category);
-                formData.append(`order_items[${index}]quantity`, item.quantity.toString());
-            });
+            const payload = {
+                reservation: reservationId,
+                order_items: validItems.map(item => ({
+                    service: item.service,
+                    category: item.category,
+                    quantity: item.quantity
+                }))
+            };
 
             const response = await apiClient<any>('/ar/order/api/orders/calculation/', {
                 method: 'POST',
-                body: formData
+                body: payload
             });
-            
+
             // The response structure from calculation endpoint isn't explicitly detailed in prompt 
             // beyond "Returns totals, taxes, and final amounts". 
             // I will assume standard keys based on previous context.
             if (response) {
-                 setValue(response.amount || 0); // Usually raw value
-                 setSubtotal(response.subtotal || 0);
-                 setTax(response.tax || 0);
-                 setTotal(response.total || 0);
+                setValue(response.amount || 0); // Usually raw value
+                setSubtotal(response.subtotal || 0);
+                setTax(response.tax || 0);
+                setTotal(response.total || 0);
             }
 
         } catch (error) {
@@ -155,27 +157,77 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
         setItems(prev => [...prev, newItem]);
     };
 
+    const fetchServicesForCategory = async (categoryId: string) => {
+        // Return if already cached or currently loading
+        if (services[categoryId] || loadingServices[categoryId]) return;
+
+        setLoadingServices(prev => ({ ...prev, [categoryId]: true }));
+        try {
+            const res = await apiClient<{ data: any[] }>(`/ar/service/api/services/?category=${categoryId}&is_active=true&length=1000`);
+            const fetchedServices = res.data.map((s: any) => ({
+                ...s,
+                id: s.id,
+                name_ar: s.name_ar,
+                name_en: s.name_en,
+                price: parseFloat(s.price),
+                category: s.category && typeof s.category === 'object' ? s.category.id : s.category
+            }));
+
+            setServices(prev => ({ ...prev, [categoryId]: fetchedServices }));
+        } catch (error) {
+            console.error(`Error fetching services for category ${categoryId}`, error);
+        } finally {
+            setLoadingServices(prev => ({ ...prev, [categoryId]: false }));
+        }
+    };
+
+    const handleCategoryChange = (itemId: string, categoryName: string) => {
+        const selectedCategory = categories.find(c => c.name === categoryName);
+        if (!selectedCategory) return;
+
+        // Trigger fetch for this category
+        fetchServicesForCategory(selectedCategory.id);
+
+        setItems(prev => prev.map(item => {
+            if (item.id === itemId) {
+                return {
+                    ...item,
+                    category: selectedCategory.id,
+                    category_name: categoryName,
+                    service: '', // Clear service when category changes
+                    service_name: '',
+                    price: 0
+                };
+            }
+            return item;
+        }));
+    };
+
     const handleServiceChange = (itemId: string, serviceName: string) => {
-        // Service dropdown uses name for display, find ID and details
-        const selectedService = services.find(s => (language === 'ar' ? s.name_ar : s.name_en) === serviceName);
+        // Find the item to get its category
+        const currentItem = items.find(i => i.id === itemId);
+        if (!currentItem || !currentItem.category) return;
+
+        // Service options are filtered by category in the map, lookup in that specific list
+        const categoryServices = services[currentItem.category] || [];
+        const selectedService = categoryServices.find(s => (language === 'ar' ? s.name_ar : s.name_en) === serviceName);
+
         if (!selectedService) return;
 
         setItems(prev => prev.map(item => {
             if (item.id === itemId) {
-                const cat = categories.find(c => c.id === selectedService.category);
+                // Category is already set, just update service
                 return {
                     ...item,
                     service: selectedService.id,
                     service_name: serviceName,
-                    category: selectedService.category,
-                    category_name: cat ? cat.name : '',
                     price: selectedService.price
                 };
             }
             return item;
         }));
     };
-    
+
     const handleQuantityChange = (itemId: string, qty: number) => {
         setItems(prev => prev.map(item => item.id === itemId ? { ...item, quantity: qty } : item));
     }
@@ -183,7 +235,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
     const handleRemoveItem = (id: string) => {
         setItems(prev => prev.filter(item => item.id !== id));
     };
-    
+
     const handleApartmentChange = (name: string) => {
         setApartmentName(name);
         const apt = apartmentOptions.find(a => a.name === name);
@@ -202,7 +254,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
         // We should probably call the create API here if we want to use the ID returned by server?
         // The prompt says "Update OrdersPage ... Implement handleSaveOrder". 
         // I will pass the object with necessary hidden fields (reservationId) so parent can construct FormData.
-        
+
         // Injecting hidden reservationID into the object for parent to use
         const orderData = {
             ...initialData,
@@ -214,15 +266,13 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
             subtotal,
             tax,
             total,
-            discount: 0, 
+            discount: 0,
         };
         onSave(orderData);
     };
 
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
     const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
-
-    const serviceOptions = services.map(s => language === 'ar' ? s.name_ar : s.name_en);
 
     return (
         <div
@@ -244,15 +294,15 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
                         <SectionHeader icon={() => <></>} title={t('orders.apartmentInfo')} />
                         <div>
                             <label htmlFor="apartmentName" className={labelBaseClass}>{t('orders.apartments')}</label>
-                            <SearchableSelect 
-                                id="apartmentName" 
-                                options={apartmentOptions.map(a => a.name)} 
-                                value={apartmentName} 
-                                onChange={handleApartmentChange} 
-                                placeholder={t('orders.selectApartment')} 
+                            <SearchableSelect
+                                id="apartmentName"
+                                options={apartmentOptions.map(a => a.name)}
+                                value={apartmentName}
+                                onChange={handleApartmentChange}
+                                placeholder={t('orders.selectApartment')}
                             />
                         </div>
-                        
+
                         {/* Services */}
                         <SectionHeader icon={() => <></>} title={t('orders.services')} />
                         <div className="mb-4">
@@ -261,13 +311,13 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
                                 <span>{t('orders.addItemsToOrder')}</span>
                             </button>
                         </div>
-                        
+
                         <div className="border dark:border-slate-700 rounded-lg">
                             <table className="w-full text-sm text-center table-fixed">
                                 <thead className="text-xs text-slate-700 uppercase bg-slate-200 dark:bg-slate-700 dark:text-slate-300">
                                     <tr>
-                                        <th scope="col" className="px-4 py-3 w-[30%]">{t('orders.serviceHeader')}</th>
                                         <th scope="col" className="px-4 py-3 w-[20%]">{t('orders.categoryHeader')}</th>
+                                        <th scope="col" className="px-4 py-3 w-[30%]">{t('orders.serviceHeader')}</th>
                                         <th scope="col" className="px-4 py-3 w-[15%]">{t('orders.quantityHeader')}</th>
                                         <th scope="col" className="px-4 py-3 w-[15%]">{t('orders.priceHeader')}</th>
                                         <th scope="col" className="px-4 py-3 w-[15%]">{t('orders.totalHeader')}</th>
@@ -277,41 +327,56 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
                                 <tbody>
                                     {items.length === 0 ? (
                                         <tr><td colSpan={6} className="py-8 text-slate-500">{t('orders.noData')}</td></tr>
-                                    ) : items.map(item => (
-                                        <tr key={item.id} className="border-b dark:border-slate-700">
-                                            <td className="p-2">
-                                                <SearchableSelect 
-                                                    id={`service-${item.id}`} 
-                                                    options={serviceOptions} 
-                                                    value={item.service_name || ''} 
-                                                    onChange={value => handleServiceChange(item.id, value)}
-                                                    placeholder={t('orders.selectService')}
-                                                />
-                                            </td>
-                                            <td className="p-2">
-                                                <input type="text" readOnly value={item.category_name || ''} className={`${inputBaseClass} bg-gray-100 dark:bg-gray-800`} />
-                                            </td>
-                                            <td className="p-2"><input type="number" min="1" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value, 10) || 1)} className={`${inputBaseClass} w-20 text-center`} /></td>
-                                            <td className="p-2"><input type="number" readOnly value={item.price} className={`${inputBaseClass} w-24 text-center bg-gray-100 dark:bg-gray-800`} /></td>
-                                            <td className="p-2 font-semibold text-slate-800 dark:text-slate-200">{(item.quantity * item.price).toFixed(2)}</td>
-                                            <td className="p-2 flex justify-center items-center h-full"><button type="button" onClick={() => handleRemoveItem(item.id)} className="text-red-500 hover:text-red-700"><TrashIcon className="w-5 h-5"/></button></td>
-                                        </tr>
-                                    ))}
+                                    ) : items.map(item => {
+                                        // Get services for this category from cache
+                                        const categoryServices = item.category ? (services[item.category] || []) : [];
+                                        const isLoading = item.category ? (loadingServices[item.category] || false) : false;
+
+                                        const filteredServices = categoryServices.map(s => language === 'ar' ? s.name_ar : s.name_en);
+
+                                        return (
+                                            <tr key={item.id} className="border-b dark:border-slate-700">
+                                                <td className="p-2">
+                                                    <SearchableSelect
+                                                        id={`category-${item.id}`}
+                                                        options={categories.map(c => c.name)}
+                                                        value={item.category_name || ''}
+                                                        onChange={value => handleCategoryChange(item.id, value)}
+                                                        placeholder={t('orders.selectCategory')}
+                                                    />
+                                                </td>
+                                                <td className="p-2">
+                                                    <SearchableSelect
+                                                        id={`service-${item.id}`}
+                                                        options={filteredServices}
+                                                        value={item.service_name || ''}
+                                                        onChange={value => handleServiceChange(item.id, value)}
+                                                        placeholder={t('orders.selectService')}
+                                                        disabled={!item.category}
+                                                    />
+                                                </td>
+                                                <td className="p-2"><input type="number" min="1" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value, 10) || 1)} className={`${inputBaseClass} w-20 text-center`} /></td>
+                                                <td className="p-2"><input type="number" readOnly value={item.price} className={`${inputBaseClass} w-24 text-center bg-gray-100 dark:bg-gray-800`} /></td>
+                                                <td className="p-2 font-semibold text-slate-800 dark:text-slate-200">{(item.quantity * item.price).toFixed(2)}</td>
+                                                <td className="p-2 flex justify-center items-center h-full"><button type="button" onClick={() => handleRemoveItem(item.id)} className="text-red-500 hover:text-red-700"><TrashIcon className="w-5 h-5" /></button></td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
 
                         <div className="mt-4 grid grid-cols-1 md:grid-cols-2">
                             <div className="md:col-start-2">
-                                 <div className="border dark:border-slate-700 rounded-lg overflow-hidden">
-                                     <div className="flex justify-between items-center p-3 border-b dark:border-slate-700"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.value')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{value.toFixed(2)}</span></div>
-                                     <div className="flex justify-between items-center p-3 border-b dark:border-slate-700"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.subtotal')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{subtotal.toFixed(2)}</span></div>
-                                     <div className="flex justify-between items-center p-3 border-b dark:border-slate-700"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.tax')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{tax.toFixed(2)}</span></div>
-                                     <div className="flex justify-between items-center p-3 bg-slate-100 dark:bg-slate-700">
-                                         <span className="font-bold text-slate-800 dark:text-slate-200">{t('orders.total')}:</span>
-                                         {calculating ? <span className="text-xs text-blue-500">Calculating...</span> : <span className="font-bold text-blue-600 dark:text-blue-400 text-lg">{total.toFixed(2)}</span>}
-                                     </div>
-                                 </div>
+                                <div className="border dark:border-slate-700 rounded-lg overflow-hidden">
+                                    <div className="flex justify-between items-center p-3 border-b dark:border-slate-700"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.value')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{value.toFixed(2)}</span></div>
+                                    <div className="flex justify-between items-center p-3 border-b dark:border-slate-700"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.subtotal')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{subtotal.toFixed(2)}</span></div>
+                                    <div className="flex justify-between items-center p-3 border-b dark:border-slate-700"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.tax')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{tax.toFixed(2)}</span></div>
+                                    <div className="flex justify-between items-center p-3 bg-slate-100 dark:bg-slate-700">
+                                        <span className="font-bold text-slate-800 dark:text-slate-200">{t('orders.total')}:</span>
+                                        {calculating ? <span className="text-xs text-blue-500">Calculating...</span> : <span className="font-bold text-blue-600 dark:text-blue-400 text-lg">{total.toFixed(2)}</span>}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -327,7 +392,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
                         <CheckCircleIcon className="w-5 h-5" />
                         <span>{t('orders.saveOrder')}</span>
                     </button>
-                     <button onClick={onClose} className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200">
+                    <button onClick={onClose} className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200">
                         {t('units.cancel')}
                     </button>
                 </footer>

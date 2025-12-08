@@ -150,8 +150,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
     : 'bg-slate-50 dark:bg-slate-900';
 
   return (
-    <div className={`${layoutWidthClass} h-screen overflow-hidden`}>
-      <div className={`relative flex h-full ${animatedBgClass} font-sans transition-colors duration-500`}>
+    <div className={`${layoutWidthClass} min-h-screen`}>
+      <div className={`relative flex min-h-screen ${animatedBgClass} font-sans transition-colors duration-500`}>
         {/* Overlay for mobile sidebar */}
         {isMobileMenuOpen && (
           <div
@@ -163,7 +163,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
         <Sidebar onLogout={onLogout} settings={settings} isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} setCurrentPage={setCurrentPage} currentPage={currentPage} user={user} />
         <div className="flex-1 flex flex-col min-w-0">
           <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} setCurrentPage={setCurrentPage} currentPage={currentPage} user={user} />
-          <main className={`flex-1 overflow-y-auto p-4 sm:p-6 ${settings.animatedBackground ? 'bg-transparent' : 'bg-slate-100 dark:bg-slate-950'}`}>
+          <main className={`flex-1 p-4 sm:p-6 ${settings.animatedBackground ? 'bg-transparent' : 'bg-slate-100 dark:bg-slate-950'}`}>
             {currentPage === 'dashboard' && <Dashboard />}
             {currentPage === 'profile' && <UserProfilePage user={user} />}
             {currentPage === 'units' && <UnitsPage />}

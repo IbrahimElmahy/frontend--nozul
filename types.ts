@@ -141,6 +141,10 @@ export interface Guest {
     postal_code: string;
     street: string;
     neighborhood: string;
+    address_country?: string; // For Address section
+    id_copy_number?: string;
+    issue_place?: string; // Renamed from issue_location
+    id_serial?: string; // Renamed from serial_number
     account?: string; // UUID for financial account
 }
 
@@ -188,6 +192,14 @@ export interface BookingAgency {
     neighborhood?: string;
     street?: string;
     postal_code?: string;
+
+    // Additional fields for extended form
+    work_number?: string;
+    serial_number?: string; // For form handling, mapped to id_serial if needed
+    issue_date?: string;
+    expiry_date?: string;
+    issue_place?: string;
+    notes?: string;
 }
 
 

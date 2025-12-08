@@ -32,7 +32,7 @@ const ExpensesPage: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
-    
+
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -45,9 +45,9 @@ const ExpensesPage: React.FC = () => {
             const params = new URLSearchParams();
             params.append('start', ((currentPage - 1) * itemsPerPage).toString());
             params.append('length', itemsPerPage.toString());
-            
+
             const response = await apiClient<{ data: Expense[], recordsFiltered: number }>(`/ar/expense/api/expenses/?${params.toString()}`);
-             // Normalize API response
+            // Normalize API response
             const mappedData = response.data.map(item => ({
                 ...item,
                 status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
@@ -82,12 +82,12 @@ const ExpensesPage: React.FC = () => {
             let savedExpense: Expense;
 
             if (editingExpense) {
-                 savedExpense = await apiClient<Expense>(`/ar/expense/api/expenses/${editingExpense.id}/`, {
+                savedExpense = await apiClient<Expense>(`/ar/expense/api/expenses/${editingExpense.id}/`, {
                     method: 'PUT',
                     body: formData
                 });
             } else {
-                 savedExpense = await apiClient<Expense>(`/ar/expense/api/expenses/`, {
+                savedExpense = await apiClient<Expense>(`/ar/expense/api/expenses/`, {
                     method: 'POST',
                     body: formData
                 });
@@ -95,16 +95,16 @@ const ExpensesPage: React.FC = () => {
 
             // Handle Activation/Deactivation separately
             if (expenseData.is_active !== undefined) {
-                 const action = expenseData.is_active ? 'active' : 'disable';
-                 if (!editingExpense || editingExpense.is_active !== expenseData.is_active) {
-                     await apiClient(`/ar/expense/api/expenses/${savedExpense.id}/${action}/`, { method: 'POST' });
-                 }
+                const action = expenseData.is_active ? 'active' : 'disable';
+                if (!editingExpense || editingExpense.is_active !== expenseData.is_active) {
+                    await apiClient(`/ar/expense/api/expenses/${savedExpense.id}/${action}/`, { method: 'POST' });
+                }
             }
 
             fetchExpenses();
             handleClosePanel();
         } catch (err) {
-             alert(`Error saving expense: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`Error saving expense: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
     };
 
@@ -124,12 +124,12 @@ const ExpensesPage: React.FC = () => {
 
     const handleConfirmDelete = async () => {
         if (expenseToDelete) {
-             try {
+            try {
                 await apiClient(`/ar/expense/api/expenses/${expenseToDelete.id}/`, { method: 'DELETE' });
                 fetchExpenses();
                 setExpenseToDelete(null);
             } catch (err) {
-                 alert(`Error deleting expense: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`Error deleting expense: ${err instanceof Error ? err.message : 'Unknown error'}`);
             }
         }
     };
@@ -143,10 +143,10 @@ const ExpensesPage: React.FC = () => {
         { key: 'th_updatedAt', className: 'px-4 py-3 hidden lg:table-cell' },
         { key: 'th_actions', className: 'px-4 py-3' },
     ];
-    
+
     return (
         <div className="space-y-6">
-             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">{t('expensesPage.pageTitle')}</h2>
                     <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
@@ -155,19 +155,19 @@ const ExpensesPage: React.FC = () => {
                     </button>
                 </div>
             </div>
-            
+
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center border-b dark:border-slate-700 pb-3 mb-4">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('expensesPage.searchInfo')}</h3>
-                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button onClick={fetchExpenses} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5" /></button>
+                        <button onClick={fetchExpenses} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
                     <span>{t('units.showing')}</span>
                     <select
                         value={itemsPerPage}
@@ -207,21 +207,21 @@ const ExpensesPage: React.FC = () => {
                                     <td className="px-4 py-2 whitespace-nowrap hidden lg:table-cell">{new Date(expense.updated_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center justify-center gap-1">
-                                            <button onClick={() => handleDeleteClick(expense)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => setViewingExpense(expense)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => handleEditClick(expense)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => handleDeleteClick(expense)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => setViewingExpense(expense)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => handleEditClick(expense)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
-                             {!loading && expenses.length === 0 && (
+                            {!loading && expenses.length === 0 && (
                                 <tr><td colSpan={7} className="py-8 text-center">{t('orders.noData')}</td></tr>
                             )}
                         </tbody>
                     </table>
                 </div>
 
-                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
                         Page {currentPage}
                     </div>
@@ -232,7 +232,7 @@ const ExpensesPage: React.FC = () => {
                     </nav>
                 </div>
             </div>
-            
+
             <AddExpensePanel
                 isOpen={isAddPanelOpen}
                 onClose={handleClosePanel}
@@ -249,7 +249,7 @@ const ExpensesPage: React.FC = () => {
                 message={t('expensesPage.confirmDeleteMessage')}
             />
 
-            <ExpenseDetailsModal 
+            <ExpenseDetailsModal
                 expense={viewingExpense}
                 onClose={() => setViewingExpense(null)}
             />

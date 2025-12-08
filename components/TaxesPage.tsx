@@ -36,7 +36,7 @@ const TaxesPage: React.FC = () => {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
     const [totalRecords, setTotalRecords] = useState(0);
-    
+
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingTax, setEditingTax] = useState<Tax | null>(null);
@@ -49,7 +49,7 @@ const TaxesPage: React.FC = () => {
             const params = new URLSearchParams();
             params.append('start', ((currentPage - 1) * itemsPerPage).toString());
             params.append('length', itemsPerPage.toString());
-            
+
             const response = await apiClient<{ data: Tax[], recordsFiltered: number }>(`/ar/tax/api/taxes/?${params.toString()}`);
             setTaxes(response.data);
             setTotalRecords(response.recordsFiltered);
@@ -127,12 +127,12 @@ const TaxesPage: React.FC = () => {
         { key: 'updatedAt', className: 'hidden xl:table-cell' },
         { key: 'actions', className: '' },
     ];
-    
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('taxes.pageTitle')}</h2>
-                 <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                     <PlusCircleIcon className="w-5 h-5" />
                     <span>{t('taxes.addTax')}</span>
                 </button>
@@ -141,17 +141,17 @@ const TaxesPage: React.FC = () => {
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center border-b dark:border-slate-700 pb-3 mb-4">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('receipts.searchInfo')}</h3>
-                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button onClick={handleAddNewClick} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5"/></button>
-                        <button onClick={fetchTaxes} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5" /></button>
+                        <button onClick={handleAddNewClick} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5" /></button>
+                        <button onClick={fetchTaxes} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
-                <div className="h-4"></div> 
+                <div className="h-4"></div>
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
                     <span>{t('units.showing')}</span>
                     <select
                         value={itemsPerPage}
@@ -188,10 +188,10 @@ const TaxesPage: React.FC = () => {
                                     <td className="px-4 py-2 hidden lg:table-cell"><input type="checkbox" checked={tax.is_added_to_price} readOnly className="form-checkbox h-4 w-4 text-blue-600 rounded" /></td>
                                     <td className="px-4 py-2 hidden lg:table-cell"><input type="checkbox" checked={tax.is_vat_included} readOnly className="form-checkbox h-4 w-4 text-blue-600 rounded" /></td>
                                     <td className="px-4 py-2">
-                                        <Switch 
-                                            id={`tax-status-${tax.id}`} 
-                                            checked={tax.is_active} 
-                                            onChange={(c) => handleToggleStatus(tax, c)} 
+                                        <Switch
+                                            id={`tax-status-${tax.id}`}
+                                            checked={tax.is_active}
+                                            onChange={(c) => handleToggleStatus(tax, c)}
                                         />
                                     </td>
                                     <td className="px-4 py-2 hidden xl:table-cell">{new Date(tax.created_at).toLocaleDateString()}</td>
@@ -217,9 +217,9 @@ const TaxesPage: React.FC = () => {
                         {`${t('units.showing')} ${taxes.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, totalRecords)} ${t('units.of')} ${totalRecords} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <nav className="flex items-center gap-1" aria-label="Pagination">
                             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
+                            <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
                             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
                         </nav>
                     )}
@@ -235,7 +235,7 @@ const TaxesPage: React.FC = () => {
             />
 
             <TaxDetailsModal tax={viewingTax} onClose={() => setViewingTax(null)} />
-            
+
             <ConfirmationModal
                 isOpen={!!taxToDelete}
                 onClose={() => setTaxToDelete(null)}

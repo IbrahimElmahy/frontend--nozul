@@ -39,7 +39,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onC
     const filteredOptions = options.filter(option =>
         option.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
+
     const baseClass = `w-full px-4 py-2 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200`;
     const textAlignClass = language === 'ar' ? 'text-right' : 'text-left';
 
@@ -63,7 +63,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onC
                 <div className={`absolute top-full mt-2 w-full bg-white dark:bg-slate-800 rounded-lg shadow-lg border dark:border-slate-700 z-20`}>
                     <div className="p-2">
                         <div className="relative">
-                             <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
+                            <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
                             <input
                                 type="text"
                                 placeholder={t('phone.search')}
@@ -78,11 +78,10 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onC
                             <li
                                 key={option}
                                 onClick={() => handleSelect(option)}
-                                className={`px-4 py-2 text-sm cursor-pointer ${textAlignClass} ${
-                                    value === option
+                                className={`px-4 py-2 text-sm cursor-pointer ${textAlignClass} ${value === option
                                         ? 'bg-blue-500 text-white'
                                         : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700'
-                                }`}
+                                    }`}
                                 role="option"
                                 aria-selected={value === option}
                             >

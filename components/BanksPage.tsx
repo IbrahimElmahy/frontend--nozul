@@ -32,7 +32,7 @@ const BanksPage: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
-    
+
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingBank, setEditingBank] = useState<Bank | null>(null);
@@ -45,9 +45,9 @@ const BanksPage: React.FC = () => {
             const params = new URLSearchParams();
             params.append('start', ((currentPage - 1) * itemsPerPage).toString());
             params.append('length', itemsPerPage.toString());
-            
+
             const response = await apiClient<{ data: Bank[], recordsFiltered: number }>(`/ar/bank/api/banks/?${params.toString()}`);
-             // Normalize API response
+            // Normalize API response
             const mappedData = response.data.map(item => ({
                 ...item,
                 status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
@@ -72,7 +72,7 @@ const BanksPage: React.FC = () => {
     };
 
     const handleSaveBank = async (bankData: Omit<Bank, 'id' | 'created_at' | 'updated_at'>) => {
-         try {
+        try {
             const formData = new FormData();
             formData.append('name_en', bankData.name_en);
             formData.append('name_ar', bankData.name_ar);
@@ -81,12 +81,12 @@ const BanksPage: React.FC = () => {
             let savedBank: Bank;
 
             if (editingBank) {
-                 savedBank = await apiClient<Bank>(`/ar/bank/api/banks/${editingBank.id}/`, {
+                savedBank = await apiClient<Bank>(`/ar/bank/api/banks/${editingBank.id}/`, {
                     method: 'PUT',
                     body: formData
                 });
             } else {
-                 savedBank = await apiClient<Bank>(`/ar/bank/api/banks/`, {
+                savedBank = await apiClient<Bank>(`/ar/bank/api/banks/`, {
                     method: 'POST',
                     body: formData
                 });
@@ -94,16 +94,16 @@ const BanksPage: React.FC = () => {
 
             // Handle Activation/Deactivation separately
             if (bankData.is_active !== undefined) {
-                 const action = bankData.is_active ? 'active' : 'disable';
-                 if (!editingBank || editingBank.is_active !== bankData.is_active) {
-                     await apiClient(`/ar/bank/api/banks/${savedBank.id}/${action}/`, { method: 'POST' });
-                 }
+                const action = bankData.is_active ? 'active' : 'disable';
+                if (!editingBank || editingBank.is_active !== bankData.is_active) {
+                    await apiClient(`/ar/bank/api/banks/${savedBank.id}/${action}/`, { method: 'POST' });
+                }
             }
 
             fetchBanks();
             handleClosePanel();
         } catch (err) {
-             alert(`Error saving bank: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`Error saving bank: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
     };
 
@@ -128,7 +128,7 @@ const BanksPage: React.FC = () => {
                 fetchBanks();
                 setBankToDelete(null);
             } catch (err) {
-                 alert(`Error deleting bank: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`Error deleting bank: ${err instanceof Error ? err.message : 'Unknown error'}`);
             }
         }
     };
@@ -142,10 +142,10 @@ const BanksPage: React.FC = () => {
         { key: 'th_updatedAt', className: 'px-4 py-3 hidden lg:table-cell' },
         { key: 'th_actions', className: 'px-4 py-3' },
     ];
-    
+
     return (
         <div className="space-y-6">
-             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">{t('banksPage.pageTitle')}</h2>
                     <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
@@ -154,19 +154,19 @@ const BanksPage: React.FC = () => {
                     </button>
                 </div>
             </div>
-            
+
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center border-b dark:border-slate-700 pb-3 mb-4">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('banksPage.searchInfo')}</h3>
-                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button onClick={fetchBanks} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5" /></button>
+                        <button onClick={fetchBanks} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
                     <span>{t('units.showing')}</span>
                     <select
                         value={itemsPerPage}
@@ -206,23 +206,23 @@ const BanksPage: React.FC = () => {
                                     <td className="px-4 py-2 whitespace-nowrap hidden lg:table-cell">{new Date(bank.updated_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center justify-center gap-1">
-                                            <button onClick={() => handleDeleteClick(bank)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => setViewingBank(bank)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => handleEditClick(bank)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => handleDeleteClick(bank)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => setViewingBank(bank)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => handleEditClick(bank)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
-                             {!loading && banks.length === 0 && (
+                            {!loading && banks.length === 0 && (
                                 <tr><td colSpan={7} className="py-8 text-center">{t('orders.noData')}</td></tr>
                             )}
                         </tbody>
                     </table>
                 </div>
 
-                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
-                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                         Page {currentPage}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
+                    <div className="text-sm text-slate-600 dark:text-slate-300">
+                        Page {currentPage}
                     </div>
                     <nav className="flex items-center gap-1" aria-label="Pagination">
                         <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
@@ -231,7 +231,7 @@ const BanksPage: React.FC = () => {
                     </nav>
                 </div>
             </div>
-            
+
             <AddBankPanel
                 isOpen={isAddPanelOpen}
                 onClose={handleClosePanel}
@@ -248,7 +248,7 @@ const BanksPage: React.FC = () => {
                 message={t('banksPage.confirmDeleteMessage')}
             />
 
-            <BankDetailsModal 
+            <BankDetailsModal
                 bank={viewingBank}
                 onClose={() => setViewingBank(null)}
             />

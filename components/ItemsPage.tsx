@@ -44,7 +44,7 @@ const ItemsPage: React.FC = () => {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
     const [activeView, setActiveView] = useState<ViewType>('services');
-    
+
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [panelMode, setPanelMode] = useState<'add' | 'edit' | 'copy'>('add');
@@ -59,13 +59,13 @@ const ItemsPage: React.FC = () => {
             const params = new URLSearchParams();
             params.append('start', ((currentPage - 1) * itemsPerPage).toString());
             params.append('length', itemsPerPage.toString());
-            
-            const endpoint = activeView === 'services' 
-                ? '/ar/service/api/services/' 
+
+            const endpoint = activeView === 'services'
+                ? '/ar/service/api/services/'
                 : '/ar/category/api/categories/';
 
             const response = await apiClient<{ data: any[], recordsFiltered: number }>(`${endpoint}?${params.toString()}`);
-            
+
             // Normalize API response
             const mappedData = response.data.map(item => ({
                 ...item,
@@ -120,12 +120,12 @@ const ItemsPage: React.FC = () => {
             const endpointBase = activeView === 'services' ? '/ar/service/api/services/' : '/ar/category/api/categories/';
 
             if (panelMode === 'edit' && editingItem) {
-                 savedItem = await apiClient<Item>(`${endpointBase}${editingItem.id}/`, {
+                savedItem = await apiClient<Item>(`${endpointBase}${editingItem.id}/`, {
                     method: 'PUT',
                     body: formData
                 });
             } else {
-                 savedItem = await apiClient<Item>(endpointBase, {
+                savedItem = await apiClient<Item>(endpointBase, {
                     method: 'POST',
                     body: formData
                 });
@@ -133,16 +133,16 @@ const ItemsPage: React.FC = () => {
 
             // Handle Activation/Deactivation separately
             if (itemData.is_active !== undefined) {
-                 const action = itemData.is_active ? 'active' : 'disable';
-                 if (!editingItem || editingItem.is_active !== itemData.is_active || panelMode !== 'edit') {
-                     await apiClient(`${endpointBase}${savedItem.id}/${action}/`, { method: 'POST' });
-                 }
+                const action = itemData.is_active ? 'active' : 'disable';
+                if (!editingItem || editingItem.is_active !== itemData.is_active || panelMode !== 'edit') {
+                    await apiClient(`${endpointBase}${savedItem.id}/${action}/`, { method: 'POST' });
+                }
             }
 
             fetchItems();
             handleClosePanel();
         } catch (err) {
-             alert(`Error saving ${activeView === 'services' ? 'service' : 'category'}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`Error saving ${activeView === 'services' ? 'service' : 'category'}: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
     };
 
@@ -151,12 +151,12 @@ const ItemsPage: React.FC = () => {
             const endpointBase = activeView === 'services' ? '/ar/service/api/services/' : '/ar/category/api/categories/';
             const action = newStatus ? 'active' : 'disable';
             await apiClient(`${endpointBase}${item.id}/${action}/`, { method: 'POST' });
-            
+
             // Optimistically update
             setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_active: newStatus, status: newStatus ? 'active' : 'inactive' } : i));
         } catch (err) {
-             alert(`Error changing status: ${err instanceof Error ? err.message : 'Unknown error'}`);
-             fetchItems(); // Revert on error
+            alert(`Error changing status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            fetchItems(); // Revert on error
         }
     };
 
@@ -165,7 +165,7 @@ const ItemsPage: React.FC = () => {
         setPanelMode('add');
         setIsAddPanelOpen(true);
     };
-    
+
     const handleEditClick = (item: Item) => {
         setEditingItem(item);
         setPanelMode('edit');
@@ -183,25 +183,25 @@ const ItemsPage: React.FC = () => {
     };
 
     const handleConfirmDelete = async () => {
-         if (itemToDelete) {
+        if (itemToDelete) {
             try {
                 const endpointBase = activeView === 'services' ? '/ar/service/api/services/' : '/ar/category/api/categories/';
                 await apiClient(`${endpointBase}${itemToDelete.id}/`, { method: 'DELETE' });
                 fetchItems();
                 setItemToDelete(null);
             } catch (err) {
-                 alert(`Error deleting item: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`Error deleting item: ${err instanceof Error ? err.message : 'Unknown error'}`);
             }
         }
     };
 
     return (
         <div className="space-y-6">
-             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
                     {activeView === 'services' ? t('itemsPage.pageTitle') : t('categories.pageTitle')}
                 </h2>
-                 <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                     <PlusCircleIcon className="w-5 h-5" />
                     <span>{activeView === 'services' ? t('itemsPage.addService') : t('categories.addCategory')}</span>
                 </button>
@@ -209,14 +209,14 @@ const ItemsPage: React.FC = () => {
 
             {/* Toggle View */}
             <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg w-fit">
-                <button 
+                <button
                     onClick={() => setActiveView('services')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeView === 'services' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                 >
                     <CubeIcon className="w-4 h-4" />
                     <span>{t('itemsPage.services')}</span>
                 </button>
-                <button 
+                <button
                     onClick={() => setActiveView('categories')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeView === 'categories' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                 >
@@ -224,19 +224,19 @@ const ItemsPage: React.FC = () => {
                     <span>{t('itemsPage.categories')}</span>
                 </button>
             </div>
-            
+
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center border-b dark:border-slate-700 pb-3 mb-4">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('itemsPage.searchInfo')}</h3>
-                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button onClick={fetchItems} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5" /></button>
+                        <button onClick={fetchItems} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
                     <span>{t('units.showing')}</span>
                     <select
                         value={itemsPerPage}
@@ -279,7 +279,7 @@ const ItemsPage: React.FC = () => {
                                     <td className="px-4 py-2 hidden md:table-cell"><span className="font-mono text-xs">{item.id.split('-')[0]}</span></td>
                                     <td className="px-4 py-2 text-start">{item.name_en}</td>
                                     <td className="px-4 py-2 text-start">{item.name_ar}</td>
-                                    
+
                                     {activeView === 'services' ? (
                                         <>
                                             <td className="px-4 py-2 font-medium">{item.price}</td>
@@ -290,20 +290,20 @@ const ItemsPage: React.FC = () => {
                                     )}
 
                                     <td className="px-4 py-2">
-                                         <Switch 
-                                            id={`status-${item.id}`} 
-                                            checked={!!item.is_active} 
-                                            onChange={(c) => handleToggleStatus(item, c)} 
+                                        <Switch
+                                            id={`status-${item.id}`}
+                                            checked={!!item.is_active}
+                                            onChange={(c) => handleToggleStatus(item, c)}
                                         />
                                     </td>
                                     <td className="px-4 py-2 whitespace-nowrap">{new Date(item.created_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2 whitespace-nowrap">{new Date(item.updated_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-2">
                                         <div className="flex items-center justify-center gap-1">
-                                            <button onClick={() => handleDeleteClick(item)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => setViewingItem(item)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => handleEditClick(item)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => handleCopyClick(item)} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"><DocumentDuplicateIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => handleDeleteClick(item)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => setViewingItem(item)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => handleEditClick(item)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
+                                            <button onClick={() => handleCopyClick(item)} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"><DocumentDuplicateIcon className="w-5 h-5" /></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -315,7 +315,7 @@ const ItemsPage: React.FC = () => {
                     </table>
                 </div>
 
-                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
                         Page {currentPage}
                     </div>
@@ -327,7 +327,7 @@ const ItemsPage: React.FC = () => {
                 </div>
             </div>
 
-            <AddItemPanel 
+            <AddItemPanel
                 isOpen={isAddPanelOpen}
                 onClose={handleClosePanel}
                 onSave={handleSaveItem}
@@ -344,7 +344,7 @@ const ItemsPage: React.FC = () => {
                 message={activeView === 'services' ? t('itemsPage.confirmDeleteMessage') : t('categories.confirmDeleteMessage')}
             />
 
-            <ItemDetailsModal 
+            <ItemDetailsModal
                 item={viewingItem}
                 onClose={() => setViewingItem(null)}
             />

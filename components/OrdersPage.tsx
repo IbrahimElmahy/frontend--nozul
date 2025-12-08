@@ -119,30 +119,27 @@ const OrdersPage: React.FC = () => {
         // It contains 'items', 'reservation' ID (passed in bookingNumber field temporarily), 'notes'
 
         try {
-            const formData = new FormData();
-            // Use the reservation ID stored in bookingNumber field from the panel
-            formData.append('reservation', orderData.bookingNumber);
-            formData.append('note', orderData.notes);
-
-            if (orderData.items) {
-                orderData.items.forEach((item: any, index: number) => {
-                    formData.append(`order_items[${index}]service`, item.service);
-                    formData.append(`order_items[${index}]category`, item.category);
-                    formData.append(`order_items[${index}]quantity`, item.quantity.toString());
-                });
-            }
+            const payload: any = {
+                reservation: orderData.bookingNumber,
+                note: orderData.notes,
+                order_items: orderData.items ? orderData.items.map((item: any) => ({
+                    service: item.service,
+                    category: item.category,
+                    quantity: item.quantity
+                })) : []
+            };
 
             if (editingOrder) {
                 // MUST append 'order' ID when updating as per API docs
-                formData.append('order', editingOrder.id);
+                payload.order = editingOrder.id;
                 await apiClient(`/ar/order/api/orders/${editingOrder.id}/`, {
                     method: 'PUT',
-                    body: formData
+                    body: payload
                 });
             } else {
                 await apiClient('/ar/order/api/orders/', {
                     method: 'POST',
-                    body: formData
+                    body: payload
                 });
             }
             fetchOrders();

@@ -283,6 +283,9 @@ export const translations = {
             errorInvalidRange: "يجب أن يكون 'إلى رقم' أكبر من أو يساوي 'من رقم'.",
             roomTemplate: "قالب الغرفة",
             generateRooms: "إنشاء الغرف",
+            error: "خطأ",
+            close: "إغلاق",
+            requiredField: "هذا الحقل مطلوب",
         },
         bookings: {
             manageBookings: "إدارة الحجوزات",
@@ -437,6 +440,7 @@ export const translations = {
             th_idType: "نوع الهوية",
             th_idNumber: "رقم الهوية",
             th_issueDate: "تاريخ الإصدار",
+            th_idCopyNumber: "رقم نسخه الهوية",
             th_expiryDate: "تاريخ الانتهاء",
             th_status: "الحالة",
             th_createdAt: "تاريخ الإنشاء",

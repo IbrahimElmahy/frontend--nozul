@@ -5,7 +5,7 @@ import ConfirmationModal from './ConfirmationModal';
 import GuestCard from './GuestCard';
 import AddGuestPanel from './AddGuestPanel';
 import GuestDetailsModal from './GuestDetailsModal';
-import { apiClient } from '../apiClient';
+import { apiClient, ApiValidationError } from '../apiClient';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -26,11 +26,13 @@ import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 
 const GuestsPage: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
-    
+
     // Data and loading states
     const [guests, setGuests] = useState<Guest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [validationErrors, setValidationErrors] = useState<Record<string, string | string[]>>({});
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // Dropdown options states
     const [guestTypes, setGuestTypes] = useState<GuestTypeAPI[]>([]);
@@ -43,7 +45,7 @@ const GuestsPage: React.FC = () => {
     const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
     const [viewingGuest, setViewingGuest] = useState<Guest | null>(null);
     const [guestToAction, setGuestToAction] = useState<{ guest: Guest, action: 'delete' | 'deactivate' | 'activate' } | null>(null);
-    
+
     // Search, sort, and pagination states
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState<{ key: keyof Guest | null; direction: 'ascending' | 'descending' }>({ key: 'created_at', direction: 'descending' });
@@ -70,7 +72,7 @@ const GuestsPage: React.FC = () => {
             params.append('start', ((pagination.currentPage - 1) * pagination.itemsPerPage).toString());
             params.append('length', pagination.itemsPerPage.toString());
             if (searchTerm) params.append('search', searchTerm);
-            
+
             const guestsRes = await apiClient<{ data: Guest[], recordsFiltered: number }>(`/ar/guest/api/guests/?${params.toString()}`);
             setGuests(guestsRes.data);
             setPagination(p => ({ ...p, totalRecords: guestsRes.recordsFiltered }));
@@ -85,10 +87,10 @@ const GuestsPage: React.FC = () => {
     useEffect(() => {
         fetchGuestsAndOptions();
     }, [fetchGuestsAndOptions]);
-    
+
     // Reset page number when search term changes
     useEffect(() => {
-        setPagination(p => ({...p, currentPage: 1}));
+        setPagination(p => ({ ...p, currentPage: 1 }));
     }, [searchTerm]);
 
 
@@ -101,11 +103,14 @@ const GuestsPage: React.FC = () => {
         setEditingGuest(guest);
         setIsAddPanelOpen(true);
     };
-    
+
     const handleSaveGuest = async (formData: FormData) => {
         const isEditing = !!editingGuest;
         const endpoint = isEditing ? `/ar/guest/api/guests/${editingGuest.id}/` : '/ar/guest/api/guests/';
         const method = isEditing ? 'PUT' : 'POST';
+
+        setValidationErrors({});
+        setErrorMessage(null);
 
         try {
             await apiClient(endpoint, { method, body: formData });
@@ -113,10 +118,15 @@ const GuestsPage: React.FC = () => {
             setEditingGuest(null);
             fetchGuestsAndOptions(); // Refresh data
         } catch (err) {
-            alert(`Error saving guest: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            if (err instanceof ApiValidationError) {
+                setValidationErrors(err.errors);
+                setErrorMessage(err.message);
+            } else {
+                setErrorMessage(err instanceof Error ? err.message : 'An unknown error occurred');
+            }
         }
     };
-    
+
     const handleConfirmAction = async () => {
         if (!guestToAction) return;
         const { guest, action } = guestToAction;
@@ -141,7 +151,6 @@ const GuestsPage: React.FC = () => {
     };
 
     const tableHeaders: { key: keyof Guest | 'actions', labelKey: string, className?: string }[] = [
-        { key: 'id', labelKey: 'guests.th_id', className: 'hidden 2xl:table-cell' },
         { key: 'name', labelKey: 'guests.th_name' },
         { key: 'phone_number', labelKey: 'guests.th_mobileNumber', className: 'hidden sm:table-cell' },
         { key: 'id_number', labelKey: 'guests.th_idNumber', className: 'hidden md:table-cell' },
@@ -208,9 +217,9 @@ const GuestsPage: React.FC = () => {
                                                         <button onClick={() => setViewingGuest(guest)} className="p-1.5 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/10"><EyeIcon className="w-5 h-5" /></button>
                                                         <button onClick={() => handleEditClick(guest)} className="p-1.5 rounded-full text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-500/10"><PencilSquareIcon className="w-5 h-5" /></button>
                                                         <button onClick={() => setGuestToAction({ guest, action: 'delete' })} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10"><TrashIcon className="w-5 h-5" /></button>
-                                                        {guest.is_active ? 
-                                                            <button onClick={() => setGuestToAction({ guest, action: 'deactivate' })} className="p-1.5 rounded-full text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/10" title="Deactivate"><XCircleIcon className="w-5 h-5"/></button> :
-                                                            <button onClick={() => setGuestToAction({ guest, action: 'activate' })} className="p-1.5 rounded-full text-green-500 hover:bg-green-100 dark:hover:bg-green-500/10" title="Activate"><CheckCircleIcon className="w-5 h-5"/></button>
+                                                        {guest.is_active ?
+                                                            <button onClick={() => setGuestToAction({ guest, action: 'deactivate' })} className="p-1.5 rounded-full text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-500/10" title="Deactivate"><XCircleIcon className="w-5 h-5" /></button> :
+                                                            <button onClick={() => setGuestToAction({ guest, action: 'activate' })} className="p-1.5 rounded-full text-green-500 hover:bg-green-100 dark:hover:bg-green-500/10" title="Activate"><CheckCircleIcon className="w-5 h-5" /></button>
                                                         }
                                                     </div>
                                                 );
@@ -240,34 +249,35 @@ const GuestsPage: React.FC = () => {
                         </table>
                     </div>
                 )}
-                
+
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
                         {`${t('units.showing')} ${pagination.totalRecords > 0 ? (pagination.currentPage - 1) * pagination.itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalRecords)} ${t('units.of')} ${pagination.totalRecords} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
-                            <button onClick={() => setPagination(p => ({...p, currentPage: Math.max(1, p.currentPage - 1)}))} disabled={pagination.currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{pagination.currentPage} / {totalPages}</span>
-                            <button onClick={() => setPagination(p => ({...p, currentPage: Math.min(totalPages, p.currentPage + 1)}))} disabled={pagination.currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
+                        <nav className="flex items-center gap-1" aria-label="Pagination">
+                            <button onClick={() => setPagination(p => ({ ...p, currentPage: Math.max(1, p.currentPage - 1) }))} disabled={pagination.currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
+                            <span className="text-sm font-semibold px-2">{pagination.currentPage} / {totalPages}</span>
+                            <button onClick={() => setPagination(p => ({ ...p, currentPage: Math.min(totalPages, p.currentPage + 1) }))} disabled={pagination.currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
                         </nav>
                     )}
                 </div>
             </div>
-            
+
             <AddGuestPanel
                 initialData={editingGuest}
                 isEditing={!!editingGuest}
                 isOpen={isAddPanelOpen}
-                onClose={() => setIsAddPanelOpen(false)}
+                onClose={() => { setIsAddPanelOpen(false); setValidationErrors({}); }}
                 onSave={handleSaveGuest}
                 guestTypes={guestTypes}
                 idTypes={idTypes}
                 countries={countries}
+                validationErrors={validationErrors}
             />
-            
+
             <GuestDetailsModal guest={viewingGuest} onClose={() => setViewingGuest(null)} />
-            
+
             <ConfirmationModal
                 isOpen={!!guestToAction}
                 onClose={() => setGuestToAction(null)}
@@ -275,6 +285,27 @@ const GuestsPage: React.FC = () => {
                 title={`Confirm ${guestToAction?.action || ''}`}
                 message={`Are you sure you want to ${guestToAction?.action} this guest?`}
             />
+
+            {errorMessage && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center" role="dialog" aria-modal="true">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setErrorMessage(null)}></div>
+                    <div className="relative bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 transform transition-all">
+                        <div className="text-center">
+                            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 mb-4">
+                                <XCircleIcon className="h-8 w-8 text-red-600 dark:text-red-300" />
+                            </div>
+                            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">{t('units.error')}</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{errorMessage}</p>
+                            <button
+                                onClick={() => setErrorMessage(null)}
+                                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
+                            >
+                                {t('units.close')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

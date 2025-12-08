@@ -7,12 +7,23 @@ import { LanguageContext } from '../contexts/LanguageContext';
 interface DatePickerProps {
     value: string;
     onChange: (date: string) => void;
+    label?: string; // Added label prop
+    selectedDate?: Date | null; // Support the prop used in AddGuestPanel
 }
 
-const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
+const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, selectedDate }) => {
     const { language, translationData } = useContext(LanguageContext);
+
+    // Use selectedDate if provided (API compatibility with AddGuestPanel), otherwise fallback to value string logic
+    // AddGuestPanel passes: selectedDate={formData.birthdate ? new Date(formData.birthdate) : null}
+    // But DatePicker was previously expecting a 'value' string.
+    // Let's normalize it:
+    const effectiveValue = selectedDate
+        ? selectedDate.toISOString().split('T')[0]
+        : value || '';
+
     const [isOpen, setIsOpen] = useState(false);
-    const [viewDate, setViewDate] = useState(new Date(value || Date.now()));
+    const [viewDate, setViewDate] = useState(new Date(effectiveValue || Date.now()));
     const datepickerRef = useRef<HTMLDivElement>(null);
 
     // Safe access with fallback to English/Default if translation is missing to prevent crash
@@ -33,17 +44,20 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
 
     useEffect(() => {
         // When value changes from outside, update the view
-        const newDate = new Date(value);
+        const newDate = new Date(effectiveValue);
         if (!isNaN(newDate.getTime())) {
             setViewDate(newDate);
         }
-    }, [value]);
+    }, [effectiveValue]);
 
     const handleDateSelect = (day: number) => {
         const selected = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+        // Ensure we get the local date string correct, ignoring timezone shifts for the date part
         const dateString = new Date(selected.getTime() - (selected.getTimezoneOffset() * 60000))
             .toISOString()
             .split('T')[0];
+
+        // If the parent passed a date object, they effectively receive the string back. Assumes parent understands usage.
         onChange(dateString);
         setIsOpen(false);
     };
@@ -64,7 +78,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
         const firstDayOfMonth = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        const selectedDate = new Date(value);
+        const selectedDate = new Date(effectiveValue);
         const selectedDay = !isNaN(selectedDate.getTime()) ? selectedDate.getDate() : -1;
         const selectedMonth = !isNaN(selectedDate.getTime()) ? selectedDate.getMonth() : -1;
         const selectedYear = !isNaN(selectedDate.getTime()) ? selectedDate.getFullYear() : -1;
@@ -107,24 +121,26 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
 
     return (
         <div className="relative" ref={datepickerRef}>
+            {label && <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{label}</label>}
             <input
                 type="text"
                 readOnly
-                value={value}
+                value={effectiveValue}
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 cursor-pointer ${language === 'ar' ? 'text-right' : 'text-left'}`}
+                placeholder="YYYY-MM-DD"
+                className={`w-full px-4 py-2 bg-white dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 cursor-pointer ${language === 'ar' ? 'text-right' : 'text-left'}`}
             />
             {isOpen && (
                 <div className={`absolute top-full mt-2 z-10 w-72 bg-white dark:bg-slate-800 rounded-lg shadow-lg border dark:border-slate-700 p-2 ${popoverPositionClass}`}>
                     <div className="flex justify-between items-center mb-2 px-2">
-                        <button onClick={() => changeMonth(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                        <button onClick={() => changeMonth(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${language === 'ar' ? 'rotate-180' : ''}`} /></button>
                         <div className="font-semibold text-gray-800 dark:text-gray-200">{MONTH_NAMES[viewDate.getMonth()]}</div>
-                        <button onClick={() => changeMonth(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                        <button onClick={() => changeMonth(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${language === 'ar' ? 'rotate-180' : ''} transform rotate-180`} /></button>
                     </div>
                     <div className="flex justify-between items-center mb-2 px-2">
-                        <button onClick={() => changeYear(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                        <button onClick={() => changeYear(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${language === 'ar' ? 'rotate-180' : ''}`} /></button>
                         <div className="font-semibold text-gray-800 dark:text-gray-200">{viewDate.getFullYear()}</div>
-                        <button onClick={() => changeYear(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" /></button>
+                        <button onClick={() => changeYear(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${language === 'ar' ? 'rotate-180' : ''} transform rotate-180`} /></button>
                     </div>
                     {renderCalendar()}
                 </div>

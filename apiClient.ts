@@ -1,5 +1,15 @@
 import { User } from './types';
 
+export class ApiValidationError extends Error {
+    errors: Record<string, string | string[]>;
+
+    constructor(message: string, errors: Record<string, string | string[]>) {
+        super(message);
+        this.name = 'ApiValidationError';
+        this.errors = errors;
+    }
+}
+
 interface ApiClientOptions {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
     body?: any;
@@ -55,11 +65,37 @@ export const apiClient = async <T>(endpoint: string, options: ApiClientOptions =
         const responseData = await response.json();
 
         if (!response.ok) {
-            throw new Error(responseData.detail || Object.values(responseData).flat().join(' ') || 'An unknown API error occurred');
+            let errorMessage = 'An unknown API error occurred';
+            let errors: Record<string, string | string[]> = {};
+
+            if (responseData.detail) {
+                errorMessage = responseData.detail;
+            } else if (Array.isArray(responseData)) {
+                errorMessage = responseData.join('; ');
+                errors = { non_field_errors: responseData };
+            } else if (typeof responseData === 'object' && responseData !== null) {
+                // It's likely a validation error object
+                errors = responseData;
+
+                // Construct a summary message
+                const parts = [];
+                for (const [key, value] of Object.entries(responseData)) {
+                    const valStr = Array.isArray(value)
+                        ? value.map(v => typeof v === 'object' ? JSON.stringify(v) : v).join(', ')
+                        : (typeof value === 'object' ? JSON.stringify(value) : String(value));
+                    parts.push(`${key}: ${valStr}`);
+                }
+                if (parts.length > 0) errorMessage = parts.join('; ');
+            }
+
+            throw new ApiValidationError(errorMessage, errors);
         }
 
         return responseData as T;
     } catch (error) {
+        if (error instanceof ApiValidationError) {
+            throw error;
+        }
         if (error instanceof Error) {
             // Re-throw custom or network errors
             throw new Error(error.message || 'A network error occurred.');

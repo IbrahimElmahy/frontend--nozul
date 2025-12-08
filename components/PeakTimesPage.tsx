@@ -104,7 +104,7 @@ const PeakTimesPage: React.FC = () => {
         }
     };
 
-     const tableHeaders = [
+    const tableHeaders = [
         { key: 'id', label: 'peakTimes.th_id', className: 'hidden sm:table-cell' },
         { key: 'start_date', label: 'peakTimes.th_startDate', className: '' },
         { key: 'end_date', label: 'peakTimes.th_endDate', className: '' },
@@ -127,7 +127,7 @@ const PeakTimesPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('peakTimes.pageTitle')}</h2>
-                 <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                     <PlusCircleIcon className="w-5 h-5" />
                     <span>{t('peakTimes.addPeakTime')}</span>
                 </button>
@@ -136,9 +136,9 @@ const PeakTimesPage: React.FC = () => {
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center border-b dark:border-slate-700 pb-3 mb-4">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('apartmentPrices.searchInfo')}</h3>
-                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5"/></button>
-                        <button onClick={fetchPeakTimes} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5"/></button>
+                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5" /></button>
+                        <button onClick={fetchPeakTimes} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
@@ -202,12 +202,12 @@ const PeakTimesPage: React.FC = () => {
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                         {`${t('units.showing')} ${paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, peakTimes.length)} ${t('units.of')} ${peakTimes.length} ${t('units.entries')}`}
+                        {`${t('units.showing')} ${paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('units.to')} ${Math.min(currentPage * itemsPerPage, peakTimes.length)} ${t('units.of')} ${peakTimes.length} ${t('units.entries')}`}
                     </div>
                     {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <nav className="flex items-center gap-1" aria-label="Pagination">
                             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
+                            <span className="text-sm font-semibold px-2">{currentPage} / {totalPages}</span>
                             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
                         </nav>
                     )}

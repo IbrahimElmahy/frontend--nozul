@@ -17,7 +17,7 @@ import { Page } from '../App';
 import { apiClient } from '../apiClient';
 
 
-const newUserTemplate: Omit<HotelUser, 'id' | 'last_login' | 'created_at' | 'updated_at' | 'profile' | 'role_display' | 'image_url' > = {
+const newUserTemplate: Omit<HotelUser, 'id' | 'last_login' | 'created_at' | 'updated_at' | 'profile' | 'role_display' | 'image_url'> = {
     username: '',
     name: '',
     phone_number: '',
@@ -105,7 +105,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
             alert(`Error saving user: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
     };
-    
+
     const handleDeleteClick = (user: HotelUser) => {
         setUserToDelete(user);
     };
@@ -134,26 +134,26 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
         }
     };
 
-    
+
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     const tableHeaders = [
-        'th_id', 'th_username', 'th_name', 'th_mobile', 'th_email', 'th_role', 'th_status', 'th_gender', 
+        'th_id', 'th_username', 'th_name', 'th_mobile', 'th_email', 'th_role', 'th_status', 'th_gender',
         'th_lastLogin', 'th_createdAt', 'th_updatedAt', 'th_actions'
     ];
-    
+
     return (
         <div className="space-y-6">
-             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex items-center gap-4">
                     <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('usersPage.pageTitle')}</h2>
                 </div>
-                 <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                         <PlusCircleIcon className="w-5 h-5" />
                         <span>{t('usersPage.addUser')}</span>
                     </button>
-                    <button 
+                    <button
                         onClick={() => setCurrentPage('hotel-settings')}
                         className={`flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-2 px-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${language === 'ar' ? 'flex-row-reverse' : ''}`}
                     >
@@ -165,7 +165,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 pb-4 border-b dark:border-slate-700">
-                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                         <span>{t('usersPage.showing')}</span>
                         <select
                             value={itemsPerPage}
@@ -178,7 +178,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                         </select>
                         <span>{t('usersPage.entries')}</span>
                     </div>
-                     <div className="relative w-full sm:w-auto sm:flex-grow max-w-lg">
+                    <div className="relative w-full sm:w-auto sm:flex-grow max-w-lg">
                         <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
                         <input
                             type="text"
@@ -192,7 +192,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                         <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
+                        <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-300">
                             <tr>
                                 {tableHeaders.map(header => <th key={header} scope="col" className="px-6 py-3">{t(`usersPage.${header}` as any)}</th>)}
                             </tr>
@@ -209,10 +209,10 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                                     <td className="px-6 py-4">{user.email}</td>
                                     <td className="px-6 py-4">{user.role_display || user.role}</td>
                                     <td className="px-6 py-4">
-                                        <Switch 
-                                            id={`status-${user.id}`} 
-                                            checked={!!user.is_active} 
-                                            onChange={(c) => handleToggleStatus(user, c)} 
+                                        <Switch
+                                            id={`status-${user.id}`}
+                                            checked={!!user.is_active}
+                                            onChange={(c) => handleToggleStatus(user, c)}
                                         />
                                     </td>
                                     <td className="px-6 py-4">{user.profile?.gender_display || user.profile?.gender || '-'}</td>
@@ -240,9 +240,9 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                         {`${t('usersPage.showing')} ${users.length > 0 ? (paginationCurrentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(paginationCurrentPage * itemsPerPage, totalRecords)} ${t('usersPage.of')} ${totalRecords} ${t('usersPage.entries')}`}
                     </div>
                     {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
+                        <nav className="flex items-center gap-1" aria-label="Pagination">
                             <button onClick={() => setPaginationCurrentPage(p => Math.max(1, p - 1))} disabled={paginationCurrentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{paginationCurrentPage} / {totalPages}</span>
+                            <span className="text-sm font-semibold px-2">{paginationCurrentPage} / {totalPages}</span>
                             <button onClick={() => setPaginationCurrentPage(p => Math.min(totalPages, p + 1))} disabled={paginationCurrentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
                         </nav>
                     )}
@@ -250,7 +250,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
 
             </div>
 
-            <AddUserPanel 
+            <AddUserPanel
                 isOpen={isAddPanelOpen}
                 onClose={handleClosePanel}
                 onSave={handleSaveUser}
@@ -267,7 +267,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                 message={t('usersPage.confirmDeleteMessage')}
             />
 
-            <UserDetailsModal 
+            <UserDetailsModal
                 user={viewingUser}
                 onClose={() => setViewingUser(null)}
             />
