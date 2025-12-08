@@ -4,6 +4,7 @@ import EyeIcon from './icons-redesign/EyeIcon';
 import EyeOffIcon from './icons-redesign/EyeOffIcon';
 import { LanguageContext } from '../contexts/LanguageContext';
 import welcomeBg from '../images/login-hero.png';
+import { API_BASE_URL } from '../config/api';
 
 interface LoginPageProps {
     onLoginSuccess: () => void;
@@ -51,7 +52,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         body.append('password', password);
 
         try {
-            const response = await fetch('https://www.osusideas.online/ar/auth/api/sessions/login/', {
+            const response = await fetch(`${API_BASE_URL}/ar/auth/api/sessions/login/`, {
                 method: 'POST',
                 body,
             });

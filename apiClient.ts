@@ -1,4 +1,5 @@
 import { User } from './types';
+import { API_BASE_URL } from './config/api';
 
 export class ApiValidationError extends Error {
     errors: Record<string, string | string[]>;
@@ -49,7 +50,7 @@ export const apiClient = async <T>(endpoint: string, options: ApiClientOptions =
 
 
     try {
-        const response = await fetch(`https://www.osusideas.online${endpoint}`, config);
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
         if (method === 'DELETE' && response.status === 204) {
             return Promise.resolve(null as unknown as T);
