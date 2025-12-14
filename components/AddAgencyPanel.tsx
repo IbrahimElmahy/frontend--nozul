@@ -211,7 +211,7 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label htmlFor="name" className={labelBaseClass}>{t('agencies.th_name')}</label>
-                                <input type="text" name="name" id="name" value={formData.name} onChange={handleInputChange} className={inputBaseClass} />
+                                <input type="text" name="name" id="name" value={formData.name || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
                             <div>
                                 <label htmlFor="country" className={labelBaseClass}>{t('agencies.th_country')}</label>
@@ -231,7 +231,7 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                             </div>
                             <div className="md:col-span-2">
                                 <label htmlFor="email" className={labelBaseClass}>{t('profilePage.email')}</label>
-                                <input type="email" name="email" id="email" value={formData.email} onChange={handleInputChange} className={inputBaseClass} />
+                                <input type="email" name="email" id="email" value={formData.email || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
                         </div>
 
@@ -243,19 +243,19 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                             </div>
                             <div>
                                 <label htmlFor="city" className={labelBaseClass}>{t('guests.city')}</label>
-                                <input type="text" name="city" id="city" value={formData.city} onChange={handleInputChange} className={inputBaseClass} />
+                                <input type="text" name="city" id="city" value={formData.city || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
                             <div>
                                 <label htmlFor="neighborhood" className={labelBaseClass}>{t('guests.district')}</label>
-                                <input type="text" name="neighborhood" id="neighborhood" value={formData.neighborhood} onChange={handleInputChange} className={inputBaseClass} />
+                                <input type="text" name="neighborhood" id="neighborhood" value={formData.neighborhood || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
                             <div>
                                 <label htmlFor="street" className={labelBaseClass}>{t('guests.street')}</label>
-                                <input type="text" name="street" id="street" value={formData.street} onChange={handleInputChange} className={inputBaseClass} />
+                                <input type="text" name="street" id="street" value={formData.street || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
                             <div>
                                 <label htmlFor="postal_code" className={labelBaseClass}>{t('guests.postalCode')}</label>
-                                <input type="text" name="postal_code" id="postal_code" value={formData.postal_code} onChange={handleInputChange} className={inputBaseClass} />
+                                <input type="text" name="postal_code" id="postal_code" value={formData.postal_code || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
                         </div>
 
@@ -272,11 +272,11 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                             </div>
                             <div>
                                 <label htmlFor="id_number" className={labelBaseClass}>{t('agencies.th_idNumber')}</label>
-                                <input type="text" name="id_number" id="id_number" value={formData.id_number} onChange={handleInputChange} className={inputBaseClass} />
+                                <input type="text" name="id_number" id="id_number" value={formData.id_number || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
                             <div>
                                 <label htmlFor="serial_number" className={labelBaseClass}>{t('guests.serialNumber')}</label>
-                                <input type="text" name="serial_number" id="serial_number" value={formData.serial_number} onChange={handleInputChange} className={inputBaseClass} />
+                                <input type="text" name="serial_number" id="serial_number" value={formData.serial_number || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
                             <div>
                                 <label className={labelBaseClass}>{t('guests.issueDate')}</label>
@@ -288,7 +288,7 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                             </div>
                             <div className="md:col-span-2">
                                 <label htmlFor="issue_place" className={labelBaseClass}>{t('guests.issuePlace')}</label>
-                                <input type="text" name="issue_place" id="issue_place" value={formData.issue_place} onChange={handleInputChange} className={inputBaseClass} />
+                                <input type="text" name="issue_place" id="issue_place" value={formData.issue_place || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
                         </div>
 
@@ -300,7 +300,7 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                             </div>
                             <div>
                                 <label htmlFor="discount_value" className={labelBaseClass}>{t('bookings.value')}</label>
-                                <input type="number" name="discount_value" id="discount_value" value={formData.discount_value} onChange={handleInputChange} className={inputBaseClass} />
+                                <input type="number" name="discount_value" id="discount_value" value={formData.discount_value || ''} onChange={handleInputChange} className={inputBaseClass} />
                             </div>
                         </div>
 
