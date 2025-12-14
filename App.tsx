@@ -1,32 +1,34 @@
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, Suspense } from 'react';
 import LoginPage from './components/LoginPage';
+import { parseJwt } from './utils/jwt';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import Dashboard from './components/Dashboard';
-import UserProfilePage from './components/UserProfilePage';
-import UnitsPage from './components/UnitsPage';
-import BookingsPage from './components/BookingsPage';
-import GuestsPage from './components/GuestsPage';
-import BookingAgenciesPage from './components/BookingAgenciesPage';
-import OrdersPage from './components/OrdersPage';
-import ReceiptsPage from './components/ReceiptsPage';
+// Lazy load components for performance
+const Dashboard = React.lazy(() => import('./components/Dashboard'));
+const UserProfilePage = React.lazy(() => import('./components/UserProfilePage'));
+const UnitsPage = React.lazy(() => import('./components/UnitsPage'));
+const BookingsPage = React.lazy(() => import('./components/BookingsPage'));
+const GuestsPage = React.lazy(() => import('./components/GuestsPage'));
+const BookingAgenciesPage = React.lazy(() => import('./components/BookingAgenciesPage'));
+const OrdersPage = React.lazy(() => import('./components/OrdersPage'));
+const ReceiptsPage = React.lazy(() => import('./components/ReceiptsPage'));
+const ReportsPage = React.lazy(() => import('./components/ReportsPage'));
+const ArchivesPage = React.lazy(() => import('./components/ArchivesPage'));
+const NotificationsPage = React.lazy(() => import('./components/NotificationsPage'));
+const HotelSettingsPage = React.lazy(() => import('./components/HotelSettingsPage'));
+const HotelInfoPage = React.lazy(() => import('./components/HotelInfoPage'));
+const UsersPage = React.lazy(() => import('./components/UsersPage'));
+const ApartmentPricesPage = React.lazy(() => import('./components/ApartmentPricesPage'));
+const PeakTimesPage = React.lazy(() => import('./components/PeakTimesPage'));
+const TaxesPage = React.lazy(() => import('./components/TaxesPage'));
+const ItemsPage = React.lazy(() => import('./components/ItemsPage'));
+const CurrenciesPage = React.lazy(() => import('./components/CurrenciesPage'));
+const FundsPage = React.lazy(() => import('./components/FundsPage'));
+const BanksPage = React.lazy(() => import('./components/BanksPage'));
+const ExpensesPage = React.lazy(() => import('./components/ExpensesPage'));
+const HotelConditionsPage = React.lazy(() => import('./components/HotelConditionsPage'));
 import SettingsCog from './components/SettingsCog';
-import ReportsPage from './components/ReportsPage';
-import ArchivesPage from './components/ArchivesPage';
-import NotificationsPage from './components/NotificationsPage';
-import HotelSettingsPage from './components/HotelSettingsPage';
-import HotelInfoPage from './components/HotelInfoPage';
-import UsersPage from './components/UsersPage';
-import ApartmentPricesPage from './components/ApartmentPricesPage';
-import PeakTimesPage from './components/PeakTimesPage';
-import TaxesPage from './components/TaxesPage';
-import ItemsPage from './components/ItemsPage';
-import CurrenciesPage from './components/CurrenciesPage';
-import FundsPage from './components/FundsPage';
-import BanksPage from './components/BanksPage';
-import ExpensesPage from './components/ExpensesPage';
-import HotelConditionsPage from './components/HotelConditionsPage';
 import { LanguageContext } from './contexts/LanguageContext';
 import { User } from './types';
 
@@ -164,29 +166,35 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
         <div className="flex-1 flex flex-col min-w-0">
           <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} setCurrentPage={setCurrentPage} currentPage={currentPage} user={user} />
           <main className={`flex-1 p-4 sm:p-6 ${settings.animatedBackground ? 'bg-transparent' : 'bg-slate-100 dark:bg-slate-950'}`}>
-            {currentPage === 'dashboard' && <Dashboard />}
-            {currentPage === 'profile' && <UserProfilePage user={user} />}
-            {currentPage === 'units' && <UnitsPage />}
-            {currentPage === 'bookings' && <BookingsPage />}
-            {currentPage === 'guests' && <GuestsPage />}
-            {currentPage === 'agencies' && <BookingAgenciesPage />}
-            {currentPage === 'orders' && <OrdersPage />}
-            {currentPage === 'receipts' && <ReceiptsPage user={user} />}
-            {currentPage === 'reports' && <ReportsPage />}
-            {currentPage === 'archives' && <ArchivesPage />}
-            {currentPage === 'notifications' && <NotificationsPage />}
-            {currentPage === 'hotel-settings' && <HotelSettingsPage setCurrentPage={setCurrentPage} />}
-            {currentPage === 'hotel-info' && <HotelInfoPage setCurrentPage={setCurrentPage} />}
-            {currentPage === 'hotel-users' && <UsersPage setCurrentPage={setCurrentPage} />}
-            {currentPage === 'apartment-prices' && <ApartmentPricesPage />}
-            {currentPage === 'peak-times' && <PeakTimesPage />}
-            {currentPage === 'taxes' && <TaxesPage />}
-            {currentPage === 'items' && <ItemsPage />}
-            {currentPage === 'currencies' && <CurrenciesPage />}
-            {currentPage === 'funds' && <FundsPage />}
-            {currentPage === 'banks' && <BanksPage />}
-            {currentPage === 'expenses' && <ExpensesPage />}
-            {currentPage === 'hotel-conditions' && <HotelConditionsPage />}
+            <Suspense fallback={
+              <div className="flex items-center justify-center p-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+              </div>
+            }>
+              {currentPage === 'dashboard' && <Dashboard />}
+              {currentPage === 'profile' && <UserProfilePage user={user} />}
+              {currentPage === 'units' && <UnitsPage />}
+              {currentPage === 'bookings' && <BookingsPage />}
+              {currentPage === 'guests' && <GuestsPage />}
+              {currentPage === 'agencies' && <BookingAgenciesPage />}
+              {currentPage === 'orders' && <OrdersPage />}
+              {currentPage === 'receipts' && <ReceiptsPage user={user} />}
+              {currentPage === 'reports' && <ReportsPage />}
+              {currentPage === 'archives' && <ArchivesPage />}
+              {currentPage === 'notifications' && <NotificationsPage />}
+              {currentPage === 'hotel-settings' && <HotelSettingsPage setCurrentPage={setCurrentPage} />}
+              {currentPage === 'hotel-info' && <HotelInfoPage setCurrentPage={setCurrentPage} />}
+              {currentPage === 'hotel-users' && <UsersPage setCurrentPage={setCurrentPage} />}
+              {currentPage === 'apartment-prices' && <ApartmentPricesPage />}
+              {currentPage === 'peak-times' && <PeakTimesPage />}
+              {currentPage === 'taxes' && <TaxesPage />}
+              {currentPage === 'items' && <ItemsPage />}
+              {currentPage === 'currencies' && <CurrenciesPage />}
+              {currentPage === 'funds' && <FundsPage />}
+              {currentPage === 'banks' && <BanksPage />}
+              {currentPage === 'expenses' && <ExpensesPage />}
+              {currentPage === 'hotel-conditions' && <HotelConditionsPage />}
+            </Suspense>
           </main>
         </div>
         <SettingsCog settings={settings} setSettings={setSettings} />
@@ -222,7 +230,15 @@ const App: React.FC = () => {
       document.title = "نزلكم";
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        // Ensure ID is present if token exists
+        if (!parsedUser.id && parsedUser.access_token) {
+          const decoded = parseJwt(parsedUser.access_token);
+          if (decoded && decoded.user_id) {
+            parsedUser.id = decoded.user_id;
+          }
+        }
+        setUser(parsedUser);
       }
     } else {
       document.title = "نزلكم - تسجيل الدخول";
@@ -264,6 +280,20 @@ const App: React.FC = () => {
 
   const handleLogin = () => {
     localStorage.setItem('isAuthenticated', 'true');
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      // Ensure ID is present
+      if (!parsedUser.id && parsedUser.access_token) {
+        const decoded = parseJwt(parsedUser.access_token);
+        if (decoded && decoded.user_id) {
+          parsedUser.id = decoded.user_id;
+          // Update local storage too so it persists
+          localStorage.setItem('user', JSON.stringify(parsedUser));
+        }
+      }
+      setUser(parsedUser);
+    }
     setIsAuthenticated(true);
   };
 

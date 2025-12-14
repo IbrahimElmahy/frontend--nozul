@@ -89,8 +89,8 @@ export const translations = {
         },
         login: {
             error: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-            title: "مرحبا بعودتك",
-            subtitle: "قم بتسجيل الدخول للمتابعة",
+            title: "مرحباً بصنّاع التميز",
+            subtitle: "بوابتك لإدارة فندقية استثنائية",
             usernameLabel: "اسم المستخدم",
             usernamePlaceholder: "ادخل اسم المستخدم",
             passwordLabel: "كلمة المرور",

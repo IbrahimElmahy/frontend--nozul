@@ -14,6 +14,7 @@ import { LanguageContext } from '../contexts/LanguageContext';
 import { TranslationKey } from '../translations';
 import { User, Notification } from '../types';
 import { apiClient } from '../apiClient';
+import { API_BASE_URL } from '../config/api';
 import IntegrationRequestModal from './IntegrationRequestModal';
 
 // Icons for notifications and status
@@ -116,6 +117,9 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
     const userDropdownRef = useRef<HTMLDivElement>(null);
     const notificationsRef = useRef<HTMLDivElement>(null);
     const langDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Memoize timestamp
+    const mountTime = React.useMemo(() => new Date().getTime(), []);
 
     const { topbarColor } = settings;
     const unreadCount = notifications.filter(n => n.unread).length;
@@ -394,9 +398,10 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                         aria-expanded={isUserDropdownOpen}
                     >
                         <img
-                            src="https://picsum.photos/id/237/200/200"
+                            src={user?.image_url ? (user.image_url.startsWith('http') ? user.image_url : `${API_BASE_URL}${user.image_url}`) + `?t=${mountTime}` : "https://via.placeholder.com/150"}
                             alt="User Avatar"
-                            className="w-10 h-10 rounded-full"
+                            loading="lazy"
+                            className="w-10 h-10 rounded-full object-cover"
                         />
                         <div className="hidden sm:block">
                             <div className={`font-semibold text-sm text-slate-700 dark:text-slate-300 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.name || t('walid_ullah')}</div>

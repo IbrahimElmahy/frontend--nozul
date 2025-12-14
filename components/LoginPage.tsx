@@ -161,25 +161,25 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
     const heroContent = isRTL
         ? {
-            eyebrow: 'منصة نزلكم',
-            title: 'منصة نزلكم مهيأة لإدارة الفنادق الراقية',
+            eyebrow: 'مستقبل الضيافة الفاخرة',
+            title: 'نُزلكم: حيث تلتقي الأصالة بأحدث تقنيات الإدارة',
             lead:
-                'تابع الحجوزات والمدفوعات، وتجارب الضيوف لحظة بلحظة عبر لوحة تحكم واحدة تنبض بروح الضيافة العربية.',
+                'حوّل إدارة منشأتك إلى رحلة من الإبداع والتميز. تحكم في كل تفصيلة، من الحجز إلى المغادرة، واصنع لضيوفك ذكريات لا تُنسى.',
             bullets: [
-                'إطلالة فورية على نسب الإشغال والإيرادات اليومية',
-                'تنبيهات ذكية لأي طلبات أو تعليقات من الضيوف',
-                'أتمتة للتقارير التشغيلية ومتابعة سلسة لفرق العمل',
+                'كن القائد الذي يرى كل شيء: إحصائيات حية ونبض فوري للأداء.',
+                'تواصل بذكاء: افهم ضيوفك قبل أن يتحدثوا.',
+                'الكفاءة في أبهى صورها: تقارير دقيقة وقرارات سديدة بلمسة زر.',
             ],
         }
         : {
-            eyebrow: 'Luxury hospitality OS',
-            title: 'Nozulkum keeps premium hotels in total control',
+            eyebrow: 'The Future of Luxury Hospitality',
+            title: 'Nozulkum: Where Authenticity Meets Modern Management',
             lead:
-                'Follow bookings, payments, and guest experiences in real time from a single Arabic-first control hub.',
+                'Transform your property management into a journey of creativity and excellence. Master every detail, from booking to checkout, and craft unforgettable memories for your guests.',
             bullets: [
-                'Live visibility into occupancy and revenue performance',
-                'Smart nudges whenever guests share requests or feedback',
-                'Automated ops reports so every team member stays in sync',
+                'Be the leader who sees it all: Live stats and instant performance pulse.',
+                'Communicate smartly: Understand your guests before they speak.',
+                'Efficiency at its finest: Precise reports and sound decisions at a touch.',
             ],
         };
 

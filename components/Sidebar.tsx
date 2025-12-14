@@ -1,6 +1,7 @@
 
 import React, { useState, useContext } from 'react';
 import { ThemeSettings, Page } from '../App';
+import { API_BASE_URL } from '../config/api';
 import DashboardIcon from './icons-redesign/DashboardIcon';
 import CalendarIcon from './icons-redesign/CalendarIcon';
 import BriefcaseIcon from './icons-redesign/BriefcaseIcon';
@@ -120,6 +121,7 @@ interface UserInfoBlockProps {
 
 const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurrentPage, sidebarColor }) => {
     const { t, language } = useContext(LanguageContext);
+    const mountTime = React.useMemo(() => new Date().getTime(), []);
 
     const colorStyles = {
         light: { base: 'text-slate-600 hover:bg-slate-100' },
@@ -147,9 +149,10 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurre
             aria-label="View user profile"
         >
             <img
-                src="https://picsum.photos/id/237/200/200"
+                src={user?.image_url ? (user.image_url.startsWith('http') ? user.image_url : `${API_BASE_URL}${user.image_url}`) + `?t=${mountTime}` : "https://via.placeholder.com/150"}
                 alt="User Avatar"
-                className="w-10 h-10 rounded-md flex-shrink-0 border-2 border-white/20"
+                loading="lazy"
+                className="w-10 h-10 rounded-md flex-shrink-0 border-2 border-white/20 object-cover"
             />
             {!collapsed && (
                 <div className={`${language === 'ar' ? 'mr-3 text-right' : 'ml-3 text-left'}`}>

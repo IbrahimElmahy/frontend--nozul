@@ -58,6 +58,7 @@ export interface User {
     phone_number: string;
     role_name: string;
     role: string;
+    id?: string;
 }
 
 export type BookingStatus = 'check-in' | 'check-out' | 'pending' | 'confirmed' | 'cancelled';

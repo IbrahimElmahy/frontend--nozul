@@ -75,11 +75,11 @@ const NotificationsPage: React.FC = () => {
             yesterday: [],
             earlier: []
         };
-    
+
         const today = new Date();
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-    
+
         filteredNotifications.forEach(notification => {
             const notificationDate = new Date(notification.timestamp);
             if (notificationDate.toDateString() === today.toDateString()) {
@@ -90,14 +90,14 @@ const NotificationsPage: React.FC = () => {
                 groups.earlier.push(notification);
             }
         });
-    
+
         return [
             { title: t('notificationsPage.today'), notifications: groups.today },
             { title: t('notificationsPage.yesterday'), notifications: groups.yesterday },
             { title: t('notificationsPage.earlier'), notifications: groups.earlier },
         ].filter(group => group.notifications.length > 0);
     }, [filteredNotifications, t]);
-    
+
 
     if (loading) {
         return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div></div>;
@@ -112,7 +112,7 @@ const NotificationsPage: React.FC = () => {
                 </div>
                 <button onClick={handleMarkAllAsRead} className="text-sm font-semibold text-blue-500 hover:underline">{t('notificationsPage.markAllAsRead')}</button>
             </header>
-            
+
             <div className="p-6 space-y-6">
                 {groupedNotifications.length > 0 ? (
                     groupedNotifications.map((group, index) => (
@@ -124,7 +124,7 @@ const NotificationsPage: React.FC = () => {
                                         {notification.unread && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full mt-2.5 flex-shrink-0"></div>}
                                         <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700">
                                             {notification.actor.image_url ? (
-                                                <img src={notification.actor.image_url} alt="User" className="w-10 h-10 rounded-full" />
+                                                <img src={notification.actor.image_url} alt="User" className="w-10 h-10 rounded-full" loading="lazy" />
                                             ) : (
                                                 <InformationCircleIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                                             )}

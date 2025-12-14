@@ -1,4 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
+import { apiClient } from '../apiClient';
+import { API_BASE_URL } from '../config/api';
 import ProfileStatCard from './ProfileStatCard';
 import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
 import DatePicker from './DatePicker';
@@ -28,6 +30,10 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
         phoneNumber: '',
         email: '',
     });
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [loading, setLoading] = useState(false);
+    // Memoize timestamp to prevent image refreshing on every keystroke/render
+    const mountTime = React.useMemo(() => new Date().getTime(), []);
 
     useEffect(() => {
         if (user) {
@@ -54,6 +60,74 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
 
     const handlePhoneChange = (newNumber: string) => {
         setProfileData(prev => ({ ...prev, phoneNumber: newNumber }));
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setSelectedFile(e.target.files[0]);
+        }
+    };
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+
+        setLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append('name', profileData.name);
+            formData.append('email', profileData.email);
+            formData.append('phone_number', profileData.phoneNumber);
+            // Mapping 'dob' to 'profile.birth_date' as per docs
+            if (profileData.dob) {
+                formData.append('profile.birth_date', profileData.dob);
+            }
+            if (profileData.gender) {
+                // Map localized gender to API values 'male'/'female'
+                const genderMap: { [key: string]: string } = {
+                    'ذكر': 'male',
+                    'أنثى': 'female',
+                    'Male': 'male',
+                    'Female': 'female'
+                };
+                formData.append('profile.gender', genderMap[profileData.gender] || profileData.gender);
+            }
+
+            if (selectedFile) {
+                formData.append('profile.image', selectedFile);
+                // Also append as 'image' top-level just in case the backend expects it there
+                formData.append('image', selectedFile);
+            }
+
+            // Using PUT to update profile without specific ID (as ID endpoint gave 404)
+            const updatedUserResponse = await apiClient<User>(`/ar/user/api/profile/`, {
+                method: 'PUT',
+                body: formData,
+            });
+
+            // Update local storage with the new user data
+            // We need to merge the new data with the existing token/refresh info just in case
+            // or assume the response is the full user object (usually is for profile endpoints).
+            if (user) {
+                const newUserData = { ...user, ...updatedUserResponse };
+                localStorage.setItem('user', JSON.stringify(newUserData));
+            }
+
+            // Reload page to reflect changes (App.tsx will read new localStorage)
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Failed to update profile:", error);
+            alert("Failed to update profile.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getImageUrl = (url: string | null | undefined) => {
+        if (!url) return "https://via.placeholder.com/150";
+        if (url.startsWith('http')) return url;
+        return `${API_BASE_URL}${url}`;
     };
 
     const textAlignClass = language === 'ar' ? 'text-right' : 'text-left';
@@ -99,7 +173,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                         <span>{t('profilePage.accountInfo')}</span>
                     </h3>
                 </div>
-                <form className="p-6 space-y-6" onSubmit={(e) => e.preventDefault()}>
+                <form className="p-6 space-y-6" onSubmit={handleSave}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         {/* Name */}
                         <div>
@@ -117,16 +191,22 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                             </select>
                         </div>
 
+                        {/* Photo */}
+                        <div className="relative">
+                            <img
+                                src={`${getImageUrl(user?.image_url)}?t=${mountTime}`}
+                                alt="Profile"
+                                loading="lazy"
+                                className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg"
+                            />
+                            <label htmlFor="photo" className={labelAlignClass}>{t('profilePage.photo')}</label>
+                            <input type="file" id="photo" onChange={handleFileChange} className={fileInputClass} accept="image/*" />
+                        </div>
+
                         {/* Date of Birth */}
                         <div>
                             <label htmlFor="dob" className={labelAlignClass}>{t('profilePage.dob')}</label>
                             <DatePicker value={profileData.dob} onChange={handleDateChange} />
-                        </div>
-
-                        {/* Photo */}
-                        <div>
-                            <label htmlFor="photo" className={labelAlignClass}>{t('profilePage.photo')}</label>
-                            <input type="file" id="photo" className={fileInputClass} />
                         </div>
                     </div>
 
@@ -163,9 +243,9 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                     </div>
 
                     <div className={`flex ${language === 'ar' ? 'justify-start' : 'justify-start'} pt-4`}>
-                        <button type="submit" className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
+                        <button type="submit" disabled={loading} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50">
                             <CheckCircleIcon className="w-5 h-5" />
-                            <span>{t('profilePage.save')}</span>
+                            <span>{loading ? 'Saving...' : t('profilePage.save')}</span>
                         </button>
                     </div>
                 </form>
