@@ -186,7 +186,7 @@ const Dashboard: React.FC = () => {
                 <StatCard key={index} title={card.title} value={card.value} color={card.color} icon={card.icon} />
             ))}
 
-            <div className="md:col-span-2 lg:col-span-2">
+            <div className="md:col-span-2 lg:col-span-2 min-w-0">
                 <DonutChartCard
                     title={t('dashboard.apartmentAvailability')}
                     data={apartmentAvailability}
@@ -196,7 +196,7 @@ const Dashboard: React.FC = () => {
                 />
             </div>
 
-            <div className="md:col-span-2 lg:col-span-2">
+            <div className="md:col-span-2 lg:col-span-2 min-w-0">
                 <BarChartCard
                     title={t('dashboard.apartmentStats')}
                     data={weeklyStatsData}
@@ -209,7 +209,7 @@ const Dashboard: React.FC = () => {
                 />
             </div>
 
-            <div className="md:col-span-2 lg:col-span-4">
+            <div className="md:col-span-2 lg:col-span-4 min-w-0">
                 <BarChartCard
                     title={t('dashboard.bookingStats')}
                     data={monthlyStatsData}
@@ -222,7 +222,7 @@ const Dashboard: React.FC = () => {
                 />
             </div>
 
-            <div className="md:col-span-2 lg:col-span-2">
+            <div className="md:col-span-2 lg:col-span-2 min-w-0">
                 <DonutChartCard
                     title={t('dashboard.bookingStatus')}
                     data={reservationStatus}
@@ -237,7 +237,7 @@ const Dashboard: React.FC = () => {
                 />
             </div>
 
-            <div className="md:col-span-2 lg:col-span-2">
+            <div className="md:col-span-2 lg:col-span-2 min-w-0">
                 <DonutChartCard
                     title={t('dashboard.apartmentCleaning')}
                     data={apartmentCleanliness}

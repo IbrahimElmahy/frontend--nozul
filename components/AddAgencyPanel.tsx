@@ -280,11 +280,11 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                             </div>
                             <div>
                                 <label className={labelBaseClass}>{t('guests.issueDate')}</label>
-                                <DatePicker selected={formData.issue_date ? new Date(formData.issue_date) : null} onChange={date => setFormData(p => ({ ...p, issue_date: date ? date.toISOString().split('T')[0] : '' }))} placeholderText={t('guests.issueDate')} />
+                                <DatePicker selected={formData.issue_date ? new Date(formData.issue_date) : null} onChange={date => setFormData(p => ({ ...p, issue_date: date || '' }))} placeholderText={t('guests.issueDate')} />
                             </div>
                             <div>
                                 <label className={labelBaseClass}>{t('guests.expiryDate')}</label>
-                                <DatePicker selected={formData.expiry_date ? new Date(formData.expiry_date) : null} onChange={date => setFormData(p => ({ ...p, expiry_date: date ? date.toISOString().split('T')[0] : '' }))} placeholderText={t('guests.expiryDate')} />
+                                <DatePicker selected={formData.expiry_date ? new Date(formData.expiry_date) : null} onChange={date => setFormData(p => ({ ...p, expiry_date: date || '' }))} placeholderText={t('guests.expiryDate')} />
                             </div>
                             <div className="md:col-span-2">
                                 <label htmlFor="issue_place" className={labelBaseClass}>{t('guests.issuePlace')}</label>
