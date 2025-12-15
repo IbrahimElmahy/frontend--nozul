@@ -217,7 +217,19 @@ const UnitsPage: React.FC = () => {
     ];
 
     const handleEditUnit = (unit: Unit) => {
-        setEditingUnit(JSON.parse(JSON.stringify(unit)));
+        const editedUnit = JSON.parse(JSON.stringify(unit));
+
+        // Resolve unitType if it's a display name instead of UUID
+        if (editedUnit.unitType && unitTypeOptions.length > 0) {
+            const matchedType = unitTypeOptions.find(opt =>
+                opt.id === editedUnit.unitType || opt.name === editedUnit.unitType
+            );
+            if (matchedType) {
+                editedUnit.unitType = matchedType.id;
+            }
+        }
+
+        setEditingUnit(editedUnit);
         setIsAdding(false);
         setIsPanelOpen(true);
     };

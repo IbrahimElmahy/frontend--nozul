@@ -69,10 +69,12 @@ export const mapUnitToFormData = (unit: Unit): FormData => {
         cleanlinessApiValue = 'maintenance';
     }
 
-    // Only send cleanliness if it's 'clean' OR the unit is not reserved
-    if (cleanlinessApiValue === 'clean' || !isReserved) {
-        formData.append('cleanliness', cleanlinessApiValue);
+    // If unit is reserved and we're trying to set dirty/maintenance, force it to clean
+    if (isReserved && (cleanlinessApiValue === 'dirty' || cleanlinessApiValue === 'maintenance')) {
+        cleanlinessApiValue = 'clean';
     }
+
+    formData.append('cleanliness', cleanlinessApiValue);
 
 
     // Append each feature ID
