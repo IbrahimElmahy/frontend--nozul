@@ -79,3 +79,15 @@ body {
     border-bottom-width: 0.5px !important;
     border-bottom-color: rgb(203 213 225 / 0.02) !important;
 }
+
+/* Aggressive catch-all for any border classes to ensure consistency */
+.dark [class*="border-b"],
+.dark [class*="border-t"],
+.dark [class*="border-r"],
+.dark [class*="border-l"],
+.dark [class*="divide-y"]>*+*,
+.dark [class*="divide-x"]>*+*,
+.dark hr {
+    border-color: rgb(203 213 225 / 0.02) !important;
+    border-width: 0.5px !important;
+}
