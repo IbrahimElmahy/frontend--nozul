@@ -49,16 +49,29 @@ body {
 
 /* Custom Border Colors for Dark Mode */
 .dark {
-    --tw-border-opacity: 1;
+    --tw-border-opacity: 0.15;
 }
 
-/* Lighter borders in dark mode */
+/* Override Tailwind border colors in dark mode for lighter appearance */
 .dark .border-slate-700,
-.dark [class*="border-slate-700"] {
-    border-color: rgb(71 85 105 / 0.3) !important;
+.dark *[class*="dark:border-slate-700"] {
+    border-color: rgb(148 163 184 / 0.15) !important;
 }
 
-.dark .border-slate-200,
-.dark [class*="border-slate-200"] {
-    border-color: rgb(148 163 184 / 0.1) !important;
+.dark .border-b,
+.dark .border-t,
+.dark .border-r,
+.dark .border-l,
+.dark .border {
+    border-color: rgb(148 163 184 / 0.12) !important;
+}
+
+.dark .border-slate-200 {
+    border-color: rgb(148 163 184 / 0.08) !important;
+}
+
+/* Table borders specifically */
+.dark table tr,
+.dark tbody tr {
+    border-bottom-color: rgb(148 163 184 / 0.1) !important;
 }
