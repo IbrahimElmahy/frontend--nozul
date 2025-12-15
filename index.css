@@ -49,13 +49,14 @@ body {
 
 /* Custom Border Colors for Dark Mode */
 .dark {
-    --tw-border-opacity: 0.05;
+    --tw-border-opacity: 0.02;
 }
 
-/* Light gray borders in dark mode */
+/* Light gray borders in dark mode - thinner and lighter */
 .dark .border-slate-700,
 .dark *[class*="dark:border-slate-700"] {
-    border-color: rgb(203 213 225 / 0.04) !important;
+    border-width: 0.5px !important;
+    border-color: rgb(203 213 225 / 0.02) !important;
 }
 
 .dark .border-b,
@@ -63,15 +64,18 @@ body {
 .dark .border-r,
 .dark .border-l,
 .dark .border {
-    border-color: rgb(203 213 225 / 0.035) !important;
+    border-width: 0.5px !important;
+    border-color: rgb(203 213 225 / 0.02) !important;
 }
 
 .dark .border-slate-200 {
-    border-color: rgb(226 232 240 / 0.03) !important;
+    border-width: 0.5px !important;
+    border-color: rgb(226 232 240 / 0.015) !important;
 }
 
-/* Table borders - light gray */
+/* Table borders - very thin and light gray */
 .dark table tr,
 .dark tbody tr {
-    border-bottom-color: rgb(203 213 225 / 0.035) !important;
+    border-bottom-width: 0.5px !important;
+    border-bottom-color: rgb(203 213 225 / 0.02) !important;
 }
