@@ -4,6 +4,7 @@ import LoginPage from './components/LoginPage';
 import { parseJwt } from './utils/jwt';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import GlobalLoader from './components/GlobalLoader';
 // Lazy load components for performance
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const UserProfilePage = React.lazy(() => import('./components/UserProfilePage'));
@@ -166,11 +167,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
         <div className="flex-1 flex flex-col min-w-0">
           <Header onLogout={onLogout} settings={settings} onMenuButtonClick={() => setMobileMenuOpen(true)} setCurrentPage={setCurrentPage} currentPage={currentPage} user={user} />
           <main className={`flex-1 p-4 sm:p-6 ${settings.animatedBackground ? 'bg-transparent' : 'bg-slate-100 dark:bg-slate-950'}`}>
-            <Suspense fallback={
-              <div className="flex items-center justify-center p-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-              </div>
-            }>
+            <Suspense fallback={<GlobalLoader />}>
               {currentPage === 'dashboard' && <Dashboard />}
               {currentPage === 'profile' && <UserProfilePage user={user} />}
               {currentPage === 'units' && <UnitsPage />}
