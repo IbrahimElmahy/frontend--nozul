@@ -125,7 +125,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
     };
 
     const getImageUrl = (url: string | null | undefined) => {
-        if (!url) return "https://via.placeholder.com/150";
+        if (!url) return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E%3F%3C/text%3E%3C/svg%3E";
         if (url.startsWith('http')) return url;
         return `${API_BASE_URL}${url}`;
     };

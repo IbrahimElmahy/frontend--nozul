@@ -149,7 +149,7 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurre
             aria-label="View user profile"
         >
             <img
-                src={user?.image_url ? (user.image_url.startsWith('http') ? user.image_url : `${API_BASE_URL}${user.image_url}`) + `?t=${mountTime}` : "https://via.placeholder.com/150"}
+                src={user?.image_url ? (user.image_url.startsWith('http') ? user.image_url : `${API_BASE_URL}${user.image_url}`) + `?t=${mountTime}` : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E%3F%3C/text%3E%3C/svg%3E"}
                 alt="User Avatar"
                 loading="lazy"
                 className="w-10 h-10 rounded-md flex-shrink-0 border-2 border-white/20 object-cover"
