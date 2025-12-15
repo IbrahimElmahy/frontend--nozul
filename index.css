@@ -20,29 +20,29 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(var(--color-primary-500), 0.5);
+    background: rgb(var(--color-primary-500) / 0.5);
     border-radius: 4px;
     transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(var(--color-primary-600), 0.8);
+    background: rgb(var(--color-primary-600) / 0.8);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-    background: rgba(var(--color-primary-400), 0.4);
+    background: rgb(var(--color-primary-400) / 0.4);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-    background: rgba(var(--color-primary-400), 0.7);
+    background: rgb(var(--color-primary-400) / 0.7);
 }
 
 /* Firefox support */
 * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(var(--color-primary-500), 0.5) transparent;
+    scrollbar-color: rgb(var(--color-primary-500) / 0.5) transparent;
 }
 
 .dark * {
-    scrollbar-color: rgba(var(--color-primary-400), 0.4) transparent;
+    scrollbar-color: rgb(var(--color-primary-400) / 0.4) transparent;
 }
