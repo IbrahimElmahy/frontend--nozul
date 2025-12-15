@@ -353,10 +353,58 @@ const UnitsPage: React.FC = () => {
     };
 
     const handleExportCSV = () => {
-        // This should ideally fetch all filtered data, not just the paginated view.
-        // For simplicity, we'll export the current view.
         if (unitsData.length === 0) return;
-        // ... (existing export logic)
+
+        // CSV Headers
+        const headers = [
+            t('units.th_id'),
+            t('units.th_name'),
+            t('units.th_type'),
+            t('units.th_floor'),
+            t('units.th_rooms'),
+            t('units.th_beds'),
+            t('units.th_double_beds'),
+            t('units.th_bathrooms'),
+            t('units.th_wardrobes'),
+            t('units.th_tvs'),
+            t('units.th_cooling'),
+            t('units.th_cleaning'),
+            t('units.th_availability')
+        ];
+
+        // CSV Rows
+        const rows = unitsData.map(unit => [
+            unit.unitNumber,
+            unit.unitName,
+            unit.unitTypeName || unit.unitType,
+            unit.floor,
+            unit.rooms,
+            unit.beds,
+            unit.doubleBeds,
+            unit.bathrooms,
+            unit.wardrobes,
+            unit.tvs,
+            unit.coolingType,
+            unit.cleaningStatus === 'clean' ? t('units.clean') : t('units.notClean'),
+            unit.isAvailable ? t('units.available_status') : t('units.not_available_status')
+        ]);
+
+        // Create CSV content
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n');
+
+        // Download CSV
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `units_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     const selectClass = 'py-2 px-3 w-full sm:w-auto border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 text-sm';
