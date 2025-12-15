@@ -58,14 +58,22 @@ export const mapUnitToFormData = (unit: Unit): FormData => {
     formData.append('description', unit.notes);
 
     // API uses 'dirty', 'clean', 'maintenance'
+    // IMPORTANT: Cannot change cleanliness to 'dirty' or 'maintenance' when unit is reserved
     let cleanlinessApiValue = 'clean';
+    const isReserved = unit.status === 'occupied' || unit.status === 'not-checked-in';
+
     if (unit.cleaningStatus === 'not-clean') {
         cleanlinessApiValue = 'dirty';
     }
     if (unit.status === 'out-of-service') {
         cleanlinessApiValue = 'maintenance';
     }
-    formData.append('cleanliness', cleanlinessApiValue);
+
+    // Only send cleanliness if it's 'clean' OR the unit is not reserved
+    if (cleanlinessApiValue === 'clean' || !isReserved) {
+        formData.append('cleanliness', cleanlinessApiValue);
+    }
+
 
     // Append each feature ID
     if (unit.features) {

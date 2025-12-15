@@ -42,7 +42,7 @@ const newUnitTemplate: Unit = {
     checkOut: undefined,
     price: 0,
     remaining: undefined,
-    unitType: '8e27565c-dcd0-47d0-a119-63f97d47fe3f', // Default to 'Small Room' ID
+    unitType: '', // Will be filled dynamically from unitTypeOptions
     cleaningStatus: 'clean',
     isAvailable: true,
     floor: 1,
