@@ -281,7 +281,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
         >
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
             <div className={`relative h-full bg-slate-50 dark:bg-slate-800 shadow-2xl flex flex-col w-full max-w-4xl transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-900 z-10">
+                <header className="flex items-center justify-between p-4 border-b dark:border-white/10 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-900 z-10">
                     <h2 id="add-order-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('orders.addOrderTitle')}</h2>
                     <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
                         <XMarkIcon className="w-6 h-6" />
@@ -312,7 +312,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
                             </button>
                         </div>
 
-                        <div className="border dark:border-slate-700 rounded-lg">
+                        <div className="border dark:border-white/10 rounded-lg">
                             <table className="w-full text-sm text-center table-fixed">
                                 <thead className="text-xs text-slate-700 uppercase bg-slate-200 dark:bg-slate-700 dark:text-slate-300">
                                     <tr>
@@ -335,7 +335,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
                                         const filteredServices = categoryServices.map(s => language === 'ar' ? s.name_ar : s.name_en);
 
                                         return (
-                                            <tr key={item.id} className="border-b dark:border-slate-700">
+                                            <tr key={item.id} className="border-b dark:border-white/10">
                                                 <td className="p-2">
                                                     <SearchableSelect
                                                         id={`category-${item.id}`}
@@ -368,10 +368,10 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
 
                         <div className="mt-4 grid grid-cols-1 md:grid-cols-2">
                             <div className="md:col-start-2">
-                                <div className="border dark:border-slate-700 rounded-lg overflow-hidden">
-                                    <div className="flex justify-between items-center p-3 border-b dark:border-slate-700"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.value')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{value.toFixed(2)}</span></div>
-                                    <div className="flex justify-between items-center p-3 border-b dark:border-slate-700"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.subtotal')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{subtotal.toFixed(2)}</span></div>
-                                    <div className="flex justify-between items-center p-3 border-b dark:border-slate-700"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.tax')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{tax.toFixed(2)}</span></div>
+                                <div className="border dark:border-white/10 rounded-lg overflow-hidden">
+                                    <div className="flex justify-between items-center p-3 border-b dark:border-white/10"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.value')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{value.toFixed(2)}</span></div>
+                                    <div className="flex justify-between items-center p-3 border-b dark:border-white/10"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.subtotal')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{subtotal.toFixed(2)}</span></div>
+                                    <div className="flex justify-between items-center p-3 border-b dark:border-white/10"><span className="font-medium text-slate-600 dark:text-slate-300">{t('orders.tax')}:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{tax.toFixed(2)}</span></div>
                                     <div className="flex justify-between items-center p-3 bg-slate-100 dark:bg-slate-700">
                                         <span className="font-bold text-slate-800 dark:text-slate-200">{t('orders.total')}:</span>
                                         {calculating ? <span className="text-xs text-blue-500">Calculating...</span> : <span className="font-bold text-blue-600 dark:text-blue-400 text-lg">{total.toFixed(2)}</span>}
@@ -387,7 +387,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
                     </form>
                 </div>
 
-                <footer className="flex items-center justify-start p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-900">
+                <footer className="flex items-center justify-start p-4 border-t dark:border-white/10 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-900">
                     <button onClick={handleSaveClick} disabled={calculating || !reservationId} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 disabled:bg-blue-400">
                         <CheckCircleIcon className="w-5 h-5" />
                         <span>{t('orders.saveOrder')}</span>

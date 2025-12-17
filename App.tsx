@@ -32,6 +32,9 @@ const HotelConditionsPage = React.lazy(() => import('./components/HotelCondition
 import SettingsCog from './components/SettingsCog';
 import { LanguageContext } from './contexts/LanguageContext';
 import { User } from './types';
+import { ErrorProvider } from './contexts/ErrorContext';
+import ErrorModal from './components/ErrorModal';
+import ErrorBoundary from './components/ErrorBoundary';
 
 export type ColorSchemeName = 'blue' | 'violet' | 'teal' | 'emerald' | 'amber' | 'rose' | 'cyan' | 'slate' | 'orange' | 'indigo' | 'fuchsia' | 'lime' | 'sky' | 'pink';
 
@@ -45,6 +48,7 @@ export interface ThemeSettings {
   themeColor: ColorSchemeName;
   cardStyle?: 'solid' | 'soft' | 'glass';
   animatedBackground?: boolean;
+  isSidebarFixed?: boolean;
 }
 
 export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports' | 'archives' | 'notifications' | 'hotel-settings' | 'hotel-info' | 'hotel-users' | 'apartment-prices' | 'peak-times' | 'taxes' | 'items' | 'currencies' | 'funds' | 'banks' | 'expenses' | 'hotel-conditions';
@@ -59,6 +63,7 @@ const defaultSettings: ThemeSettings = {
   themeColor: 'blue',
   cardStyle: 'soft',
   animatedBackground: false,
+  isSidebarFixed: false,
 };
 
 // RGB values for color palettes (Tailwind colors)
@@ -217,6 +222,7 @@ const App: React.FC = () => {
     if (loadedSettings.animatedBackground === undefined) loadedSettings.animatedBackground = false;
 
     loadedSettings.sidebarSize = 'condensed'; // Force condensed size
+    if (loadedSettings.isSidebarFixed === undefined) loadedSettings.isSidebarFixed = false;
     return loadedSettings;
   });
   const { language } = useContext(LanguageContext);
@@ -301,10 +307,15 @@ const App: React.FC = () => {
     setIsAuthenticated(false);
   };
 
+  // ... (existing App logic)
+
   return (
-    <>
-      {isAuthenticated ? <DashboardPage onLogout={handleLogout} settings={settings} setSettings={setSettings} user={user} /> : <LoginPage onLoginSuccess={handleLogin} />}
-    </>
+    <ErrorProvider>
+      <ErrorModal />
+      <ErrorBoundary>
+        {isAuthenticated ? <DashboardPage onLogout={handleLogout} settings={settings} setSettings={setSettings} user={user} /> : <LoginPage onLoginSuccess={handleLogin} />}
+      </ErrorBoundary>
+    </ErrorProvider>
   );
 };
 

@@ -118,8 +118,6 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
     const notificationsRef = useRef<HTMLDivElement>(null);
     const langDropdownRef = useRef<HTMLDivElement>(null);
 
-    // Memoize timestamp
-    const mountTime = React.useMemo(() => new Date().getTime(), []);
 
     const { topbarColor } = settings;
     const unreadCount = notifications.filter(n => n.unread).length;
@@ -398,9 +396,9 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                         aria-expanded={isUserDropdownOpen}
                     >
                         <img
-                            src={user?.image_url ? (user.image_url.startsWith('http') ? user.image_url : `${API_BASE_URL}${user.image_url}`) + `?t=${mountTime}` : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E%3F%3C/text%3E%3C/svg%3E"}
+                            src={user?.image_url ? (user.image_url.startsWith('http') ? user.image_url : `${API_BASE_URL}${user.image_url}`) : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E%3F%3C/text%3E%3C/svg%3E"}
                             alt="User Avatar"
-                            loading="lazy"
+                            loading="eager"
                             className="w-10 h-10 rounded-full object-cover"
                         />
                         <div className="hidden sm:block">

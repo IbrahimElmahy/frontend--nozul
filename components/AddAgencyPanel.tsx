@@ -197,8 +197,8 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
             role="dialog" aria-modal="true" aria-labelledby="add-agency-title"
         >
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
-            <div className={`relative bg-white dark:bg-slate-800 shadow-2xl flex flex-col w-full max-w-6xl max-h-[90vh] rounded-xl transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
-                <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 z-10 rounded-t-xl">
+            <div className={`relative bg-white dark:bg-slate-800 shadow-2xl flex flex-col w-full max-w-6xl max-h-[calc(100vh-2rem)] rounded-xl transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+                <header className="flex items-center justify-between p-4 border-b dark:border-white/10 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 z-10 rounded-t-xl">
                     <h2 id="add-agency-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">{isEditing ? t('agencies.editAgencyTitle') : t('agencies.addAgencyTitle')}</h2>
                     <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
                         <XMarkIcon className="w-6 h-6" />
@@ -316,7 +316,7 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                     </form>
                 </div>
 
-                <footer className="flex items-center justify-start p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-800 rounded-b-xl">
+                <footer className="flex items-center justify-start p-4 border-t dark:border-white/10 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-800 rounded-b-xl">
                     <button onClick={handleSaveClick} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
                         <CheckCircleIcon className="w-5 h-5" />
                         <span>{t('units.saveChanges')}</span>

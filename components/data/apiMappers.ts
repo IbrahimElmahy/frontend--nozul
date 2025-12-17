@@ -15,7 +15,7 @@ export const mapApiUnitToUnit = (apiUnit: any): Unit => {
     }
 
     return {
-        id: apiUnit.id,
+        id: apiUnit.uuid ? apiUnit.uuid.toString() : apiUnit.id.toString(),
         unitNumber: apiUnit.name,
         unitName: apiUnit.name,
         status: status,

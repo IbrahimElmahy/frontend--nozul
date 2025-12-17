@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { Booking, RentType, Unit, Guest, GuestTypeAPI, IdTypeAPI, CountryAPI, Receipt, Order } from '../types';
-import { calculateRental } from '../services/reservations';
+import { ErrorContext } from '../contexts/ErrorContext';
+import { Booking, RentType, Unit, Guest, GuestTypeAPI, IdTypeAPI, CountryAPI, Receipt, Order, Companion, ReservationRelationship, ReservationSource, ReservationReason } from '../types';
+import {
+    listApartments,
+    getRentalTypes,
+    getReservationSources,
+    getReservationReasons,
+    getReservationRelationships,
+    getDiscountTypes,
+    getCountries,
+    getGuestCategories,
+    getGuestIdTypes,
+    calculateRental,
+} from '../services/reservations';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import DatePicker from './DatePicker';
@@ -19,6 +31,8 @@ import AddOrderPanel from './AddOrderPanel';
 import OrderDetailsModal from './OrderDetailsModal';
 import { apiClient } from '../apiClient';
 import { mapApiUnitToUnit, mapUnitToFormData } from './data/apiMappers';
+import AddCompanionModal from './AddCompanionModal';
+import TrashIcon from './icons-redesign/TrashIcon';
 
 interface AddBookingPanelProps {
     initialData: Booking | Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>;
@@ -74,6 +88,7 @@ const newUnitTemplate: Unit = {
 
 const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave, isSaving }) => {
     const { t, language } = useContext(LanguageContext);
+    const { showError } = useContext(ErrorContext);
     const [formData, setFormData] = useState(initialData);
     const [calcLoading, setCalcLoading] = useState(false);
     const [calcError, setCalcError] = useState<string | null>(null);
@@ -89,6 +104,12 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
     const [guestTypes, setGuestTypes] = useState<GuestTypeAPI[]>([]);
     const [idTypes, setIdTypes] = useState<IdTypeAPI[]>([]);
     const [countries, setCountries] = useState<CountryAPI>({});
+    const [rentalTypes, setRentalTypes] = useState<{ id: string; name: string; }[]>([]);
+    const [sources, setSources] = useState<ReservationSource[]>([]);
+    const [reasons, setReasons] = useState<ReservationReason[]>([]);
+    const [relationships, setRelationships] = useState<ReservationRelationship[]>([]);
+    const [discountTypes, setDiscountTypes] = useState<{ id: string; name: string; }[]>([]);
+
 
     // Sub-panel States
     // Unit
@@ -107,13 +128,10 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
     const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null); // For future use
     const [editingOrder, setEditingOrder] = useState<Order | null>(null); // For future use
 
+    // Companion State
+    const [isCompanionModalOpen, setIsCompanionModalOpen] = useState(false);
+    const [companionsList, setCompanionsList] = useState<Companion[]>([]);
 
-    useEffect(() => {
-        if (isOpen) {
-            setFormData(JSON.parse(JSON.stringify(initialData)));
-            fetchData();
-        }
-    }, [isOpen, initialData]);
 
     const fetchData = useCallback(async () => {
         try {
@@ -127,13 +145,34 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
 
             // Fetch Options if not already loaded (could be optimized)
             if (unitTypeOptions.length === 0) {
-                const [typesRes, coolingRes, featuresRes, gTypesRes, idTypesRes, countriesRes] = await Promise.all([
+                const [
+                    typesRes,
+                    coolingRes,
+                    featuresRes,
+                    gTypesRes,
+                    idTypesRes,
+                    countriesRes,
+                    rentalTypesRes,
+                    sourcesRes,
+                    reasonsRes,
+                    relationshipsRes,
+                    discountTypesRes,
+                    guestCategoriesRes,
+                    guestIdTypesRes
+                ] = await Promise.all([
                     apiClient<{ data: any[] }>('/ar/apartment/api/apartments-types/'),
                     apiClient<[string, string][]>('/ar/apartment/api/apartments/cooling-types/'),
                     apiClient<{ data: any[] }>('/ar/feature/api/features/?length=50'),
                     apiClient<{ data: GuestTypeAPI[] }>('/ar/guest/api/guests-types/'),
                     apiClient<{ data: IdTypeAPI[] }>('/ar/guest/api/ids/'),
                     apiClient<CountryAPI>('/ar/country/api/countries/'),
+                    getRentalTypes(),
+                    getReservationSources({ length: 100 }), // increased limit for dropdowns
+                    getReservationReasons({ length: 100 }),
+                    getReservationRelationships({ length: 100 }),
+                    getDiscountTypes(),
+                    getGuestCategories(),
+                    getGuestIdTypes()
                 ]);
                 setUnitTypeOptions(typesRes.data.map(t => ({ id: t.id, name: t.name })));
                 setCoolingTypeOptions(coolingRes);
@@ -141,12 +180,38 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                 setGuestTypes(gTypesRes.data);
                 setIdTypes(idTypesRes.data);
                 setCountries(countriesRes);
+
+                // Handle Arrays vs Paginated Responses safely
+                const getResults = (res: any) => res?.results || res?.data || (Array.isArray(res) ? res : []);
+
+                setRentalTypes(getResults(rentalTypesRes));
+                setSources(getResults(sourcesRes));
+                setReasons(getResults(reasonsRes));
+                setRelationships(getResults(relationshipsRes));
+                setDiscountTypes(getResults(discountTypesRes));
+
+                // Guest Categories and ID Types are seemingly duplicates or unused in state
+                // guestCategoriesRes -> No state
+                // guestIdTypesRes -> Covered by idTypesRes (apiClient call)
             }
 
         } catch (err) {
             console.error("Error fetching data for booking panel", err);
         }
     }, [unitTypeOptions.length]);
+
+    useEffect(() => {
+        if (isOpen) {
+            setFormData(JSON.parse(JSON.stringify(initialData)));
+            // Initialize companions list if present in initialData
+            if (initialData.companionsData) {
+                setCompanionsList(initialData.companionsData);
+            } else {
+                setCompanionsList([]);
+            }
+            fetchData();
+        }
+    }, [isOpen, initialData, fetchData]);
 
     // Unit Handlers
     const handleAddUnitClick = () => {
@@ -199,7 +264,8 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
             setFormData(prev => ({ ...prev, unitName: savedUnit.id, price: savedUnit.price || prev.price, rent: savedUnit.price || prev.rent }));
             setIsUnitPanelOpen(false);
         } catch (err) {
-            alert(`Error saving unit: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            console.error("Error saving unit", err);
+            // Global error handler will show the modal
         }
     };
 
@@ -230,7 +296,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
             setEditingGuest(guest);
             setIsGuestPanelOpen(true);
         } else {
-            alert(t('bookings.alerts.selectGuestFirst'));
+            showError(t('bookings.alerts.selectGuestFirst'));
         }
     };
 
@@ -240,7 +306,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
         if (guest) {
             setViewingGuest(guest);
         } else {
-            alert(t('bookings.alerts.selectGuestFirst'));
+            showError(t('bookings.alerts.selectGuestFirst'));
         }
     };
 
@@ -272,7 +338,8 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
             setIsGuestPanelOpen(false);
             setEditingGuest(null);
         } catch (err) {
-            alert(`Error saving guest: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            console.error("Error saving guest", err);
+            // Global error handler will show the modal
         }
     };
 
@@ -306,9 +373,21 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
         const total = subtotal + (formData.tax || 0) + totalOrders;
         const balance = payments - total;
 
-        setFormData(prev => ({ ...prev, value, subtotal, total, balance }));
 
-    }, [formData.rent, formData.discount, formData.payments, formData.totalOrders, formData.tax]);
+        // Sync companions count
+        const companionsCount = companionsList.length;
+
+        setFormData(prev => ({ ...prev, value, subtotal, total, balance, companions: companionsCount }));
+
+    }, [formData.rent, formData.discount, formData.payments, formData.totalOrders, formData.tax, companionsList.length]);
+
+    const handleSaveCompanion = (companion: Companion) => {
+        setCompanionsList(prev => [...prev, companion]);
+    };
+
+    const handleRemoveCompanion = (index: number) => {
+        setCompanionsList(prev => prev.filter((_, i) => i !== index));
+    };
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -327,13 +406,18 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
 
     const handleSaveClick = async () => {
         if (isSaving) return;
-        await onSave(formData);
+        await onSave({ ...formData, companionsData: companionsList });
     };
 
     useEffect(() => {
         if (!isOpen) return;
-        const apartmentId = Number(formData.unitName);
-        if (!formData.checkInDate || !formData.rentType || !formData.duration || !formData.rent || Number.isNaN(apartmentId)) {
+
+        // Find the selected unit to get its UUID
+        // Assuming search matches unitNumber or unitName
+        const selectedUnit = units.find(u => u.unitNumber === formData.unitName || u.unitName === formData.unitName || u.id === formData.unitName);
+        const apartmentUUID = selectedUnit?.id;
+
+        if (!formData.checkInDate || !formData.rentType || !formData.duration || !formData.rent || !apartmentUUID) {
             return;
         }
 
@@ -348,7 +432,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                     check_in_date: formData.checkInDate,
                     check_out_date: formData.checkOutDate,
                     period: formData.duration,
-                    apartment: apartmentId,
+                    apartment: apartmentUUID,
                     rent: formData.rent,
                     discount_type: formData.discountType === 'percentage' ? 'percent' : formData.discountType === 'fixed' ? 'fixed' : undefined,
                     discount_value: formData.discount,
@@ -385,35 +469,37 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
     const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
 
-    const bookingSources = [t('bookings.booking_source_airbnb'), t('bookings.booking_source_booking'), t('bookings.booking_source_almosafer'), t('bookings.booking_source_agoda'), t('bookings.booking_source_websites'), t('bookings.booking_source_reception')];
-    const rentTypeOptions = [
-        { value: 'hourly', label: t('bookings.rent_hourly') },
-        { value: 'daily', label: t('bookings.rent_daily') },
-        { value: 'weekly', label: t('bookings.rent_weekly') },
-        { value: 'monthly', label: t('bookings.rent_monthly') },
-    ];
-    const bookingReasonOptions = [t('bookings.guest_type_health_employee'), t('bookings.guest_type_quarantine'), t('bookings.guest_type_court_employee'), t('bookings.guest_type_recreational'), t('bookings.guest_type_sports'), t('bookings.guest_type_family_visit'), t('bookings.guest_type_tourism')];
-    const guestTypeOptions = [t('bookings.guest_type_clients'), t('bookings.guest_type_booking_agencies')];
+    const bookingSources = sources.map(s => s.name);
+    const rentTypeOptions = rentalTypes.map(o => ({ value: o.id, label: o.name }));
+    const bookingReasonOptions = reasons.map(r => r.name);
+    const guestTypeOptions = guestTypes.map(gt => gt.name);
 
+    const handleEditCompanionGuest = (guestId: string) => {
+        const guest = guests.find(g => g.id.toString() === guestId.toString());
+        if (guest) {
+            setEditingGuest(guest);
+            setIsGuestPanelOpen(true);
+        }
+    };
 
     return (
         <div
-            className={`fixed inset-0 z-50 flex items-start justify-center p-4 transition-opacity duration-300 overflow-y-auto ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="add-booking-title"
         >
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
 
-            <div className={`relative w-full max-w-screen-2xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
-                <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
+            <div className={`relative w-full max-w-screen-2xl bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 max-h-[calc(100vh-2rem)] ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+                <header className="flex items-center justify-between p-4 border-b dark:border-white/10 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
                     <h2 id="add-booking-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">{isEditing ? t('bookings.editBookingTitle') : t('bookings.addBookingTitle')}</h2>
                     <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
                         <XMarkIcon className="w-6 h-6" />
                     </button>
                 </header>
 
-                <div className="flex-grow p-6">
+                <div className="flex-grow p-6 overflow-y-auto">
                     <form onSubmit={(e) => e.preventDefault()}>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8">
                             {/* Column 1: Booking, Calendar */}
@@ -496,13 +582,39 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                     </div>
                                 </div>
                                 <div>
+                                </div>
+                                <div>
                                     <label htmlFor="companions" className={labelBaseClass}>{t('bookings.companions')}</label>
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex-grow">
-                                            <input type="number" id="companions" name="companions" value={formData.companions || 0} onChange={handleNumberChange} className={`${inputBaseClass} text-center`} min="0" />
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-2 rounded border dark:border-slate-600">
+                                            <span className="text-sm font-semibold">{companionsList.length} {t('bookings.companionsCount') || 'Companions'}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsCompanionModalOpen(true)}
+                                                className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
+                                            >
+                                                + {t('bookings.addCompanion') || 'Add'}
+                                            </button>
                                         </div>
-                                        <ActionButton icon={MinusIcon} color="bg-red-500" onClick={() => setFormData(p => ({ ...p, companions: Math.max(0, (p.companions || 0) - 1) }))} />
-                                        <ActionButton icon={PlusIcon} color="bg-blue-500" onClick={() => setFormData(p => ({ ...p, companions: (p.companions || 0) + 1 }))} />
+
+                                        {companionsList.length > 0 && (
+                                            <div className="max-h-24 overflow-y-auto custom-scrollbar space-y-1">
+                                                {companionsList.map((comp, idx) => (
+                                                    <div key={idx} className="flex items-center justify-between text-xs bg-white dark:bg-slate-700 p-1.5 rounded border dark:border-slate-600 shadow-sm">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium truncate max-w-[120px]" title={comp.guestName}>{comp.guestName}</span>
+                                                            <span className="text-slate-500 text-[10px]">{comp.relationship}</span>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleRemoveCompanion(idx)}
+                                                            className="text-red-400 hover:text-red-600"
+                                                        >
+                                                            <TrashIcon className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -599,7 +711,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                     </form>
                 </div>
 
-                <footer className="flex items-center justify-start p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-800 rounded-b-lg">
+                <footer className="flex items-center justify-start p-4 border-t dark:border-white/10 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-800 rounded-b-lg">
                     <button
                         onClick={handleSaveClick}
                         disabled={isSaving}
@@ -635,6 +747,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                 guestTypes={guestTypes}
                 idTypes={idTypes}
                 countries={countries}
+                zIndexClass="z-[75]"
             />
 
             <GuestDetailsModal
@@ -652,16 +765,27 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                 user={null} // Pass user if available
             />
 
-            <AddOrderPanel
-                initialData={{ ...formData, bookingNumber: formData.bookingNumber } as any}
-                isEditing={false}
-                isOpen={isOrderPanelOpen}
-                onClose={() => setIsOrderPanelOpen(false)}
-                onSave={() => { setIsOrderPanelOpen(false); /* Refresh logic if needed */ }}
-            />
+            {isOrderPanelOpen && (
+                <AddOrderPanel
+                    isOpen={isOrderPanelOpen}
+                    onClose={() => setIsOrderPanelOpen(false)}
+                    onSave={() => setIsOrderPanelOpen(false)} // Placeholder
+                    bookingId={formData.id as string}
+                />
+            )}
 
+            <AddCompanionModal
+                isOpen={isCompanionModalOpen}
+                onClose={() => setIsCompanionModalOpen(false)}
+                onSave={handleSaveCompanion}
+                guests={guests}
+                onAddGuest={() => { setIsGuestPanelOpen(true); setEditingGuest(null); }}
+                onEditGuest={handleEditCompanionGuest}
+                relationships={relationships}
+            />
         </div>
     );
 };
+
 
 export default AddBookingPanel;

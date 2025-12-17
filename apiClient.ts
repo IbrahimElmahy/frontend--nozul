@@ -93,12 +93,24 @@ export const apiClient = async <T>(endpoint: string, options: ApiClientOptions =
         }
 
         return responseData as T;
-    } catch (error) {
+    } catch (error: any) {
+        // Dispatch Global Error Event
+        const message = error.message || 'An unexpected error occurred.';
+        // Avoid double dispatch if the error was already dispatched (e.g. nested calls if any - unlikely for fetch)
+        // Check if it's a validation error, maybe we act differently, but for now show all as requested.
+
+        window.dispatchEvent(new CustomEvent('global-error', {
+            detail: {
+                message: message,
+                title: 'Error'
+            }
+        }));
+
         if (error instanceof ApiValidationError) {
             throw error;
         }
         if (error instanceof Error) {
-            // Re-throw custom or network errors
+            // Re-throw custom or network errors so callers can stop loading states
             throw new Error(error.message || 'A network error occurred.');
         }
         // Handle unexpected error types

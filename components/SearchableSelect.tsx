@@ -37,7 +37,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onC
     };
 
     const filteredOptions = options.filter(option =>
-        option.toLowerCase().includes(searchTerm.toLowerCase())
+        typeof option === 'string' && option.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const baseClass = `w-full px-4 py-2 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200`;
@@ -79,8 +79,8 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onC
                                 key={option}
                                 onClick={() => handleSelect(option)}
                                 className={`px-4 py-2 text-sm cursor-pointer ${textAlignClass} ${value === option
-                                        ? 'bg-blue-500 text-white'
-                                        : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700'
                                     }`}
                                 role="option"
                                 aria-selected={value === option}

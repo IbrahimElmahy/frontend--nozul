@@ -30,8 +30,8 @@ const ToggleGroup: React.FC<{ options: { value: string; label: string }[]; value
                     key={option.value}
                     onClick={() => onChange(option.value)}
                     className={`flex-1 py-2 px-2 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${value === option.value
-                            ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 ring-1 ring-black/5 dark:ring-white/5'
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                        ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 ring-1 ring-black/5 dark:ring-white/5'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                         }`}
                 >
                     {option.label}
@@ -321,6 +321,10 @@ const SettingsCog: React.FC<SettingsCogProps> = ({ settings, setSettings }) => {
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-slate-700 dark:text-slate-300">{t('themeCustomizer.autoCollapse')}</span>
                                 <Switch id="autoCollapse" checked={settings.sidebarSize === 'condensed'} onChange={(c) => updateSetting('sidebarSize', c ? 'condensed' : 'default')} />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-700 dark:text-slate-300">{t('themeCustomizer.pinSidebar')}</span>
+                                <Switch id="pinSidebar" checked={!!settings.isSidebarFixed} onChange={(c) => updateSetting('isSidebarFixed', c)} />
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-slate-700 dark:text-slate-300">{t('themeCustomizer.showUserCard')}</span>

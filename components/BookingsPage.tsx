@@ -125,6 +125,12 @@ const mapReservationToBooking = (reservation: Reservation): Booking => ({
     statusDisplay: reservation.status_display,
     rentalDisplay: reservation.rental_display,
     discountDisplay: reservation.discount_display,
+    companionsData: Array.isArray(reservation.companions) ? reservation.companions.map((c: any) => ({
+        guestId: c.guest || c.guest_id, // Handle potential API variations
+        guestName: c.guest_name || '', // API might not verify name, handle gracefully
+        relationship: c.relationship,
+        notes: c.note
+    })) : [],
 });
 
 const toReservationPayload = (booking: Booking): Partial<Reservation> => ({
@@ -143,6 +149,11 @@ const toReservationPayload = (booking: Booking): Partial<Reservation> => ({
     discount_value: booking.discount?.toString() || '0',
     total_orders: booking.totalOrders?.toString() || '0',
     note: booking.notes,
+    companions: booking.companionsData?.map(c => ({
+        guest: c.guestId,
+        relationship: c.relationship,
+        note: c.notes
+    })) || [],
 });
 
 

@@ -21,7 +21,7 @@ const DetailItem: React.FC<{ label: string; value: string | number | undefined }
 );
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="py-4 border-b dark:border-slate-700 last:border-b-0">
+    <div className="py-4 border-b dark:border-white/10 last:border-b-0">
         <h3 className="text-base font-semibold text-blue-600 dark:text-blue-400 mb-3">{title}</h3>
         <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4">
             {children}
@@ -59,15 +59,15 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
     return (
         <>
             <div
-                className={`fixed inset-0 z-50 flex items-start justify-center p-4 transition-opacity duration-300 overflow-y-auto print:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 print:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="booking-details-title"
             >
                 <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
 
-                <div className={`relative w-full max-w-5xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 max-h-[90vh] ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
-                    <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
+                <div className={`relative w-full max-w-5xl bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 max-h-[calc(100vh-2rem)] ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+                    <header className="flex items-center justify-between p-4 border-b dark:border-white/10 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
                         <h2 id="booking-details-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">
                             {t('bookings.details.title')} - #{booking.bookingNumber}
                         </h2>

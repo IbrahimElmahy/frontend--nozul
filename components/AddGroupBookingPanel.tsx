@@ -26,7 +26,7 @@ const SectionHeader: React.FC<{ title: string; }> = ({ title }) => (
 
 const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onClose, onSave }) => {
     const { t } = useContext(LanguageContext);
-    
+
     const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
     const [commonData, setCommonData] = useState({
         guestName: '',
@@ -96,7 +96,7 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
                 companions: 0,
             };
         });
-        
+
         onSave(newBookings);
     };
 
@@ -107,22 +107,22 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
 
     return (
         <div
-            className={`fixed inset-0 z-50 flex items-start justify-center p-4 transition-opacity duration-300 overflow-y-auto ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="add-group-booking-title"
         >
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
 
-            <div className={`relative w-full max-w-4xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
-                <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
+            <div className={`relative w-full max-w-4xl bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 max-h-[calc(100vh-2rem)] ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+                <header className="flex items-center justify-between p-4 border-b dark:border-white/10 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
                     <h2 id="add-group-booking-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('bookings.addGroupBookingPanel.title')}</h2>
                     <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close panel">
                         <XMarkIcon className="w-6 h-6" />
                     </button>
                 </header>
 
-                <div className="flex-grow p-6 overflow-y-auto" style={{ maxHeight: '70vh' }}>
+                <div className="flex-grow p-6 overflow-y-auto">
                     <form onSubmit={(e) => e.preventDefault()} className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
                         {/* Column 1: Apartment Selection */}
                         <div>
@@ -148,14 +148,14 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
 
                         {/* Column 2: Common Info */}
                         <div className="space-y-4">
-                             <SectionHeader title={t('bookings.addGroupBookingPanel.guestInfo')} />
-                             <div>
+                            <SectionHeader title={t('bookings.addGroupBookingPanel.guestInfo')} />
+                            <div>
                                 <label htmlFor="commonGuestName" className={labelBaseClass}>{t('bookings.addGroupBookingPanel.commonGuest')}</label>
                                 <SearchableSelect id="commonGuestName" options={mockGuests} value={commonData.guestName} onChange={(val) => setCommonData(p => ({ ...p, guestName: val }))} placeholder={t('bookings.addGroupBookingPanel.selectGuest')} />
                             </div>
 
-                             <SectionHeader title={t('bookings.addGroupBookingPanel.bookingInfo')} />
-                             <div>
+                            <SectionHeader title={t('bookings.addGroupBookingPanel.bookingInfo')} />
+                            <div>
                                 <label className={labelBaseClass}>{t('bookings.rentCalendar')}</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
@@ -167,8 +167,8 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
                                         <DatePicker value={commonData.checkOutDate} onChange={(date) => setCommonData(p => ({ ...p, checkOutDate: date }))} />
                                     </div>
                                 </div>
-                             </div>
-                             <div>
+                            </div>
+                            <div>
                                 <label htmlFor="bookingSource" className={labelBaseClass}>{t('bookings.bookingSource')}</label>
                                 <SearchableSelect id="bookingSource" options={bookingSources} value={commonData.bookingSource} onChange={(val) => setCommonData(p => ({ ...p, bookingSource: val }))} placeholder={t('bookings.selectBookingSource')} />
                             </div>
@@ -180,7 +180,7 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
                     </form>
                 </div>
 
-                <footer className="flex items-center justify-start p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-800 rounded-b-lg">
+                <footer className="flex items-center justify-start p-4 border-t dark:border-white/10 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-800 rounded-b-lg">
                     <button onClick={handleGenerateBookings} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
                         <CheckCircleIcon className="w-5 h-5" />
                         <span>{t('bookings.addGroupBookingPanel.generateBookings')} ({selectedUnits.length})</span>

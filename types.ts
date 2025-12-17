@@ -92,6 +92,7 @@ export interface Booking {
     bookingReason?: string;
     guestType?: string;
     companions?: number;
+    companionsData?: Companion[];
     discountType?: 'percentage' | 'fixed' | '';
     totalOrders?: number;
     notes?: string;
@@ -147,6 +148,15 @@ export interface Guest {
     issue_place?: string; // Renamed from issue_location
     id_serial?: string; // Renamed from serial_number
     account?: string; // UUID for financial account
+}
+
+export interface Companion {
+    guestId: string; // UUID of the guest profile
+    guestName: string; // For display
+    relationship: string;
+    notes?: string;
+    // Optional: Full guest details if needed for display? 
+    // For now, minimal.
 }
 
 export interface GuestTypeAPI {
@@ -641,6 +651,13 @@ export interface ReservationSource {
 }
 
 export interface ReservationReason {
+    id: string;
+    name: string;
+    name_ar: string;
+    name_en: string;
+}
+
+export interface ReservationRelationship {
     id: string;
     name: string;
     name_ar: string;

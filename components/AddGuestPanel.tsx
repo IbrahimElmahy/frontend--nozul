@@ -17,6 +17,7 @@ interface AddGuestPanelProps {
     idTypes: IdTypeAPI[];
     countries: CountryAPI;
     validationErrors?: Record<string, string | string[]>;
+    zIndexClass?: string;
 }
 
 const SectionHeader: React.FC<{ title: string; icon?: any }> = ({ title, icon }) => (
@@ -28,7 +29,7 @@ const SectionHeader: React.FC<{ title: string; icon?: any }> = ({ title, icon })
     </div>
 );
 
-const AddGuestPanel: React.FC<AddGuestPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave, guestTypes, idTypes, countries, validationErrors = {} }) => {
+const AddGuestPanel: React.FC<AddGuestPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave, guestTypes, idTypes, countries, validationErrors = {}, zIndexClass = "z-50" }) => {
     const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState<Record<string, any>>({});
 
@@ -270,15 +271,15 @@ const AddGuestPanel: React.FC<AddGuestPanelProps> = ({ initialData, isEditing, i
 
 
     return (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} role="dialog" aria-modal="true">
+        <div className={`fixed inset-0 ${zIndexClass} flex items-center justify-center transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} role="dialog" aria-modal="true">
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true"></div>
-            <div className={`relative bg-slate-50 dark:bg-slate-800 shadow-2xl rounded-xl flex flex-col w-[95%] max-w-[90rem] transform transition-all duration-300 ${isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 bg-white dark:bg-slate-900 z-10 rounded-t-xl">
+            <div className={`relative bg-slate-50 dark:bg-slate-800 shadow-2xl rounded-xl flex flex-col w-[95%] max-w-[90rem] transform transition-all duration-300 max-h-[calc(100vh-2rem)] ${isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+                <header className="flex items-center justify-between p-4 border-b dark:border-white/10 flex-shrink-0 bg-white dark:bg-slate-900 z-10 rounded-t-xl">
                     <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">{isEditing ? t('guests.editGuestTitle') : t('guests.addGuestTitle')}</h2>
                     <button onClick={onClose} className="p-1 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close"><XMarkIcon className="w-6 h-6" /></button>
                 </header>
 
-                <div className="flex-grow p-6">
+                <div className="flex-grow p-6 overflow-y-auto">
                     <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
 
                         <SectionHeader title={t('guests.personalInfo')} icon={<PersonalInfoIcon />} />
@@ -450,7 +451,7 @@ const AddGuestPanel: React.FC<AddGuestPanelProps> = ({ initialData, isEditing, i
                     </form>
                 </div>
 
-                <footer className="flex items-center justify-start p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 bg-white dark:bg-slate-900 rounded-b-xl">
+                <footer className="flex items-center justify-start p-4 border-t dark:border-white/10 flex-shrink-0 gap-3 bg-white dark:bg-slate-900 rounded-b-xl">
                     <button onClick={handleSaveClick} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
                         <CheckCircleIcon className="w-5 h-5" />
                         <span>{t('units.saveChanges')}</span>

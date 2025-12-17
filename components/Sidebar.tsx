@@ -1,6 +1,7 @@
 
 import React, { useState, useContext } from 'react';
 import { ThemeSettings, Page } from '../App';
+import { apiClient } from '../apiClient';
 import { API_BASE_URL } from '../config/api';
 import DashboardIcon from './icons-redesign/DashboardIcon';
 import CalendarIcon from './icons-redesign/CalendarIcon';
@@ -18,7 +19,7 @@ import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon'
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import Logo from './icons/Logo';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { User } from '../types';
+import { User, Notification } from '../types';
 
 interface NavItemProps {
     label: string;
@@ -121,7 +122,6 @@ interface UserInfoBlockProps {
 
 const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurrentPage, sidebarColor }) => {
     const { t, language } = useContext(LanguageContext);
-    const mountTime = React.useMemo(() => new Date().getTime(), []);
 
     const colorStyles = {
         light: { base: 'text-slate-600 hover:bg-slate-100' },
@@ -149,9 +149,9 @@ const UserInfoBlock: React.FC<UserInfoBlockProps> = ({ collapsed, user, setCurre
             aria-label="View user profile"
         >
             <img
-                src={user?.image_url ? (user.image_url.startsWith('http') ? user.image_url : `${API_BASE_URL}${user.image_url}`) + `?t=${mountTime}` : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E%3F%3C/text%3E%3C/svg%3E"}
+                src={user?.image_url ? (user.image_url.startsWith('http') ? user.image_url : `${API_BASE_URL}${user.image_url}`) : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E%3F%3C/text%3E%3C/svg%3E"}
                 alt="User Avatar"
-                loading="lazy"
+                loading="eager"
                 className="w-10 h-10 rounded-md flex-shrink-0 border-2 border-white/20 object-cover"
             />
             {!collapsed && (
@@ -192,13 +192,45 @@ const settingsSubPages: Page[] = ['hotel-settings', 'hotel-info', 'hotel-users',
 
 
 const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen, setMobileMenuOpen, setCurrentPage, currentPage, user }) => {
-    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(true);
+    // If sidebar is fixed, it starts expanded (false). Otherwise it starts collapsed (true).
+    const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(!settings.isSidebarFixed);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const { t, language } = useContext(LanguageContext);
+
+    // Sync local state when setting changes
+    React.useEffect(() => {
+        if (settings.isSidebarFixed) {
+            setIsDesktopCollapsed(false);
+        } else {
+            // Optional: Auto-collapse when unpinned or keep current state?
+            // Let's keep it collapsed by default if not fixed strictly speaking, but for smoother UX maybe just leave it
+            setIsDesktopCollapsed(true);
+        }
+    }, [settings.isSidebarFixed]);
+
+    // Fetch notifications
+    React.useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const response = await apiClient<{ data: Notification[] }>('/ar/notification/api/notifications/');
+                setNotifications(response.data);
+            } catch (error) {
+                console.error("Failed to fetch notifications in Sidebar", error);
+            }
+        }
+        fetchNotifications();
+        // Optional: Poll every minute or depend on parent state if lifted up.
+        // For now, minimal polling or just initial load. Let's do initial load + 1 min poll to match Header.
+        const interval = setInterval(fetchNotifications, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const unreadCount = notifications.filter(n => n.unread).length;
 
     const navigationSections = [
         {
             header: t('sidebar.mainPage'),
-            items: [{ id: 'dashboard', label: t('sidebar.dashboard'), icon: DashboardIcon, notificationCount: 2 }]
+            items: [{ id: 'dashboard', label: t('sidebar.dashboard'), icon: DashboardIcon, notificationCount: unreadCount > 0 ? unreadCount : undefined }]
         },
         {
             header: t('sidebar.reservationsManagement'),
@@ -285,6 +317,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
         gradient: 'border-white/10'
     }
 
+    const scrollbarThumbColor = {
+        light: 'scrollbar-thumb-blue-600 hover:scrollbar-thumb-blue-700 scrollbar-track-slate-100',
+        dark: 'scrollbar-thumb-slate-400 hover:scrollbar-thumb-slate-300 scrollbar-track-slate-700',
+        brand: 'scrollbar-thumb-blue-600 hover:scrollbar-thumb-blue-700 scrollbar-track-white',
+        gradient: 'scrollbar-thumb-blue-600 hover:scrollbar-thumb-blue-700 scrollbar-track-white'
+    }
+
     const widthClass = isDesktopCollapsed ? sizeClasses[sidebarSize].collapsed : sizeClasses[sidebarSize].expanded;
     const isEffectivelyCollapsed = isMobileMenuOpen ? false : isDesktopCollapsed;
 
@@ -295,8 +334,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
     return (
         <aside
             className={`${colorClasses[effectiveSidebarColor]} flex flex-col transition-transform duration-300 ease-in-out lg:transition-all lg:duration-300 h-screen fixed lg:sticky lg:top-0 z-50 w-72 ${mobileMenuPosition} lg:translate-x-0 ${widthClass}`}
-            onMouseEnter={() => setIsDesktopCollapsed(false)}
-            onMouseLeave={() => setIsDesktopCollapsed(true)}
+            onMouseEnter={() => !settings.isSidebarFixed && setIsDesktopCollapsed(false)}
+            onMouseLeave={() => !settings.isSidebarFixed && setIsDesktopCollapsed(true)}
         >
             <div className={`border-b ${borderColor[effectiveSidebarColor]} transition-all duration-300 flex items-center justify-center h-20 px-4`}>
                 <Logo
@@ -305,7 +344,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
                 />
             </div>
 
-            <nav className="flex-grow p-3 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20">
+            <nav className={`flex-grow p-3 overflow-y-auto scrollbar-thin ${scrollbarThumbColor[effectiveSidebarColor]}`}>
                 {navigationSections.map((section, index) => (
                     <div key={index}>
                         <NavHeader collapsed={isEffectivelyCollapsed} sidebarColor={effectiveSidebarColor}>{section.header}</NavHeader>

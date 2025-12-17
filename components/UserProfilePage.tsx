@@ -168,7 +168,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
             {/* User Info Form */}
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm">
                 <div className={`p-4 border-b dark:border-slate-700`}>
-                    <h3 className={`text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <h3 className={`text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2`}>
                         <InformationCircleIcon className="w-6 h-6 text-slate-500" />
                         <span>{t('profilePage.accountInfo')}</span>
                     </h3>

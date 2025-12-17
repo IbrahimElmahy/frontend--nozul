@@ -16,7 +16,7 @@ const DetailItem: React.FC<{ label: string; value: string | number | undefined |
 );
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="py-4 border-b dark:border-slate-700 last:border-b-0">
+    <div className="py-4 border-b dark:border-white/10 last:border-b-0">
         <h3 className="text-base font-semibold text-blue-600 dark:text-blue-400 mb-3">{title}</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4">
             {children}
@@ -35,15 +35,15 @@ const GuestDetailsModal: React.FC<GuestDetailsModalProps> = ({ guest, onClose })
 
     return (
         <div
-            className={`fixed inset-0 z-50 flex items-start justify-center p-4 transition-opacity duration-300 overflow-y-auto ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="guest-details-title"
         >
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
 
-            <div className={`relative w-full max-w-4xl my-8 bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 max-h-[90vh] ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
-                <header className="flex items-center justify-between p-4 border-b dark:border-slate-700 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
+            <div className={`relative w-full max-w-4xl bg-white dark:bg-slate-800 rounded-lg shadow-2xl flex flex-col transform transition-all duration-300 max-h-[calc(100vh-2rem)] ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+                <header className="flex items-center justify-between p-4 border-b dark:border-white/10 flex-shrink-0 sticky top-0 bg-white dark:bg-slate-800 rounded-t-lg z-10">
                     <h2 id="guest-details-title" className="text-lg font-bold text-slate-800 dark:text-slate-200">
                         {t('guests.detailsTitle')} - {guest.name}
                     </h2>
@@ -89,7 +89,7 @@ const GuestDetailsModal: React.FC<GuestDetailsModalProps> = ({ guest, onClose })
                         </div>
                     </div>
 
-                    <div className="py-4 border-b dark:border-slate-700 last:border-b-0">
+                    <div className="py-4 border-b dark:border-white/10 last:border-b-0">
                         <h3 className="text-base font-semibold text-blue-600 dark:text-blue-400 mb-3">{t('guests.notes')}</h3>
                         <p className="text-sm text-slate-700 dark:text-slate-300">{guest.note || '---'}</p>
                     </div>
