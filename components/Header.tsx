@@ -125,7 +125,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
-                const response = await apiClient<{ data: Notification[] }>('/ar/notification/api/notifications/');
+                const response = await apiClient<{ data: Notification[] }>('/notification/api/notifications/');
                 setNotifications(response.data);
             } catch (error) {
                 console.error("Failed to fetch notifications", error);

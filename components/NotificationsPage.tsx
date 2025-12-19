@@ -36,7 +36,7 @@ const NotificationsPage: React.FC = () => {
         const fetchNotifications = async () => {
             try {
                 setLoading(true);
-                const response = await apiClient<{ data: Notification[] }>('/ar/notification/api/notifications/');
+                const response = await apiClient<{ data: Notification[] }>('/notification/api/notifications/');
                 setNotifications(response.data);
             } catch (error) {
                 console.error("Failed to fetch notifications", error);
