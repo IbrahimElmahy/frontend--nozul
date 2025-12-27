@@ -4,31 +4,25 @@ import DonutChartCard from './DonutChartCard';
 import BarChartCard from './BarChartCard';
 import { DonutChartData, ChartData } from '../types';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { apiClient } from '../apiClient';
-
 // Import icons for StatCards
 import ArrowLeftOnRectangleIcon from './icons-redesign/ArrowLeftOnRectangleIcon';
 import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
 import DesktopComputerIcon from './icons-redesign/DesktopComputerIcon';
 import ArrowRightOnRectangleIcon from './icons-redesign/ArrowRightOnRectangleIcon';
+import {
+    getNumericStats,
+    getAvailabilityStats,
+    getApartmentStats,
+    getReservationStats,
+    getCleanlinessStats,
+    getStatusCountStats,
+    NumericStatsResponse,
+    LabelValueResponse,
+    TimeSeriesResponse
+} from '../services/analytics';
 
 // API Response Interfaces
-interface NumericStatsResponse {
-    reservations: number;
-    arrivals: number;
-    occupied: number;
-    departures: number;
-    departed: number;
-}
 
-interface LabelValueResponse {
-    label: string;
-    value: number;
-}
-
-interface TimeSeriesResponse {
-    [key: string]: number[];
-}
 
 
 const Dashboard: React.FC = () => {
@@ -57,12 +51,12 @@ const Dashboard: React.FC = () => {
                     cleanlinessData,
                     statusCountData
                 ] = await Promise.all([
-                    apiClient<NumericStatsResponse>('/ar/reservation/api/index/numeric-stats/'),
-                    apiClient<LabelValueResponse[]>('/ar/apartment/api/index/availabilities/'),
-                    apiClient<TimeSeriesResponse>('/ar/apartment/api/index/apartments/'),
-                    apiClient<TimeSeriesResponse>('/ar/reservation/api/index/reservations/'),
-                    apiClient<LabelValueResponse[]>('/ar/apartment/api/index/cleanliness/'),
-                    apiClient<LabelValueResponse[]>('/ar/reservation/api/index/status-count/'),
+                    getNumericStats(),
+                    getAvailabilityStats(),
+                    getApartmentStats(),
+                    getReservationStats(),
+                    getCleanlinessStats(),
+                    getStatusCountStats(),
                 ]);
 
                 // Set raw data states
