@@ -6,7 +6,10 @@ import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import Switch from './Switch';
 import SearchableSelect from './SearchableSelect';
-import { apiClient } from '../apiClient';
+import { listCategories } from '../services/items';
+
+// ... (imports remain)
+// Remove apiClient import if it was there (it was in line 9)
 
 interface AddItemPanelProps {
     initialData: Omit<Item, 'id' | 'created_at' | 'updated_at'> | Item | null;
@@ -20,7 +23,7 @@ interface AddItemPanelProps {
 const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, isOpen, onClose, onSave }) => {
     const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState(initialData);
-    const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
+    const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
 
     useEffect(() => {
         if (isOpen) {
@@ -33,7 +36,10 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, is
 
     const fetchCategories = async () => {
         try {
-            const response = await apiClient<{ data: any[] }>('/ar/category/api/categories/');
+            const response = await listCategories();
+            // Assuming listCategories returns { data: ... } structure based on ItemsPage usage
+            // In ItemsPage: response.data.map...
+            // Check services/items.ts: return apiClient<ItemListResponse>...
             const cats = response.data.map(c => ({
                 id: c.id,
                 name: language === 'ar' ? c.name_ar : c.name_en
@@ -61,7 +67,7 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, is
             onSave(formData);
         }
     };
-    
+
     const titles = {
         add: type === 'services' ? t('itemsPage.addServiceTitle') : t('itemsPage.addCategoryTitle'),
         edit: type === 'services' ? t('itemsPage.editServiceTitle') : t('itemsPage.editCategoryTitle'),
@@ -72,7 +78,7 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, is
 
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
     const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
-    
+
     const categoryOptions = categories.map(c => c.name);
 
     return (
@@ -93,7 +99,7 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, is
                             <label htmlFor="name_ar" className={labelBaseClass}>{t('itemsPage.th_name_ar')}</label>
                             <input type="text" name="name_ar" id="name_ar" value={formData.name_ar} onChange={handleInputChange} className={inputBaseClass} />
                         </div>
-                        
+
                         {type === 'services' && (
                             <>
                                 <div>
@@ -102,21 +108,21 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, is
                                 </div>
                                 <div>
                                     <label htmlFor="category" className={labelBaseClass}>{t('itemsPage.serviceCategory')}</label>
-                                    <SearchableSelect 
-                                        id="category" 
-                                        options={categoryOptions} 
-                                        value={categories.find(c => c.id === formData.category)?.name || ''} 
+                                    <SearchableSelect
+                                        id="category"
+                                        options={categoryOptions}
+                                        value={categories.find(c => c.id === formData.category)?.name || ''}
                                         onChange={name => {
                                             const cat = categories.find(c => c.name === name);
-                                            if(cat) setFormData(prev => ({...prev!, category: cat.id}))
-                                        }} 
+                                            if (cat) setFormData(prev => ({ ...prev!, category: cat.id }))
+                                        }}
                                         placeholder={t('itemsPage.selectCategory')}
                                     />
                                 </div>
                             </>
                         )}
 
-                         <div>
+                        <div>
                             <label htmlFor="description" className={labelBaseClass}>{t('itemsPage.description')}</label>
                             <textarea name="description" id="description" value={formData.description || ''} onChange={handleInputChange} className={inputBaseClass} rows={3}></textarea>
                         </div>

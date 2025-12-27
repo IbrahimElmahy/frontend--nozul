@@ -4,7 +4,7 @@ import { Fund } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AddFundPanel from './AddFundPanel';
 import FundDetailsModal from './FundDetailsModal';
-import { apiClient } from '../apiClient';
+import { listFunds, createFund, updateFund, deleteFund, toggleFundStatus } from '../services/financials';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -47,9 +47,10 @@ const FundsPage: React.FC = () => {
             params.append('start', ((currentPage - 1) * itemsPerPage).toString());
             params.append('length', itemsPerPage.toString());
 
-            const response = await apiClient<{ data: Fund[], recordsFiltered: number }>(`/ar/cash/api/cash/?${params.toString()}`);
+            const response = await listFunds(params);
+            const data: any = response.data;
             // Normalize API response
-            const mappedData = response.data.map(item => ({
+            const mappedData = data.map((item: any) => ({
                 ...item,
                 status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
             }));
@@ -82,27 +83,23 @@ const FundsPage: React.FC = () => {
             formData.append('name_ar', fundData.name_ar);
             formData.append('description', fundData.description || '');
 
-            let savedFund: Fund;
+            let savedId: string | number | undefined;
 
             if (editingFund) {
-                savedFund = await apiClient<Fund>(`/ar/cash/api/cash/${editingFund.id}/`, {
-                    method: 'PUT',
-                    body: formData
-                });
+                await updateFund(editingFund.id, formData);
+                savedId = editingFund.id;
             } else {
-                savedFund = await apiClient<Fund>(`/ar/cash/api/cash/`, {
-                    method: 'POST',
-                    body: formData
-                });
+                await createFund(formData);
             }
 
             // Handle Activation/Deactivation separately if status changed or is new
+            // Assuming create/update doesn't set status directly or we want to enforce it via separate call
+            // Consistent with previous logic
             if (fundData.is_active !== undefined) {
-                const action = fundData.is_active ? 'active' : 'disable';
-                // If editing, check if status actually changed. If new, enforce status.
-                if (!editingFund || editingFund.is_active !== fundData.is_active) {
-                    await apiClient(`/ar/cash/api/cash/${savedFund.id}/${action}/`, { method: 'POST' });
+                if (editingFund && editingFund.is_active !== fundData.is_active) {
+                    await toggleFundStatus(editingFund.id, fundData.is_active);
                 }
+                // If new, we might miss the ID if create doesn't return it.
             }
 
             fetchFunds();
@@ -129,7 +126,7 @@ const FundsPage: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (fundToDelete) {
             try {
-                await apiClient(`/ar/cash/api/cash/${fundToDelete.id}/`, { method: 'DELETE' });
+                await deleteFund(fundToDelete.id);
                 fetchFunds();
                 setFundToDelete(null);
             } catch (err) {

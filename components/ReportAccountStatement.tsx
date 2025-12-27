@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { apiClient } from '../apiClient';
+import { fetchAccountTree, fetchStatementAccount, exportStatementAccount } from '../services/reports';
+import { listCurrencies, listUsers } from '../services/financials';
 import { FundReportItem, ReportFilterOption } from '../types';
 import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
 import PrinterIcon from './icons-redesign/PrinterIcon';
@@ -42,12 +43,13 @@ const ReportAccountStatement: React.FC = () => {
         const fetchOptions = async () => {
             try {
                 const [treeRes, currRes, userRes] = await Promise.all([
-                    apiClient<{ data: AccountNode[] } | AccountNode[]>('/ar/account/api/accounts/tree/'),
-                    apiClient<{ data: any[] }>('/ar/currency/api/currencies/'),
-                    apiClient<{ data: any[] }>('/ar/user/api/users/'),
+                    fetchAccountTree(),
+                    listCurrencies(),
+                    listUsers(),
                 ]);
 
-                // Helper to flatten tree
+                // ... keep flattenTree Logic ...
+
                 const flattenTree = (nodes: AccountNode[], depth = 0): ReportFilterOption[] => {
                     let result: ReportFilterOption[] = [];
                     const list = Array.isArray(nodes) ? nodes : [];
@@ -66,10 +68,9 @@ const ReportAccountStatement: React.FC = () => {
                     return result;
                 };
 
-                const rawTree = Array.isArray(treeRes) ? treeRes : (treeRes as any).data || [];
+                const rawTree = (treeRes as any).data || (Array.isArray(treeRes) ? treeRes : []);
                 setAccountTree(flattenTree(rawTree));
 
-                // Helper to map standard options
                 const mapOptions = (list: any) => {
                     const arr = Array.isArray(list) ? list : Array.isArray(list?.data) ? list.data : [];
                     return arr.map(item => ({
@@ -78,8 +79,8 @@ const ReportAccountStatement: React.FC = () => {
                     }));
                 };
 
-                setCurrencies(mapOptions(currRes.data));
-                setUsers(mapOptions(userRes.data));
+                setCurrencies(mapOptions(currRes));
+                setUsers(mapOptions(userRes));
 
             } catch (error) {
                 console.error("Failed to fetch report options", error);
@@ -90,11 +91,11 @@ const ReportAccountStatement: React.FC = () => {
 
     const handleSearch = async () => {
         if (!filters.account) {
-            alert(t('common.requiredField') || "Account is required");
+            alert(t('common.requiredField' as any) || "Account is required");
             return;
         }
         if (!filters.currency) {
-            alert(t('common.requiredField') || "Currency is required");
+            alert(t('common.requiredField' as any) || "Currency is required");
             return;
         }
 
@@ -108,9 +109,9 @@ const ReportAccountStatement: React.FC = () => {
             if (filters.userId) params.append('created_by', filters.userId);
             if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
 
-            const response = await apiClient<any>('/ar/report/api/statement-account/?' + params.toString());
+            const response = await fetchStatementAccount(Object.fromEntries(params));
 
-            const responseData = response.data || {};
+            const responseData: any = (response as any).data || {};
             const rawLegs = responseData.legs || [];
 
             const mappedData: FundReportItem[] = rawLegs.map((item: any) => ({
@@ -142,55 +143,29 @@ const ReportAccountStatement: React.FC = () => {
         }
     };
 
-    const fetchFullData = async () => {
-        const params = new URLSearchParams();
-        params.append('account', filters.account);
-        params.append('currency', filters.currency);
-        params.append('start_date', filters.startDate);
-        params.append('end_date', filters.endDate);
-        if (filters.userId) params.append('created_by', filters.userId);
-        if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
-        params.append('is_export', 'true');
 
-        const response = await apiClient<any>('/ar/report/api/statement-account/?' + params.toString());
-        return response.data || {};
+    const fetchFullData = async () => {
+        // Blob export used instead
+        return {};
     };
 
     const handleExport = async () => {
         if (!filters.account || !filters.currency) return;
         try {
             setLoading(true);
-            const data = await fetchFullData();
-            const legs = data.legs || [];
+            const params = new URLSearchParams();
+            params.append('account', filters.account);
+            params.append('currency', filters.currency);
+            params.append('start_date', filters.startDate);
+            params.append('end_date', filters.endDate);
+            if (filters.userId) params.append('created_by', filters.userId);
+            if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
 
-            const headers = [
-                t('receipts.th_date'),
-                t('receipts.addReceiptPanel.voucher'),
-                t('receipts.th_transactionNumber'),
-                t('receipts.addReceiptPanel.description'),
-                t('receipts.addReceiptPanel.debitAccount'),
-                t('receipts.addReceiptPanel.creditAccount'),
-                t('bookings.balance')
-            ];
-
-            const csvContent = [
-                headers.join(','),
-                ...legs.map((item: any) => [
-                    item.date,
-                    item.type,
-                    item.number,
-                    `"${(item.description || '').replace(/"/g, '""')}"`,
-                    item.debit,
-                    item.credit,
-                    item.balance
-                ].join(','))
-            ].join('\n');
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const blob = await exportStatementAccount(Object.fromEntries(params));
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', `account_statement_${new Date().toISOString().split('T')[0]}.csv`);
+            link.href = url;
+            link.setAttribute('download', `account_statement_${new Date().toISOString().split('T')[0]}.xlsx`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -206,7 +181,8 @@ const ReportAccountStatement: React.FC = () => {
         if (!filters.account || !filters.currency) return;
         try {
             setLoading(true);
-            const data = await fetchFullData();
+            const response = await fetchStatementAccount(Object.fromEntries(filters as any));
+            const data: any = (response as any).data || {};
             const legs = data.legs || [];
             const summary = {
                 debit: data.debit,
@@ -297,8 +273,8 @@ const ReportAccountStatement: React.FC = () => {
                         <SearchableSelect
                             id="account"
                             options={accountTree.map(o => o.name)}
-                            value={accountTree.find(o => o.id === filters.account)?.name || ''}
-                            onChange={val => { const f = accountTree.find(o => o.name === val); if (f) setFilters(p => ({ ...p, account: f.id })) }}
+                            value={accountTree.find(o => String(o.id) === String(filters.account))?.name || ''}
+                            onChange={val => { const f = accountTree.find(o => o.name === val); if (f) setFilters(p => ({ ...p, account: String(f.id) })) }}
                             placeholder="Select Account"
                         />
                     </div>
@@ -307,8 +283,8 @@ const ReportAccountStatement: React.FC = () => {
                         <SearchableSelect
                             id="currency"
                             options={currencies.map(o => o.name)}
-                            value={currencies.find(o => o.id === filters.currency)?.name || ''}
-                            onChange={val => { const f = currencies.find(o => o.name === val); if (f) setFilters(p => ({ ...p, currency: f.id })) }}
+                            value={currencies.find(o => String(o.id) === String(filters.currency))?.name || ''}
+                            onChange={val => { const f = currencies.find(o => o.name === val); if (f) setFilters(p => ({ ...p, currency: String(f.id) })) }}
                             placeholder="Select Currency"
                         />
                     </div>
@@ -325,8 +301,8 @@ const ReportAccountStatement: React.FC = () => {
                         <SearchableSelect
                             id="user"
                             options={users.map(o => o.name)}
-                            value={users.find(o => o.id === filters.userId)?.name || ''}
-                            onChange={val => { const f = users.find(o => o.name === val); if (f) setFilters(p => ({ ...p, userId: f.id })) }}
+                            value={users.find(o => String(o.id) === String(filters.userId))?.name || ''}
+                            onChange={val => { const f = users.find(o => o.name === val); if (f) setFilters(p => ({ ...p, userId: String(f.id) })) }}
                             placeholder="Select User"
                         />
                     </div>

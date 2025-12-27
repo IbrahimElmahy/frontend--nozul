@@ -7,7 +7,9 @@ import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
 import DatePicker from './DatePicker';
 import SearchableSelect from './SearchableSelect';
-import { apiClient } from '../apiClient';
+
+import { listCurrencies, listPaymentMethods, listFunds, listBanks, listExpenses, createTransaction, updateTransaction } from '../services/financials';
+import { listCustomers } from '../services/guests';
 
 type VoucherType = 'receipt' | 'payment';
 
@@ -71,33 +73,32 @@ const AddReceiptPanel: React.FC<AddReceiptPanelProps> = ({ initialData, isEditin
         const fetchDependencies = async () => {
             setLoadingData(true);
             try {
-                const [currRes, pmRes, fundsRes, banksRes, expRes, custRes] = await Promise.all([
-                    apiClient<{ data: any[] }>('/ar/currency/api/currencies/'),
-                    apiClient<{ data: any[] }>('/ar/payment/api/payments-methods/'),
-                    apiClient<{ data: any[] }>('/ar/cash/api/cash/'),
-                    apiClient<{ data: any[] }>('/ar/bank/api/banks/'),
-                    apiClient<{ data: any[] }>('/ar/expense/api/expenses/'),
-                    apiClient<{ data: any[] }>('/ar/guest/api/guests/?category=customer'),
+                const [currencies, paymentMethods, funds, banks, expenses, customers] = await Promise.all([
+                    listCurrencies(),
+                    listPaymentMethods(),
+                    listFunds(),
+                    listBanks(),
+                    listExpenses(),
+                    listCustomers(),
                 ]);
 
                 const mapOption = (item: any) => ({ value: item.account || item.id, label: language === 'ar' ? (item.name_ar || item.name) : (item.name_en || item.name) });
-                const mapGuestOption = (item: any) => ({ value: item.account, label: item.name }); // Guest uses 'account' field for transaction leg
+                const mapGuestOption = (item: any) => ({ value: item.account, label: item.name });
 
-                setCurrencies(currRes.data.map(c => ({ value: c.id, label: language === 'ar' ? c.name_ar : c.name_en })));
-                setPaymentMethods(pmRes.data.map(mapOption));
+                setCurrencies(currencies.map((c: any) => ({ value: c.id, label: language === 'ar' ? c.name_ar : c.name_en })));
+                setPaymentMethods(paymentMethods.map(mapOption));
 
                 const combinedFundsBanks = [
-                    ...fundsRes.data.map(f => ({ value: f.account, label: `${t('receipts.addReceiptPanel.funds')} - ${language === 'ar' ? f.name_ar : f.name_en}` })),
-                    ...banksRes.data.map(b => ({ value: b.account, label: `${t('receipts.addReceiptPanel.banks')} - ${language === 'ar' ? b.name_ar : b.name_en}` }))
-                ].filter(o => o.value); // Filter out items without account IDs
+                    ...funds.data.map((f: any) => ({ value: f.account, label: `${t('receipts.addReceiptPanel.funds')} - ${language === 'ar' ? f.name_ar : f.name_en}` })),
+                    ...banks.data.map((b: any) => ({ value: b.account, label: `${t('receipts.addReceiptPanel.banks')} - ${language === 'ar' ? b.name_ar : b.name_en}` }))
+                ].filter(o => o.value);
 
                 setFundsAndBanks(combinedFundsBanks);
-                setExpenses(expRes.data.filter(e => e.account).map(e => ({ value: e.account, label: language === 'ar' ? e.name_ar : e.name_en })));
-                setCustomers(custRes.data.filter(c => c.account).map(mapGuestOption));
+                setExpenses(expenses.data.filter((e: any) => e.account).map((e: any) => ({ value: e.account, label: language === 'ar' ? e.name_ar : e.name_en })));
+                setCustomers(customers.data.filter((c: any) => c.account).map(mapGuestOption)); // Logic for guests remains same
 
-                // Set default currency if available
-                if (currRes.data.length > 0 && !formData.currency) {
-                    const defaultCurr = currRes.data[0].id;
+                if (currencies.length > 0 && !formData.currency) {
+                    const defaultCurr = String(currencies[0].id);
                     setFormData(prev => ({ ...prev, currency: defaultCurr }));
                     setSelectedCurrency(defaultCurr);
                 }
@@ -156,18 +157,11 @@ const AddReceiptPanel: React.FC<AddReceiptPanelProps> = ({ initialData, isEditin
                 payload.append('credit_legs[0]account', selectedPaymentFrom);
             }
 
-            let endpoint = '/ar/transaction/api/transactions/';
-            let method: 'POST' | 'PUT' = 'POST';
-
-            // Edit mode is complex because we are editing a transaction which implies journal entry changes.
-            // For this simplified panel, we assume create mode mostly, or basic edit.
-            // If editing, we need the transaction ID.
             if (isEditing && (initialData as any).id) {
-                endpoint += `${(initialData as any).id}/`;
-                method = 'PUT';
+                await updateTransaction((initialData as any).id, payload);
+            } else {
+                await createTransaction(payload);
             }
-
-            await apiClient(endpoint, { method, body: payload });
             onSave(formData);
 
         } catch (error) {

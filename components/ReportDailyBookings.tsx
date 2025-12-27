@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { apiClient } from '../apiClient';
+
 import { ReportFilterOption, DailyBookingItem } from '../types';
 import { fetchDailyReservationsMovements, fetchAllReservationsMovements } from '../services/reports';
 import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
@@ -13,7 +13,7 @@ import SearchableSelect from './SearchableSelect';
 import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import ConfirmationModal from './ConfirmationModal';
-import { getReservation } from '../services/reservations';
+import { getReservation, getReservationStatuses, getRentalTypes, getReservationSources, getReservationReasons, getApartmentTypes, deleteReservation } from '../services/reservations';
 import RentalContract from './RentalContract';
 import { Reservation } from '../types';
 
@@ -66,11 +66,11 @@ const ReportDailyBookings: React.FC = () => {
                 // Status and Rental Types return [["key", "Label"], ...]
                 // Sources and Reasons might be standard paginated or list
                 const [statusRes, rentRes, sourceRes, reasonRes, typesRes] = await Promise.all([
-                    apiClient<[string, string][]>('/ar/reservation/api/reservations/status/'),
-                    apiClient<[string, string][]>('/ar/reservation/api/reservations/rental-types/'),
-                    apiClient<{ results: ReportFilterOption[] } | ReportFilterOption[]>('/ar/reservation/api/reservation-sources/?length=50'),
-                    apiClient<{ results: ReportFilterOption[] } | ReportFilterOption[]>('/ar/reservation/api/reservation-reasons/?length=50'),
-                    apiClient<{ data: any[] } | any[]>('/ar/apartment/api/apartments-types/'),
+                    getReservationStatuses(),
+                    getRentalTypes(),
+                    getReservationSources({ length: 50 }),
+                    getReservationReasons({ length: 50 }),
+                    getApartmentTypes(),
                 ]);
 
                 // Parse Status
@@ -241,7 +241,7 @@ const ReportDailyBookings: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (itemToDelete) {
             try {
-                await apiClient(`/ar/reservation/api/reservations/${itemToDelete.id}/`, { method: 'DELETE' });
+                await deleteReservation(itemToDelete.id);
                 fetchData();
                 setItemToDelete(null);
             } catch (err) {
@@ -261,7 +261,7 @@ const ReportDailyBookings: React.FC = () => {
             // Don't auto-print immediately, let user see the preview
         } catch (err) {
             console.error("Failed to fetch reservation for printing", err);
-            alert(t('bookings.printError') || "Failed to print reservation");
+            alert(t('bookings.printError' as any) || "Failed to print reservation");
         }
     };
 
@@ -311,11 +311,11 @@ const ReportDailyBookings: React.FC = () => {
                         </div>
                         <div>
                             <label className={labelClass}>{t('bookings.th_status')}</label>
-                            <SearchableSelect id="status" options={statusOptions.map(o => o.name)} value={statusOptions.find(o => o.id === filters.status)?.name || ''} onChange={val => { const f = statusOptions.find(o => o.name === val); if (f) setFilters({ ...filters, status: f.id }) }} />
+                            <SearchableSelect id="status" options={statusOptions.map(o => o.name)} value={statusOptions.find(o => String(o.id) === String(filters.status))?.name || ''} onChange={val => { const f = statusOptions.find(o => o.name === val); if (f) setFilters({ ...filters, status: String(f.id) }) }} />
                         </div>
                         <div>
                             <label className={labelClass}>{t('units.roomType')}</label>
-                            <SearchableSelect id="unitType" options={unitTypes.map(o => o.name)} value={unitTypes.find(o => o.id === filters.unitType)?.name || ''} onChange={val => { const f = unitTypes.find(o => o.name === val); if (f) setFilters({ ...filters, unitType: f.id }) }} />
+                            <SearchableSelect id="unitType" options={unitTypes.map(o => o.name)} value={unitTypes.find(o => String(o.id) === String(filters.unitType))?.name || ''} onChange={val => { const f = unitTypes.find(o => o.name === val); if (f) setFilters({ ...filters, unitType: String(f.id) }) }} />
                         </div>
                     </div>
 
@@ -482,7 +482,7 @@ const ReportDailyBookings: React.FC = () => {
                                     onClick={() => setPrintingReservation(null)}
                                     className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
                                 >
-                                    {t('common.close')}
+                                    {t('common.close' as any)}
                                 </button>
                             </div>
                         </div>

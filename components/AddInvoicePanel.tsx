@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
-import { apiClient } from '../apiClient';
+import { createInvoice } from '../services/invoices';
 
 interface AddInvoicePanelProps {
     isOpen: boolean;
@@ -39,17 +39,11 @@ const AddInvoicePanel: React.FC<AddInvoicePanelProps> = ({ isOpen, onClose, onSa
             payload.append('discount_value', '0.0'); // Script sends 0.0
             payload.append('note', bookingData.notes || '');
 
-            await apiClient('/ar/invoice/api/invoices/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-                },
-                body: payload
-            });
+            await createInvoice(payload);
 
             onSave();
             onClose();
-            alert(t('bookings.alerts.invoiceCreated') || 'Invoice created successfully');
+            alert(t('bookings.alerts.invoiceCreated' as any) || 'Invoice created successfully');
 
         } catch (error) {
             console.error("Error creating invoice", error);
@@ -64,12 +58,12 @@ const AddInvoicePanel: React.FC<AddInvoicePanelProps> = ({ isOpen, onClose, onSa
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
             <div className={`relative bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md p-6 transform transition-all duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('bookings.createInvoice') || 'Create Invoice'}</h3>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('bookings.createInvoice' as any) || 'Create Invoice'}</h3>
                     <button onClick={onClose} className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"><XMarkIcon className="w-6 h-6" /></button>
                 </div>
 
                 <p className="text-slate-600 dark:text-slate-300 mb-6">
-                    {t('bookings.confirmCreateInvoice') || 'Are you sure you want to generate an invoice for this reservation?'}
+                    {t('bookings.confirmCreateInvoice' as any) || 'Are you sure you want to generate an invoice for this reservation?'}
                 </p>
 
                 <div className="flex justify-end gap-3">
@@ -80,7 +74,7 @@ const AddInvoicePanel: React.FC<AddInvoicePanelProps> = ({ isOpen, onClose, onSa
                         {loading ? 'Creating...' : (
                             <>
                                 <CheckCircleIcon className="w-5 h-5" />
-                                <span>{t('bookings.create') || 'Create'}</span>
+                                <span>{t('bookings.create' as any) || 'Create'}</span>
                             </>
                         )}
                     </button>

@@ -65,7 +65,9 @@ export const mapUnitToFormData = (unit: Unit): FormData => {
     if (unit.cleaningStatus === 'not-clean') {
         cleanlinessApiValue = 'dirty';
     }
-    if (unit.status === 'out-of-service') {
+    // "Out of Service" is handled by 'maintenance' cleanliness in this API.
+    // If unit is explicitly marked "Not Available" in UI switch, or has "out-of-service" status.
+    if (!unit.isAvailable || unit.status === 'out-of-service') {
         cleanlinessApiValue = 'maintenance';
     }
 

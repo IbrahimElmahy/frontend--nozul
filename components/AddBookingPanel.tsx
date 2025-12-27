@@ -3,7 +3,6 @@ import { LanguageContext } from '../contexts/LanguageContext';
 import { ErrorContext } from '../contexts/ErrorContext';
 import { Booking, RentType, Unit, Guest, GuestTypeAPI, IdTypeAPI, CountryAPI, Receipt, Order, Companion, ReservationRelationship, ReservationSource, ReservationReason } from '../types';
 import {
-    listApartments,
     getRentalTypes,
     getReservationSources,
     getReservationReasons,
@@ -14,6 +13,16 @@ import {
     getGuestIdTypes,
     calculateRental,
 } from '../services/reservations';
+import {
+    listUnits,
+    listUnitTypes,
+    listCoolingTypes,
+    listFeatures,
+    createUnit,
+    updateUnit
+} from '../services/units';
+import { createGuest, updateGuest, getGuestTypes, getIdTypes, listGuests } from '../services/guests';
+import { createOrder } from '../services/orders';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import DatePicker from './DatePicker';
@@ -29,7 +38,7 @@ import AddReceiptPanel from './AddReceiptPanel';
 import ReceiptDetailsModal from './ReceiptDetailsModal';
 import AddOrderPanel from './AddOrderPanel';
 import OrderDetailsModal from './OrderDetailsModal';
-import { apiClient } from '../apiClient';
+
 import { mapApiUnitToUnit, mapUnitToFormData } from './data/apiMappers';
 import AddCompanionModal from './AddCompanionModal';
 import TrashIcon from './icons-redesign/TrashIcon';
@@ -69,7 +78,7 @@ const newUnitTemplate: Unit = {
     unitNumber: '',
     unitName: '',
     status: 'free',
-    unitType: '8e27565c-dcd0-47d0-a119-63f97d47fe3f',
+    unitType: '',
     cleaningStatus: 'clean',
     isAvailable: true,
     floor: 1,
@@ -136,11 +145,11 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
     const fetchData = useCallback(async () => {
         try {
             // Fetch Units
-            const unitsRes = await apiClient<{ data: any[] }>('/ar/apartment/api/apartments/?length=1000'); // Fetch all for dropdown
+            const unitsRes = await listUnits(new URLSearchParams({ length: '1000' }));
             setUnits(unitsRes.data.map(mapApiUnitToUnit));
 
             // Fetch Guests
-            const guestsRes = await apiClient<{ data: Guest[] }>('/ar/guest/api/guests/?length=1000');
+            const guestsRes = await listGuests(new URLSearchParams({ length: '1000' }));
             setGuests(guestsRes.data);
 
             // Fetch Options if not already loaded (could be optimized)
@@ -160,12 +169,12 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                     guestCategoriesRes,
                     guestIdTypesRes
                 ] = await Promise.all([
-                    apiClient<{ data: any[] }>('/ar/apartment/api/apartments-types/'),
-                    apiClient<[string, string][]>('/ar/apartment/api/apartments/cooling-types/'),
-                    apiClient<{ data: any[] }>('/ar/feature/api/features/?length=50'),
-                    apiClient<{ data: GuestTypeAPI[] }>('/ar/guest/api/guests-types/'),
-                    apiClient<{ data: IdTypeAPI[] }>('/ar/guest/api/ids/'),
-                    apiClient<CountryAPI>('/ar/country/api/countries/'),
+                    listUnitTypes(),
+                    listCoolingTypes(),
+                    listFeatures(),
+                    getGuestTypes(),
+                    getIdTypes(),
+                    getCountries(),
                     getRentalTypes(),
                     getReservationSources({ length: 100 }), // increased limit for dropdowns
                     getReservationReasons({ length: 100 }),
@@ -174,9 +183,9 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                     getGuestCategories(),
                     getGuestIdTypes()
                 ]);
-                setUnitTypeOptions(typesRes.data.map(t => ({ id: t.id, name: t.name })));
+                setUnitTypeOptions(typesRes);
                 setCoolingTypeOptions(coolingRes);
-                setAllApiFeatures(featuresRes.data);
+                setAllApiFeatures(featuresRes);
                 setGuestTypes(gTypesRes.data);
                 setIdTypes(idTypesRes.data);
                 setCountries(countriesRes);
@@ -251,11 +260,11 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
         try {
             let savedUnit: Unit;
             if (isAddingUnit) {
-                const newApiUnit = await apiClient('/ar/apartment/api/apartments/', { method: 'POST', body: unitFormData });
+                const newApiUnit = await createUnit(updatedUnit);
                 savedUnit = mapApiUnitToUnit(newApiUnit);
                 setUnits(prev => [savedUnit, ...prev]);
             } else {
-                const updatedApiUnit = await apiClient(`/ar/apartment/api/apartments/${updatedUnit.id}/`, { method: 'PUT', body: unitFormData });
+                const updatedApiUnit = await updateUnit(updatedUnit);
                 savedUnit = mapApiUnitToUnit(updatedApiUnit);
                 setUnits(prev => prev.map(u => u.id === savedUnit.id ? savedUnit : u));
             }
@@ -311,25 +320,13 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
     };
 
     const handleSaveGuest = async (guestFormData: FormData) => {
-        const isEditing = !!editingGuest;
-        const endpoint = isEditing ? `/ar/guest/api/guests/${editingGuest.id}/` : '/ar/guest/api/guests/';
-        const method = isEditing ? 'PUT' : 'POST';
-
         try {
-            const res = await apiClient<{ data: Guest }>(endpoint, { method, body: guestFormData });
-            // API might return the guest object directly or wrapped in data
-            // Adjust based on actual API response structure if needed.
-            // Assuming standard response structure based on other calls.
-            // Wait, `apiClient` returns parsed JSON. If it returns {data: ...}, we use that.
-            // If it returns the object directly (some create endpoints might), we check.
-
-            // Let's assume it follows the pattern.
-            // We need to refresh the guest list.
-            const newGuest = (res as any).data || res; // Fallback
-
-            if (isEditing) {
+            let newGuest: Guest;
+            if (editingGuest) {
+                newGuest = await updateGuest(editingGuest.id, guestFormData);
                 setGuests(prev => prev.map(g => g.id === newGuest.id ? newGuest : g));
             } else {
+                newGuest = await createGuest(guestFormData);
                 setGuests(prev => [newGuest, ...prev]);
             }
 
@@ -406,7 +403,57 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
 
     const handleSaveClick = async () => {
         if (isSaving) return;
-        await onSave({ ...formData, companionsData: companionsList });
+
+        // Ensure we send IDs for foreign keys, resolving from Names if necessary
+        // This is crucial because initialData might be populated with Names (from Table display),
+        // but the API expects UUIDs.
+        let finalFormData = { ...formData };
+
+        // Resolve Guest ID
+        const currentGuestVal = formData.guestName;
+        // Try finding by Name or ID
+        const matchedGuest = guests.find(g => g.id.toString() === currentGuestVal || g.name === currentGuestVal);
+        if (matchedGuest) {
+            finalFormData.guestName = matchedGuest.id;
+        }
+
+        // Resolve Unit ID
+        const currentUnitVal = formData.unitName;
+        const matchedUnit = units.find(u => u.id.toString() === currentUnitVal || u.unitName === currentUnitVal || u.unitNumber === currentUnitVal);
+        if (matchedUnit) {
+            finalFormData.unitName = matchedUnit.id;
+        }
+
+        await onSave({ ...finalFormData, companionsData: companionsList });
+    };
+
+    const handleSaveOrder = async (orderData: any) => {
+        try {
+            // orderData coming from AddOrderPanel has bookingNumber set to reservationId
+            if (!orderData.bookingNumber) {
+                alert(t('bookings.alerts.saveBookingFirst'));
+                return;
+            }
+
+            const payload = {
+                reservation: orderData.bookingNumber,
+                note: orderData.notes,
+                order_items: orderData.items?.map((item: any) => ({
+                    service: item.service,
+                    category: item.category,
+                    quantity: item.quantity
+                })) || []
+            };
+
+            await createOrder(payload);
+            setIsOrderPanelOpen(false);
+            // Optional: Show success message or refresh data if needed
+            // alert(t('orders.orderSavedSuccess')); 
+        } catch (err) {
+            console.error("Error saving order", err);
+            // ErrorContext should handle this if configured, or alert
+            alert(typeof err === 'string' ? err : 'Failed to save order');
+        }
     };
 
     useEffect(() => {
@@ -441,14 +488,14 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
 
                 setFormData(prev => ({
                     ...prev,
-                    checkOutDate: response.check_out_date,
-                    rent: Number(response.rent) || prev.rent,
-                    discount: response.discount ?? prev.discount,
-                    subtotal: response.subtotal ?? prev.subtotal,
-                    tax: response.tax ?? prev.tax,
-                    total: response.total ?? prev.total,
-                    balance: Number(response.balance) || prev.balance,
-                    value: response.amount ?? prev.value,
+                    checkOutDate: response?.check_out_date,
+                    rent: Number(response?.rent) || prev.rent,
+                    discount: response?.discount ?? prev.discount,
+                    subtotal: response?.subtotal ?? prev.subtotal,
+                    tax: response?.tax ?? prev.tax,
+                    total: response?.total ?? prev.total,
+                    balance: Number(response?.balance) || prev.balance,
+                    value: response?.amount ?? prev.value,
                 }));
             } catch (err) {
                 if (!controller.signal.aborted) {
@@ -759,7 +806,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                 isOpen={isReceiptPanelOpen}
                 onClose={() => setIsReceiptPanelOpen(false)}
                 onSave={() => { setIsReceiptPanelOpen(false); /* Refresh logic if needed */ }}
-                initialData={{ ...formData, bookingNumber: formData.bookingNumber } as any} // Pass basic data
+                initialData={{ ...formData, bookingNumber: 'bookingNumber' in formData ? formData.bookingNumber : '' } as any} // Pass basic data
                 isEditing={false}
                 voucherType="receipt"
                 user={null} // Pass user if available
@@ -769,8 +816,20 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                 <AddOrderPanel
                     isOpen={isOrderPanelOpen}
                     onClose={() => setIsOrderPanelOpen(false)}
-                    onSave={() => setIsOrderPanelOpen(false)} // Placeholder
-                    bookingId={formData.id as string}
+                    onSave={handleSaveOrder}
+                    initialData={{
+                        apartmentName: '',
+                        bookingNumber: 'bookingNumber' in formData ? formData.bookingNumber : '',
+                        orderNumber: '',
+                        items: [],
+                        notes: '',
+                        value: 0,
+                        subtotal: 0,
+                        tax: 0,
+                        total: 0,
+                        discount: 0
+                    }}
+                    isEditing={false}
                 />
             )}
 

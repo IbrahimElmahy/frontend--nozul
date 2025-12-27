@@ -9,9 +9,10 @@ interface SearchableSelectProps {
     onChange: (value: string) => void;
     placeholder?: string;
     id: string;
+    disabled?: boolean;
 }
 
-const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onChange, placeholder, id }) => {
+const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onChange, placeholder, id, disabled }) => {
     const { language, t } = useContext(LanguageContext);
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +42,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onC
     );
 
     const baseClass = `w-full px-4 py-2 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200`;
+    const disabledClass = `bg-gray-100 dark:bg-slate-800 cursor-not-allowed opacity-75`;
     const textAlignClass = language === 'ar' ? 'text-right' : 'text-left';
 
     return (
@@ -48,8 +50,9 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({ options, value, onC
             <button
                 type="button"
                 id={id}
-                onClick={() => setIsOpen(!isOpen)}
-                className={`${baseClass} ${textAlignClass} flex justify-between items-center`}
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+                disabled={disabled}
+                className={`${baseClass} ${disabled ? disabledClass : ''} ${textAlignClass} flex justify-between items-center`}
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
             >

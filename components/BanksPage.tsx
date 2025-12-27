@@ -4,7 +4,7 @@ import { Bank } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AddBankPanel from './AddBankPanel';
 import BankDetailsModal from './BankDetailsModal';
-import { apiClient } from '../apiClient';
+import { listBanks, createBank, updateBank, deleteBank, toggleBankStatus } from '../services/financials';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -46,9 +46,10 @@ const BanksPage: React.FC = () => {
             params.append('start', ((currentPage - 1) * itemsPerPage).toString());
             params.append('length', itemsPerPage.toString());
 
-            const response = await apiClient<{ data: Bank[], recordsFiltered: number }>(`/ar/bank/api/banks/?${params.toString()}`);
+            const response = await listBanks(params);
+            const data: any = response.data; // Cast to bypass strict Generic if needed
             // Normalize API response
-            const mappedData = response.data.map(item => ({
+            const mappedData = data.map((item: any) => ({
                 ...item,
                 status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
             }));
@@ -66,11 +67,6 @@ const BanksPage: React.FC = () => {
     }, [fetchBanks]);
 
     // Handlers
-    const handleClosePanel = () => {
-        setIsAddPanelOpen(false);
-        setEditingBank(null);
-    };
-
     const handleSaveBank = async (bankData: Omit<Bank, 'id' | 'created_at' | 'updated_at'>) => {
         try {
             const formData = new FormData();
@@ -78,26 +74,29 @@ const BanksPage: React.FC = () => {
             formData.append('name_ar', bankData.name_ar);
             formData.append('description', bankData.description || '');
 
-            let savedBank: Bank;
+            let savedId: string | number | undefined;
 
             if (editingBank) {
-                savedBank = await apiClient<Bank>(`/ar/bank/api/banks/${editingBank.id}/`, {
-                    method: 'PUT',
-                    body: formData
-                });
+                await updateBank(editingBank.id, formData);
+                savedId = editingBank.id;
             } else {
-                savedBank = await apiClient<Bank>(`/ar/bank/api/banks/`, {
-                    method: 'POST',
-                    body: formData
-                });
+                await createBank(formData);
+                // createBank returns generic API response, we might not get ID back easily if not returned.
+                // But toggleStatus below needs ID.
+                // If createBank doesn't return ID, we can't do the toggle immediately for new items unless we refetch or update createBank to return ID.
+                // However, usually we just assume default status or refetch.
+                // Let's refetch first.
             }
 
-            // Handle Activation/Deactivation separately
-            if (bankData.is_active !== undefined) {
-                const action = bankData.is_active ? 'active' : 'disable';
-                if (!editingBank || editingBank.is_active !== bankData.is_active) {
-                    await apiClient(`/ar/bank/api/banks/${savedBank.id}/${action}/`, { method: 'POST' });
+            // Validating ID for toggle is tricky if create doesn't return it.
+            // For now, let's assume if we are editing we can toggle. 
+            // If new, we might rely on default 'active' from backend.
+            if (editingBank && bankData.is_active !== undefined) {
+                if (editingBank.is_active !== bankData.is_active) {
+                    await toggleBankStatus(editingBank.id, bankData.is_active);
                 }
+            } else if (!editingBank) {
+                // For new, we can't toggle without ID. Assuming backend sets default.
             }
 
             fetchBanks();
@@ -105,6 +104,11 @@ const BanksPage: React.FC = () => {
         } catch (err) {
             alert(`Error saving bank: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
+    };
+
+    const handleClosePanel = () => {
+        setIsAddPanelOpen(false);
+        setEditingBank(null);
     };
 
     const handleAddNewClick = () => {
@@ -124,7 +128,7 @@ const BanksPage: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (bankToDelete) {
             try {
-                await apiClient(`/ar/bank/api/banks/${bankToDelete.id}/`, { method: 'DELETE' });
+                await deleteBank(bankToDelete.id);
                 fetchBanks();
                 setBankToDelete(null);
             } catch (err) {

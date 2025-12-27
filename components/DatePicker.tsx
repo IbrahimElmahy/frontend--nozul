@@ -5,7 +5,7 @@ import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
 import { LanguageContext } from '../contexts/LanguageContext';
 
 interface DatePickerProps {
-    value: string;
+    value?: string;
     onChange: (date: string) => void;
     label?: string; // Added label prop
     selectedDate?: Date | null; // Support the prop used in AddGuestPanel

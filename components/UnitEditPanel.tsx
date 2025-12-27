@@ -1,17 +1,12 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Unit, CleaningStatus, CoolingType } from '../types';
+import { FeatureAPI } from '../services/units';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import Switch from './Switch';
 import Checkbox from './Checkbox';
 
-interface ApiFeature {
-    id: string;
-    name_en: string;
-    name_ar: string;
-    type: 'common' | 'special';
-}
 
 interface UnitEditPanelProps {
     unit: Unit | null;
@@ -21,7 +16,7 @@ interface UnitEditPanelProps {
     isAdding?: boolean;
     unitTypeOptions: { id: string; name: string }[];
     coolingTypeOptions: [string, string][];
-    allApiFeatures: ApiFeature[];
+    allApiFeatures: FeatureAPI[];
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (

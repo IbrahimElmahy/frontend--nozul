@@ -1,24 +1,21 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Unit, CleaningStatus, CoolingType } from '../types';
+import { FeatureAPI } from '../services/units';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import Switch from './Switch';
 import Checkbox from './Checkbox';
 
-interface ApiFeature {
-    id: string;
-    name_en: string;
-    name_ar: string;
-    type: 'common' | 'special';
-}
 
 interface AddGroupPanelProps {
     template: Unit; // The base template for new rooms
     isOpen: boolean;
     onClose: () => void;
     onSave: (newUnits: Unit[]) => void;
-    allApiFeatures: ApiFeature[];
+    allApiFeatures: FeatureAPI[];
+    unitTypeOptions: { id: string; name: string }[];
+    coolingTypeOptions: [string, string][];
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -28,7 +25,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
     </div>
 );
 
-const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose, onSave, allApiFeatures }) => {
+const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose, onSave, allApiFeatures, unitTypeOptions, coolingTypeOptions }) => {
     const { t, language } = useContext(LanguageContext);
     const [fromNumber, setFromNumber] = useState(101);
     const [toNumber, setToNumber] = useState(110);
@@ -38,6 +35,13 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
     const commonFeatures = useMemo(() => allApiFeatures.filter(f => f.type === 'common'), [allApiFeatures]);
     const specialFeatures = useMemo(() => allApiFeatures.filter(f => f.type === 'special'), [allApiFeatures]);
 
+
+    useEffect(() => {
+        // Ensure template unit type is valid or default to first option
+        if (isOpen && unitTypeOptions.length > 0 && !unitTypeOptions.find(opt => opt.id === templateUnit.unitType)) {
+            setTemplateUnit(prev => ({ ...prev, unitType: unitTypeOptions[0].id }));
+        }
+    }, [isOpen, unitTypeOptions]);
 
     useEffect(() => {
         // Reset form when panel is opened with a new template
@@ -56,17 +60,17 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
         const { name, value } = e.target;
         setTemplateUnit({ ...templateUnit, [name]: parseInt(value, 10) || 0 });
     };
-    
+
     const handleFeatureChange = (featureId: string, checked: boolean) => {
         const currentFeatures = templateUnit.features || [];
         const newFeatures = checked
-           ? [...currentFeatures, featureId]
-           : currentFeatures.filter(id => id !== featureId);
+            ? [...currentFeatures, featureId]
+            : currentFeatures.filter(id => id !== featureId);
         setTemplateUnit({
-           ...templateUnit,
-           features: newFeatures,
+            ...templateUnit,
+            features: newFeatures,
         });
-   }
+    }
 
     const handleGenerateRooms = () => {
         const from = fromNumber;
@@ -90,7 +94,7 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
         }
         onSave(newUnits);
     };
-    
+
     const labelAlignClass = `block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ${language === 'ar' ? 'text-right' : 'text-left'}`;
     const inputBaseClass = `w-full px-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200`;
 
@@ -141,15 +145,13 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
                                             <div>
                                                 <label htmlFor="unitType" className={labelAlignClass}>{t('units.roomType')}</label>
                                                 <select id="unitType" name="unitType" value={templateUnit.unitType} onChange={handleInputChange} className={inputBaseClass}>
-                                                    <option value="غرفة مفردة">{t('units.singleRoom')}</option>
-                                                    <option value="غرفة مزدوجة">{t('units.doubleRoom')}</option>
-                                                    <option value="جناح">{t('units.suite')}</option>
+                                                    {unitTypeOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
                                                 </select>
                                             </div>
                                             <div>
                                                 {/* FIX: Changed translation key 'units.cleaning' to the correct key 'units.th_cleaning' to resolve the type error. */}
                                                 <label htmlFor="cleaningStatus" className={labelAlignClass}>{t('units.th_cleaning')}</label>
-                                                <select id="cleaningStatus" name="cleaningStatus" value={templateUnit.cleaningStatus} onChange={(e) => setTemplateUnit({...templateUnit, cleaningStatus: e.target.value as CleaningStatus})} className={inputBaseClass}>
+                                                <select id="cleaningStatus" name="cleaningStatus" value={templateUnit.cleaningStatus} onChange={(e) => setTemplateUnit({ ...templateUnit, cleaningStatus: e.target.value as CleaningStatus })} className={inputBaseClass}>
                                                     <option value="clean">{t('units.clean')}</option>
                                                     <option value="not-clean">{t('units.notClean')}</option>
                                                 </select>
@@ -157,11 +159,11 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
                                         </div>
                                         <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                                             <span className="font-semibold text-slate-800 dark:text-slate-200">{t('units.available')}</span>
-                                            <Switch id="isAvailableTemplate" checked={templateUnit.isAvailable} onChange={(c) => setTemplateUnit({...templateUnit, isAvailable: c})} />
+                                            <Switch id="isAvailableTemplate" checked={templateUnit.isAvailable} onChange={(c) => setTemplateUnit({ ...templateUnit, isAvailable: c })} />
                                         </div>
                                     </div>
                                 </Section>
-                            
+
                                 <Section title={t('units.unitDetails')}>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                         {(['floor', 'rooms', 'bathrooms', 'beds', 'doubleBeds', 'wardrobes', 'tvs'] as const).map(key => (
@@ -172,11 +174,9 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
                                         ))}
                                         <div>
                                             <label htmlFor="template-coolingType" className={labelAlignClass}>{t('units.coolingType')}</label>
-                                            <select id="template-coolingType" name="coolingType" value={templateUnit.coolingType} onChange={(e) => setTemplateUnit({...templateUnit, coolingType: e.target.value as CoolingType})} className={inputBaseClass}>
+                                            <select id="template-coolingType" name="coolingType" value={templateUnit.coolingType} onChange={(e) => setTemplateUnit({ ...templateUnit, coolingType: e.target.value as CoolingType })} className={inputBaseClass}>
                                                 <option value="">{t('units.selectCoolingType')}</option>
-                                                <option value="central">{t('units.central')}</option>
-                                                <option value="split">{t('units.split')}</option>
-                                                <option value="window">{t('units.window')}</option>
+                                                {coolingTypeOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                                             </select>
                                         </div>
                                     </div>
@@ -191,7 +191,7 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
                                         ))}
                                     </div>
                                 </Section>
-                                
+
                                 <Section title={t('units.specialFeatures')}>
                                     <div className="grid grid-cols-3 gap-x-4 gap-y-3">
                                         {specialFeatures.map(feature => (
@@ -199,7 +199,7 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
                                         ))}
                                     </div>
                                 </Section>
-                                
+
                                 <Section title={t('units.notes')}>
                                     <textarea id="template-notes" name="notes" rows={4} placeholder={t('units.notesPlaceholder')} value={templateUnit.notes} onChange={handleInputChange} className={inputBaseClass}></textarea>
                                 </Section>
@@ -209,7 +209,7 @@ const AddGroupPanel: React.FC<AddGroupPanelProps> = ({ template, isOpen, onClose
                 </div>
 
                 <footer className="flex items-center justify-end p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-800 rounded-b-lg">
-                     <button onClick={onClose} className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200">
+                    <button onClick={onClose} className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200">
                         {t('units.cancel')}
                     </button>
                     <button onClick={handleGenerateRooms} className="bg-green-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center gap-2">

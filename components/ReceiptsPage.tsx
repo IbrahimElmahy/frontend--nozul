@@ -18,7 +18,8 @@ import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
-import { apiClient } from '../apiClient';
+
+import { listTransactions, listInvoices, deleteTransaction, deleteInvoice } from '../services/financials';
 
 const newReceiptTemplate: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt'> = {
     receiptNumber: '',
@@ -82,35 +83,20 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 params.append('type', voucherType);
             }
 
-            const response = await apiClient<{ data: any[], recordsFiltered: number }>(`${endpoint}?${params.toString()}`);
-
             if (voucherType === 'invoice') {
-                setInvoices(response.data as Invoice[]);
+                const { invoices: data, total } = await listInvoices(params);
+                setInvoices(data);
+                setTotalRecords(total);
             } else {
-                // Map transaction response to Receipt type
-                const mappedData: Receipt[] = response.data.map((item: any) => ({
-                    id: item.id,
-                    receiptNumber: item.number || item.id, // Use number if available
-                    currency: item.currency?.name_ar || 'SAR', // Simplification
-                    value: parseFloat(item.amount),
-                    date: item.date,
-                    time: item.time,
-                    paymentMethod: item.payment_method?.name_ar || '',
-                    paymentType: item.type,
-                    transactionNumber: item.id, // Using ID as txn number for now
-                    bookingNumber: '', // Not always available directly on transaction object
-                    createdAt: item.created_at,
-                    updatedAt: item.updated_at,
-                    description: item.description
-                }));
+                const { transactions: data, total } = await listTransactions(params);
 
                 if (voucherType === 'payment') {
-                    setPaymentVouchers(mappedData);
+                    setPaymentVouchers(data);
                 } else {
-                    setReceipts(mappedData);
+                    setReceipts(data);
                 }
+                setTotalRecords(total);
             }
-            setTotalRecords(response.recordsFiltered);
 
         } catch (err) {
             console.error("Error fetching data:", err);
@@ -142,7 +128,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
     const handleConfirmDelete = async () => {
         if (voucherToDelete) {
             try {
-                await apiClient(`/ar/transaction/api/transactions/${voucherToDelete.id}/`, { method: 'DELETE' });
+                await deleteTransaction(voucherToDelete.id);
                 fetchData();
                 setVoucherToDelete(null);
             } catch (err) {
@@ -150,7 +136,6 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
             }
         }
     };
-
     const handleClosePanel = () => {
         setIsAddPanelOpen(false);
         setEditingVoucher(null);
@@ -177,7 +162,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
     const handleConfirmDeleteInvoice = async () => {
         if (invoiceToDelete) {
             try {
-                await apiClient(`/ar/invoice/api/invoices/${invoiceToDelete.id}/`, { method: 'DELETE' });
+                await deleteInvoice(invoiceToDelete.id);
                 fetchData();
                 setInvoiceToDelete(null);
             } catch (err) {

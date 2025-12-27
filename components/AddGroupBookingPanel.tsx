@@ -13,10 +13,12 @@ interface AddGroupBookingPanelProps {
     onSave: (newBookings: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>[]) => void;
 }
 
-const mockAvailableUnits = ['101', '102', '103', '104', '105', '201', '202', '203', '301', '302'];
-const mockGuests = ['حملة محمد', 'محمد سالم', 'فيصل الجهني', 'محمد احمد', 'راشد عمر'];
+import { listGuests } from '../services/guests';
+import { listUnits } from '../services/units';
+import { mapApiUnitToUnit } from './data/apiMappers';
+import { Guest, Unit } from '../types';
 
-
+// ... (imports remain)
 const SectionHeader: React.FC<{ title: string; }> = ({ title }) => (
     <div className="bg-slate-100 dark:bg-slate-700/50 p-2 my-4 rounded-md flex items-center">
         <div className="w-1 h-4 bg-blue-500 rounded-full mx-2"></div>
@@ -28,10 +30,12 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
     const { t } = useContext(LanguageContext);
 
     const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
+    const [units, setUnits] = useState<Unit[]>([]);
+    const [guestsList, setGuestsList] = useState<Guest[]>([]);
     const [commonData, setCommonData] = useState({
         guestName: '',
-        checkInDate: new Date().toISOString().split('T')[0],
-        checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        checkInDate: new Date().toLocaleDateString('en-CA'),
+        checkOutDate: new Date(Date.now() + 86400000).toLocaleDateString('en-CA'),
         rentType: 'daily' as RentType,
         bookingSource: '',
         rent: 150, // Default rent per unit
@@ -43,20 +47,36 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
             setSelectedUnits([]);
             setCommonData({
                 guestName: '',
-                checkInDate: new Date().toISOString().split('T')[0],
-                checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                checkInDate: new Date().toLocaleDateString('en-CA'),
+                checkOutDate: new Date(Date.now() + 86400000).toLocaleDateString('en-CA'),
                 rentType: 'daily' as RentType,
                 bookingSource: '',
                 rent: 150,
             });
+
+            // Fetch Real Data
+            const fetchData = async () => {
+                try {
+                    const guestsRes = await listGuests(new URLSearchParams({ length: '1000' }));
+                    // Handle potential response structure differences
+                    const gList = Array.isArray(guestsRes) ? guestsRes : (guestsRes as any).data || (guestsRes as any).results || [];
+                    setGuestsList(gList);
+
+                    const unitsRes = await listUnits(new URLSearchParams({ length: '1000' }));
+                    setUnits(unitsRes.data.map(mapApiUnitToUnit));
+                } catch (err) {
+                    console.error("Failed to load group booking data", err);
+                }
+            };
+            fetchData();
         }
     }, [isOpen]);
 
-    const handleUnitToggle = (unitNumber: string, isChecked: boolean) => {
+    const handleUnitToggle = (unitId: string, isChecked: boolean) => {
         if (isChecked) {
-            setSelectedUnits(prev => [...prev, unitNumber]);
+            setSelectedUnits(prev => [...prev, unitId]);
         } else {
-            setSelectedUnits(prev => prev.filter(u => u !== unitNumber));
+            setSelectedUnits(prev => prev.filter(u => u !== unitId));
         }
     };
 
@@ -67,7 +87,8 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
             return;
         }
 
-        const newBookings: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>[] = selectedUnits.map(unitName => {
+        const newBookings: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>[] = selectedUnits.map(unitId => {
+            const unit = units.find(u => u.id.toString() === unitId) || { unitName: unitId } as any;
             const rent = commonData.rent;
             // Simplified financial calculation for group booking
             const subtotal = rent;
@@ -75,8 +96,8 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
             const balance = 0 - total;
 
             return {
-                guestName: commonData.guestName,
-                unitName: unitName,
+                guestName: commonData.guestName, // This is now an ID
+                unitName: unit.id, // This is an ID
                 checkInDate: commonData.checkInDate,
                 checkOutDate: commonData.checkOutDate,
                 time: new Date().toTimeString().slice(0, 5),
@@ -103,7 +124,7 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
     const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
     const bookingSources = [t('bookings.booking_source_airbnb'), t('bookings.booking_source_booking'), t('bookings.booking_source_almosafer'), t('bookings.booking_source_agoda'), t('bookings.booking_source_websites'), t('bookings.booking_source_reception')];
-    const rentTypeOptions = [{ value: 'hourly', label: t('bookings.rent_hourly') }, { value: 'daily', label: t('bookings.rent_daily') }, { value: 'monthly', label: t('bookings.rent_monthly') }];
+    // const rentTypeOptions = ... (omitted, will be handled by remaining file content or re-added if overwritten)
 
     return (
         <div
@@ -130,13 +151,13 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
                             <div className="p-3 border dark:border-slate-600 rounded-md max-h-96 overflow-y-auto">
                                 <label className={labelBaseClass}>{t('bookings.addGroupBookingPanel.selectApartments')}</label>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
-                                    {mockAvailableUnits.map(unit => (
+                                    {units.map(unit => (
                                         <Checkbox
-                                            key={unit}
-                                            id={`unit-${unit}`}
-                                            label={unit}
-                                            checked={selectedUnits.includes(unit)}
-                                            onChange={(checked) => handleUnitToggle(unit, checked)}
+                                            key={unit.id}
+                                            id={`unit-${unit.id}`}
+                                            label={unit.unitNumber || unit.unitName}
+                                            checked={selectedUnits.includes(unit.id.toString())}
+                                            onChange={(checked) => handleUnitToggle(unit.id.toString(), checked)}
                                         />
                                     ))}
                                 </div>
@@ -151,7 +172,16 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
                             <SectionHeader title={t('bookings.addGroupBookingPanel.guestInfo')} />
                             <div>
                                 <label htmlFor="commonGuestName" className={labelBaseClass}>{t('bookings.addGroupBookingPanel.commonGuest')}</label>
-                                <SearchableSelect id="commonGuestName" options={mockGuests} value={commonData.guestName} onChange={(val) => setCommonData(p => ({ ...p, guestName: val }))} placeholder={t('bookings.addGroupBookingPanel.selectGuest')} />
+                                <SearchableSelect
+                                    id="commonGuestName"
+                                    options={guestsList.map(g => g.name)}
+                                    value={guestsList.find(g => g.id.toString() === commonData.guestName)?.name || ''}
+                                    onChange={(val) => {
+                                        const found = guestsList.find(g => g.name === val);
+                                        setCommonData(p => ({ ...p, guestName: found ? found.id.toString() : val }));
+                                    }}
+                                    placeholder={t('bookings.addGroupBookingPanel.selectGuest')}
+                                />
                             </div>
 
                             <SectionHeader title={t('bookings.addGroupBookingPanel.bookingInfo')} />

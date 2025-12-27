@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useCallback } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Currency } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AddCurrencyPanel from './AddCurrencyPanel';
 import CurrencyDetailsModal from './CurrencyDetailsModal';
+import { listCurrencies, createCurrency, updateCurrency, deleteCurrency, toggleCurrencyStatus } from '../services/financials';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -15,10 +16,6 @@ import TrashIcon from './icons-redesign/TrashIcon';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import PlusIcon from './icons-redesign/PlusIcon';
 import ArrowPathIcon from './icons-redesign/ArrowPathIcon';
-
-const mockCurrencies: Currency[] = [
-    { id: 1, name_en: 'Saudi Riyal', name_ar: 'ريال سعودي', type: 'local', exchange_rate: 1, status: 'active', symbol_en: 'SAR', fraction_en: 'Halala', symbol_ar: 'ر.س', fraction_ar: 'هللة', createdAt: '12:45:20 2024-03-31', updatedAt: '12:48:01 2024-03-31' },
-];
 
 const newCurrencyTemplate: Omit<Currency, 'id' | 'createdAt' | 'updatedAt'> = {
     name_en: '',
@@ -34,9 +31,10 @@ const newCurrencyTemplate: Omit<Currency, 'id' | 'createdAt' | 'updatedAt'> = {
 
 const CurrenciesPage: React.FC = () => {
     const { t } = useContext(LanguageContext);
-    const [currencies, setCurrencies] = useState<Currency[]>(mockCurrencies);
+    const [currencies, setCurrencies] = useState<Currency[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [loading, setLoading] = useState(true);
 
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
@@ -51,26 +49,87 @@ const CurrenciesPage: React.FC = () => {
 
     const totalPages = Math.ceil(currencies.length / itemsPerPage);
 
+    const fetchCurrencies = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await listCurrencies();
+            setCurrencies(data);
+        } catch (err) {
+            console.error("Error fetching currencies", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchCurrencies();
+    }, [fetchCurrencies]);
+
     // Handlers
     const handleClosePanel = () => {
         setIsAddPanelOpen(false);
         setEditingCurrency(null);
     };
 
-    const handleSaveCurrency = (currencyData: Omit<Currency, 'id' | 'createdAt' | 'updatedAt'>) => {
-        if (editingCurrency) {
-            const updatedCurrency = { ...editingCurrency, ...currencyData, updatedAt: new Date().toISOString() };
-            setCurrencies(currencies.map(c => c.id === updatedCurrency.id ? updatedCurrency : c));
-        } else {
-            const newCurrency: Currency = {
-                ...currencyData,
-                id: Math.max(...currencies.map(c => c.id), 0) + 1,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setCurrencies(prev => [newCurrency, ...prev]);
+    const handleSaveCurrency = async (currencyData: Omit<Currency, 'id' | 'createdAt' | 'updatedAt'>) => {
+        try {
+            const formData = new FormData();
+            formData.append('name_en', currencyData.name_en);
+            formData.append('name_ar', currencyData.name_ar);
+            formData.append('type', currencyData.type);
+            formData.append('exchange_rate', currencyData.exchange_rate.toString());
+            // Map status to boolean for toggle? Or backend expects 'active'/'inactive'?
+            // My add panel sends 'active'/'inactive' string in `status` field, but toggleService expects bool.
+            // But create/update endpoints likely expect fields.
+            // Let's look at AddCurrencyPanel again. It updates `status` (string).
+            // `formData` in AddCurrencyPanel has `status` string.
+
+            // Backend likely expects 'is_active' or similar?
+            // services/financials.ts toggle uses `is_active` boolean.
+            // ItemsPage used `is_active`.
+            // Let's assume backend for currency might want `is_active` too or just status.
+            // But wait, `Currency` type has `status`.
+            // Let's invoke createCurrency with formData as constructed by keys.
+
+            formData.append('symbol_en', currencyData.symbol_en);
+            formData.append('fraction_en', currencyData.fraction_en);
+            formData.append('symbol_ar', currencyData.symbol_ar);
+            formData.append('fraction_ar', currencyData.fraction_ar);
+
+            // Handle status/is_active
+            // If API expects is_active:
+            // formData.append('is_active', currencyData.status === 'active' ? 'true' : 'false');
+            // Or maybe it expects no status field in create/update and uses toggle?
+            // I'll append what I have.
+
+            let savedId: string | number | undefined;
+
+            if (editingCurrency) {
+                await updateCurrency(editingCurrency.id, formData);
+                savedId = editingCurrency.id;
+            } else {
+                const response = await createCurrency(formData);
+                // Try to get ID from response. It might be direct or in data property.
+                // apiClient normally returns parsed JSON.
+                savedId = (response as any).id || (response as any).data?.id;
+            }
+
+            // Handle status toggle if needed
+            if (currencyData.status) {
+                const isActive = currencyData.status === 'active';
+                if (savedId && (!editingCurrency || editingCurrency.status !== currencyData.status)) {
+                    await toggleCurrencyStatus(savedId, isActive);
+                } else if (!editingCurrency) {
+                    // For new, we might not have ID easily if createCurrency doesn't return it structured.
+                    // Assuming create handles initial status or defaulting to active.
+                }
+            }
+
+            fetchCurrencies();
+            handleClosePanel();
+        } catch (err) {
+            alert(`Error saving currency: ${err instanceof Error ? err.message : 'Unknown error'}`);
         }
-        handleClosePanel();
     };
 
     const handleAddNewClick = () => {
@@ -87,10 +146,15 @@ const CurrenciesPage: React.FC = () => {
         setCurrencyToDelete(currency);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (currencyToDelete) {
-            setCurrencies(currencies.filter(c => c.id !== currencyToDelete.id));
-            setCurrencyToDelete(null);
+            try {
+                await deleteCurrency(currencyToDelete.id);
+                fetchCurrencies();
+                setCurrencyToDelete(null);
+            } catch (err) {
+                alert(`Error deleting currency: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            }
         }
     };
 
@@ -128,7 +192,7 @@ const CurrenciesPage: React.FC = () => {
                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5" /></button>
                         <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5" /></button>
-                        <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5" /></button>
+                        <button onClick={fetchCurrencies} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
             </div>
@@ -189,7 +253,7 @@ const CurrenciesPage: React.FC = () => {
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} ${paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(currentPage * itemsPerPage, paginatedData.length)} ${t('usersPage.of')} ${currencies.length} ${t('usersPage.entries')}`}
+                        {`${t('usersPage.showing' as any)} ${currencies.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to' as any)} ${Math.min(currentPage * itemsPerPage, currencies.length)} ${t('usersPage.of' as any)} ${currencies.length} ${t('usersPage.entries' as any)}`}
                     </div>
                     {totalPages > 1 && (
                         <nav className="flex items-center gap-1" aria-label="Pagination">

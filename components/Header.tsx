@@ -13,7 +13,7 @@ import GlobeAltIcon from './icons-redesign/GlobeAltIcon';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { TranslationKey } from '../translations';
 import { User, Notification } from '../types';
-import { apiClient } from '../apiClient';
+import { listNotifications } from '../services/notifications';
 import { API_BASE_URL } from '../config/api';
 import IntegrationRequestModal from './IntegrationRequestModal';
 
@@ -125,8 +125,8 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
-                const response = await apiClient<{ data: Notification[] }>('/notification/api/notifications/');
-                setNotifications(response.data);
+                const data = await listNotifications();
+                setNotifications(data);
             } catch (error) {
                 console.error("Failed to fetch notifications", error);
             }

@@ -4,7 +4,7 @@ import { Expense } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AddExpensePanel from './AddExpensePanel';
 import ExpenseDetailsModal from './ExpenseDetailsModal';
-import { apiClient } from '../apiClient';
+import { listExpenses, createExpense, updateExpense, deleteExpense, toggleExpenseStatus } from '../services/financials';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -46,9 +46,10 @@ const ExpensesPage: React.FC = () => {
             params.append('start', ((currentPage - 1) * itemsPerPage).toString());
             params.append('length', itemsPerPage.toString());
 
-            const response = await apiClient<{ data: Expense[], recordsFiltered: number }>(`/ar/expense/api/expenses/?${params.toString()}`);
+            const response = await listExpenses(params);
+            const data: any = response.data;
             // Normalize API response
-            const mappedData = response.data.map(item => ({
+            const mappedData = data.map((item: any) => ({
                 ...item,
                 status: item.is_active ? 'active' : 'inactive' as 'active' | 'inactive'
             }));
@@ -79,25 +80,19 @@ const ExpensesPage: React.FC = () => {
             formData.append('name_ar', expenseData.name_ar);
             formData.append('description', expenseData.description || '');
 
-            let savedExpense: Expense;
+            let savedId: string | number | undefined;
 
             if (editingExpense) {
-                savedExpense = await apiClient<Expense>(`/ar/expense/api/expenses/${editingExpense.id}/`, {
-                    method: 'PUT',
-                    body: formData
-                });
+                await updateExpense(editingExpense.id, formData);
+                savedId = editingExpense.id;
             } else {
-                savedExpense = await apiClient<Expense>(`/ar/expense/api/expenses/`, {
-                    method: 'POST',
-                    body: formData
-                });
+                await createExpense(formData);
             }
 
             // Handle Activation/Deactivation separately
             if (expenseData.is_active !== undefined) {
-                const action = expenseData.is_active ? 'active' : 'disable';
-                if (!editingExpense || editingExpense.is_active !== expenseData.is_active) {
-                    await apiClient(`/ar/expense/api/expenses/${savedExpense.id}/${action}/`, { method: 'POST' });
+                if (editingExpense && editingExpense.is_active !== expenseData.is_active) {
+                    await toggleExpenseStatus(editingExpense.id, expenseData.is_active);
                 }
             }
 
@@ -125,7 +120,7 @@ const ExpensesPage: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (expenseToDelete) {
             try {
-                await apiClient(`/ar/expense/api/expenses/${expenseToDelete.id}/`, { method: 'DELETE' });
+                await deleteExpense(expenseToDelete.id);
                 fetchExpenses();
                 setExpenseToDelete(null);
             } catch (err) {

@@ -5,7 +5,7 @@ import { Item, Service, Category } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import AddItemPanel from './AddItemPanel';
 import ItemDetailsModal from './ItemDetailsModal';
-import { apiClient } from '../apiClient';
+import { listServices, createService, updateService, deleteService, toggleServiceStatus, listCategories, createCategory, updateCategory, deleteCategory, toggleCategoryStatus } from '../services/items';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -60,11 +60,12 @@ const ItemsPage: React.FC = () => {
             params.append('start', ((currentPage - 1) * itemsPerPage).toString());
             params.append('length', itemsPerPage.toString());
 
-            const endpoint = activeView === 'services'
-                ? '/ar/service/api/services/'
-                : '/ar/category/api/categories/';
-
-            const response = await apiClient<{ data: any[], recordsFiltered: number }>(`${endpoint}?${params.toString()}`);
+            let response;
+            if (activeView === 'services') {
+                response = await listServices(params);
+            } else {
+                response = await listCategories(params);
+            }
 
             // Normalize API response
             const mappedData = response.data.map(item => ({
@@ -116,26 +117,37 @@ const ItemsPage: React.FC = () => {
                 }
             }
 
-            let savedItem: Item;
-            const endpointBase = activeView === 'services' ? '/ar/service/api/services/' : '/ar/category/api/categories/';
+            let savedItem: Item | any; // create/updateService returns generic or Item.
 
             if (panelMode === 'edit' && editingItem) {
-                savedItem = await apiClient<Item>(`${endpointBase}${editingItem.id}/`, {
-                    method: 'PUT',
-                    body: formData
-                });
+                if (activeView === 'services') {
+                    savedItem = await updateService(editingItem.id, formData);
+                } else {
+                    savedItem = await updateCategory(editingItem.id, formData);
+                }
             } else {
-                savedItem = await apiClient<Item>(endpointBase, {
-                    method: 'POST',
-                    body: formData
-                });
+                if (activeView === 'services') {
+                    savedItem = await createService(formData);
+                } else {
+                    savedItem = await createCategory(formData);
+                }
             }
 
             // Handle Activation/Deactivation separately
             if (itemData.is_active !== undefined) {
-                const action = itemData.is_active ? 'active' : 'disable';
-                if (!editingItem || editingItem.is_active !== itemData.is_active || panelMode !== 'edit') {
-                    await apiClient(`${endpointBase}${savedItem.id}/${action}/`, { method: 'POST' });
+                // If editing, check if status actually changed. If new, assume default active or enforce.
+                // We need ID for toggle. `savedItem` should have it.
+                // createService/Category likely returns the created object with ID.
+                const newItemId = savedItem?.id || (savedItem as any)?.data?.id;
+
+                if (newItemId) {
+                    if (!editingItem || editingItem.is_active !== itemData.is_active || panelMode !== 'edit') {
+                        if (activeView === 'services') {
+                            await toggleServiceStatus(newItemId, itemData.is_active);
+                        } else {
+                            await toggleCategoryStatus(newItemId, itemData.is_active);
+                        }
+                    }
                 }
             }
 
@@ -148,9 +160,11 @@ const ItemsPage: React.FC = () => {
 
     const handleToggleStatus = async (item: Item, newStatus: boolean) => {
         try {
-            const endpointBase = activeView === 'services' ? '/ar/service/api/services/' : '/ar/category/api/categories/';
-            const action = newStatus ? 'active' : 'disable';
-            await apiClient(`${endpointBase}${item.id}/${action}/`, { method: 'POST' });
+            if (activeView === 'services') {
+                await toggleServiceStatus(item.id, newStatus);
+            } else {
+                await toggleCategoryStatus(item.id, newStatus);
+            }
 
             // Optimistically update
             setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_active: newStatus, status: newStatus ? 'active' : 'inactive' } : i));
@@ -185,8 +199,11 @@ const ItemsPage: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (itemToDelete) {
             try {
-                const endpointBase = activeView === 'services' ? '/ar/service/api/services/' : '/ar/category/api/categories/';
-                await apiClient(`${endpointBase}${itemToDelete.id}/`, { method: 'DELETE' });
+                if (activeView === 'services') {
+                    await deleteService(itemToDelete.id);
+                } else {
+                    await deleteCategory(itemToDelete.id);
+                }
                 fetchItems();
                 setItemToDelete(null);
             } catch (err) {

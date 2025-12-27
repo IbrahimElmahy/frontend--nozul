@@ -7,9 +7,12 @@ import UnitCard from './UnitCard';
 import UnitStatusCard from './UnitStatusCard';
 import ConfirmationModal from './ConfirmationModal';
 import AddBookingPanel from './AddBookingPanel';
-import { apiClient } from '../apiClient';
+
+// Checking if apiClient is used anywhere else... no, services/units.ts handles it.
+// Removing apiClient from imports
 import { mapApiUnitToUnit, mapUnitToFormData } from './data/apiMappers';
 import { createReservation } from '../services/reservations';
+import { listUnits, listUnitTypes, listCoolingTypes, listFeatures, createUnit, updateUnit, deleteUnit, UnitTypeAPI, FeatureAPI } from '../services/units';
 
 
 // Icons
@@ -58,16 +61,7 @@ const newUnitTemplate: Unit = {
 };
 
 
-// API Feature Interfaces
-interface ApiFeature {
-    id: string;
-    name_en: string;
-    name_ar: string;
-    type: 'common' | 'special';
-}
-interface FeaturesApiResponse {
-    data: ApiFeature[];
-}
+
 
 const newBookingTemplate: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'> = {
     guestName: '',
@@ -145,10 +139,14 @@ const UnitsPage: React.FC = () => {
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [cleaningFilter, setCleaningFilter] = useState<string>('all');
 
+
+
+    // ... (state declarations)
+
     // Options for dropdowns
     const [unitTypeOptions, setUnitTypeOptions] = useState<{ id: string, name: string }[]>([]);
     const [coolingTypeOptions, setCoolingTypeOptions] = useState<[string, string][]>([]);
-    const [allApiFeatures, setAllApiFeatures] = useState<ApiFeature[]>([]);
+    const [allApiFeatures, setAllApiFeatures] = useState<FeatureAPI[]>([]);
 
 
     useEffect(() => {
@@ -157,14 +155,16 @@ const UnitsPage: React.FC = () => {
             setError(null);
             try {
                 // Fetch options first
-                const [typesRes, coolingRes, featuresRes] = await Promise.all([
-                    apiClient<{ data: any[] }>('/ar/apartment/api/apartments-types/'),
-                    apiClient<[string, string][]>('/ar/apartment/api/apartments/cooling-types/'),
-                    apiClient<FeaturesApiResponse>('/ar/feature/api/features/?length=50')
+                // Run in parallel for performance
+                const [types, cooling, features] = await Promise.all([
+                    listUnitTypes(),
+                    listCoolingTypes(),
+                    listFeatures()
                 ]);
-                setUnitTypeOptions(typesRes.data.map(t => ({ id: t.id, name: t.name })));
-                setCoolingTypeOptions(coolingRes);
-                setAllApiFeatures(featuresRes.data);
+
+                setUnitTypeOptions(types.map(t => ({ id: t.id, name: t.name })));
+                setCoolingTypeOptions(cooling);
+                setAllApiFeatures(features);
 
 
                 // Fetch units
@@ -183,7 +183,7 @@ const UnitsPage: React.FC = () => {
                 if (cleaningFilter === 'not-clean') params.append('cleanliness', 'dirty');
 
 
-                const response = await apiClient<{ data: any[], recordsFiltered: number }>(`/ar/apartment/api/apartments/?${params.toString()}`);
+                const response = await listUnits(params);
 
                 setUnitsData(response.data.map(mapApiUnitToUnit));
                 setPagination(prev => ({ ...prev, totalRecords: response.recordsFiltered }));
@@ -198,7 +198,6 @@ const UnitsPage: React.FC = () => {
 
         fetchUnitsAndOptions();
     }, [pagination.currentPage, pagination.itemsPerPage, searchTerm, statusFilter, typeFilter, cleaningFilter]);
-
 
     const unitCounts = useMemo(() => {
         return unitsData.reduce((acc, unit) => {
@@ -247,13 +246,13 @@ const UnitsPage: React.FC = () => {
     };
 
     const handleSaveUnit = async (updatedUnit: Unit) => {
-        const formData = mapUnitToFormData(updatedUnit);
         try {
             if (isAdding) {
-                const newApiUnit = await apiClient('/ar/apartment/api/apartments/', { method: 'POST', body: formData });
+                const newApiUnit = await createUnit(updatedUnit);
                 setUnitsData(prev => [mapApiUnitToUnit(newApiUnit), ...prev]);
+                setPagination(prev => ({ ...prev, totalRecords: prev.totalRecords + 1 }));
             } else {
-                const updatedApiUnit = await apiClient(`/ar/apartment/api/apartments/${updatedUnit.id}/`, { method: 'PUT', body: formData });
+                const updatedApiUnit = await updateUnit(updatedUnit);
                 setUnitsData(unitsData.map(u => u.id === updatedUnit.id ? mapApiUnitToUnit(updatedApiUnit) : u));
             }
             handleClosePanel();
@@ -262,6 +261,7 @@ const UnitsPage: React.FC = () => {
         }
     };
 
+    // ... (delete handlers)
     const handleDeleteClick = (unitId: string) => {
         setUnitToDeleteId(unitId);
     };
@@ -269,14 +269,16 @@ const UnitsPage: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (!unitToDeleteId) return;
         try {
-            await apiClient(`/ar/apartment/api/apartments/${unitToDeleteId}/`, { method: 'DELETE' });
+            await deleteUnit(unitToDeleteId);
             setUnitsData(prevUnits => prevUnits.filter(u => u.id !== unitToDeleteId));
+            setPagination(prev => ({ ...prev, totalRecords: Math.max(0, prev.totalRecords - 1) }));
             setUnitToDeleteId(null);
         } catch (err) {
             if (err instanceof Error) alert(`Error deleting unit: ${err.message}`);
         }
     };
 
+    // ... (handleCancelDelete, handleAddReservation)
     const handleCancelDelete = () => {
         setUnitToDeleteId(null);
     };
@@ -291,14 +293,14 @@ const UnitsPage: React.FC = () => {
         setIsAddBookingPanelOpen(true);
     };
 
+
     const handleSaveBooking = async (bookingData: Booking | Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>) => {
         setIsSavingBooking(true);
         try {
             const payload = toReservationPayload(bookingData as Booking);
             await createReservation(payload);
 
-            // Refresh units to reflect status change
-            // Re-fetch logic duplicated from useEffect - ideally refactor to a function
+            // Refresh units logic
             const params = new URLSearchParams();
             params.append('start', ((pagination.currentPage - 1) * pagination.itemsPerPage).toString());
             params.append('length', pagination.itemsPerPage.toString());
@@ -310,7 +312,7 @@ const UnitsPage: React.FC = () => {
             if (cleaningFilter === 'clean') params.append('cleanliness', 'clean');
             if (cleaningFilter === 'not-clean') params.append('cleanliness', 'dirty');
 
-            const response = await apiClient<{ data: any[], recordsFiltered: number }>(`/ar/apartment/api/apartments/?${params.toString()}`);
+            const response = await listUnits(params);
             setUnitsData(response.data.map(mapApiUnitToUnit));
             setPagination(prev => ({ ...prev, totalRecords: response.recordsFiltered }));
 
@@ -325,13 +327,13 @@ const UnitsPage: React.FC = () => {
 
     const handleSaveNewGroup = (newUnits: Unit[]) => {
         // This should ideally be a single bulk API call, but the API doc doesn't specify one.
-        // We will add them one by one.
+        // We will add them one by one using the service.
         Promise.all(newUnits.map(unit => {
-            const formData = mapUnitToFormData(unit);
-            return apiClient('/ar/apartment/api/apartments/', { method: 'POST', body: formData });
+            return createUnit(unit);
         })).then(results => {
             const addedUnits = results.map(mapApiUnitToUnit);
             setUnitsData(prev => [...addedUnits, ...prev]);
+            setPagination(prev => ({ ...prev, totalRecords: prev.totalRecords + addedUnits.length }));
             setIsAddGroupPanelOpen(false);
         }).catch(err => {
             if (err instanceof Error) alert(`Error saving group: ${err.message}`);
@@ -539,7 +541,7 @@ const UnitsPage: React.FC = () => {
             </div>
 
             <UnitEditPanel unit={editingUnit} isOpen={isPanelOpen} onClose={handleClosePanel} onSave={handleSaveUnit} isAdding={isAdding} unitTypeOptions={unitTypeOptions} coolingTypeOptions={coolingTypeOptions} allApiFeatures={allApiFeatures} />
-            <AddGroupPanel template={newUnitTemplate} isOpen={isAddGroupPanelOpen} onClose={() => setIsAddGroupPanelOpen(false)} onSave={handleSaveNewGroup} allApiFeatures={allApiFeatures} />
+            <AddGroupPanel template={newUnitTemplate} isOpen={isAddGroupPanelOpen} onClose={() => setIsAddGroupPanelOpen(false)} onSave={handleSaveNewGroup} allApiFeatures={allApiFeatures} unitTypeOptions={unitTypeOptions} coolingTypeOptions={coolingTypeOptions} />
             <AddBookingPanel
                 initialData={bookingInitialData}
                 isEditing={false}

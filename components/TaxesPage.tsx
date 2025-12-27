@@ -14,7 +14,7 @@ import TrashIcon from './icons-redesign/TrashIcon';
 import AddTaxPanel from './AddTaxPanel';
 import ConfirmationModal from './ConfirmationModal';
 import TaxDetailsModal from './TaxDetailsModal';
-import { apiClient } from '../apiClient';
+import { listTaxes, deleteTax, toggleTaxStatus } from '../services/taxes';
 import Switch from './Switch';
 
 const newTaxTemplate: Omit<Tax, 'id' | 'created_at' | 'updated_at'> = {
@@ -50,7 +50,7 @@ const TaxesPage: React.FC = () => {
             params.append('start', ((currentPage - 1) * itemsPerPage).toString());
             params.append('length', itemsPerPage.toString());
 
-            const response = await apiClient<{ data: Tax[], recordsFiltered: number }>(`/ar/tax/api/taxes/?${params.toString()}`);
+            const response = await listTaxes(params);
             setTaxes(response.data);
             setTotalRecords(response.recordsFiltered);
         } catch (error) {
@@ -94,7 +94,7 @@ const TaxesPage: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (taxToDelete) {
             try {
-                await apiClient(`/ar/tax/api/taxes/${taxToDelete.id}/`, { method: 'DELETE' });
+                await deleteTax(taxToDelete.id);
                 fetchTaxes();
                 setTaxToDelete(null);
             } catch (error) {
@@ -105,8 +105,7 @@ const TaxesPage: React.FC = () => {
 
     const handleToggleStatus = async (tax: Tax, newStatus: boolean) => {
         try {
-            const action = newStatus ? 'active' : 'disable';
-            await apiClient(`/ar/tax/api/taxes/${tax.id}/${action}/`, { method: 'POST' });
+            await toggleTaxStatus(tax.id, newStatus);
             setTaxes(prev => prev.map(t => t.id === tax.id ? { ...t, is_active: newStatus } : t));
         } catch (error) {
             alert(`Error updating tax status: ${error instanceof Error ? error.message : 'Unknown error'}`);

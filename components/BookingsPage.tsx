@@ -37,8 +37,8 @@ import RentalContract from './RentalContract';
 const newBookingTemplate: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'> = {
     guestName: '',
     unitName: '',
-    checkInDate: new Date().toISOString().split('T')[0],
-    checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // tomorrow
+    checkInDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD in local time
+    checkOutDate: new Date(Date.now() + 86400000).toLocaleDateString('en-CA'), // tomorrow in local time
     time: new Date().toTimeString().slice(0, 5),
     status: 'check-in',
     rentType: 'daily',
@@ -79,59 +79,69 @@ const normalizeRentType = (type: Reservation['rental_type']): RentType => {
     return 'daily';
 };
 
-const mapReservationToBooking = (reservation: Reservation): Booking => ({
-    id: reservation.id, // Use raw ID (string or number)
-    bookingNumber: reservation.number,
-    guestName: typeof reservation.guest === 'string' ? reservation.guest : String(reservation.guest),
-    unitName: typeof reservation.apartment === 'string' ? reservation.apartment : String(reservation.apartment),
-    checkInDate: reservation.check_in_date,
-    checkOutDate: reservation.check_out_date,
-    time: reservation.time || '',
-    status: normalizeStatus(reservation.status),
-    rentType: normalizeRentType(reservation.rental_type),
-    duration: reservation.period,
-    rent: parseFloat(String(reservation.rent || 0)),
-    value: parseFloat(String(reservation.amount || 0)),
-    discount: reservation.discount ? parseFloat(String(reservation.discount)) : parseFloat(String(reservation.discount_value || '0')) || 0,
-    subtotal: parseFloat(String(reservation.subtotal || 0)),
-    tax: parseFloat(String(reservation.tax || 0)),
-    total: parseFloat(String(reservation.total || 0)),
-    payments: parseFloat(String(reservation.paid || 0)),
-    balance: parseFloat(String(reservation.balance || 0)),
-    createdAt: reservation.created_at,
-    updatedAt: reservation.updated_at,
-    // UI-only helpers/fallbacks
-    bookingSource: reservation.source ? reservation.source.toString() : '',
-    bookingReason: reservation.reason ? reservation.reason.toString() : '',
-    totalOrders: reservation.total_orders ? parseFloat(String(reservation.total_orders)) || 0 : 0,
-    notes: reservation.note || '',
-    price: reservation.apartment_price ? parseFloat(String(reservation.apartment_price)) : 0,
-    guestType: '',
-    companions: 0,
-    discountType: reservation.discount_type === 'percent' ? 'percentage' : reservation.discount_type === 'fixed' ? 'fixed' : '',
-    receiptVoucher: '',
-    returnVouchers: '',
-    invoices: '',
-    order: '',
-    // Map new fields
-    vatOnly: reservation.vat_only,
-    lodgingTax: reservation.lodging_tax,
-    payment: reservation.payment,
-    refund: reservation.refund,
-    checkedInAt: reservation.checked_in_at,
-    checkedOutAt: reservation.checked_out_at,
-    createdBy: reservation.created_by,
-    updatedBy: reservation.updated_by,
-    statusDisplay: reservation.status_display,
-    rentalDisplay: reservation.rental_display,
-    discountDisplay: reservation.discount_display,
-    companionsData: Array.isArray(reservation.companions) ? reservation.companions.map((c: any) => ({
-        guestId: c.guest || c.guest_id, // Handle potential API variations
-        guestName: c.guest_name || '', // API might not verify name, handle gracefully
-        relationship: c.relationship,
-        notes: c.note
-    })) : [],
-});
+const mapReservationToBooking = (reservation: Reservation): Booking => {
+    // Helper to safely extract name or ID
+    const extractName = (entity: any): string => {
+        if (!entity) return '';
+        if (typeof entity === 'string' || typeof entity === 'number') return String(entity);
+        // Try common name fields
+        return entity.name_ar || entity.name_en || entity.name || entity.id?.toString() || String(entity);
+    };
+
+    return {
+        id: reservation.id, // Use raw ID (string or number)
+        bookingNumber: reservation.number,
+        guestName: extractName(reservation.guest),
+        unitName: extractName(reservation.apartment),
+        checkInDate: reservation.check_in_date,
+        checkOutDate: reservation.check_out_date,
+        time: reservation.time || '',
+        status: normalizeStatus(reservation.status),
+        rentType: normalizeRentType(reservation.rental_type),
+        duration: reservation.period,
+        rent: parseFloat(String(reservation.rent || 0)),
+        value: parseFloat(String(reservation.amount || 0)),
+        discount: reservation.discount ? parseFloat(String(reservation.discount)) : parseFloat(String(reservation.discount_value || '0')) || 0,
+        subtotal: parseFloat(String(reservation.subtotal || 0)),
+        tax: parseFloat(String(reservation.tax || 0)),
+        total: parseFloat(String(reservation.total || 0)),
+        payments: parseFloat(String(reservation.paid || 0)),
+        balance: parseFloat(String(reservation.balance || 0)),
+        createdAt: reservation.created_at,
+        updatedAt: reservation.updated_at,
+        // UI-only helpers/fallbacks
+        bookingSource: reservation.source ? reservation.source.toString() : '',
+        bookingReason: reservation.reason ? reservation.reason.toString() : '',
+        totalOrders: reservation.total_orders ? parseFloat(String(reservation.total_orders)) || 0 : 0,
+        notes: reservation.note || '',
+        price: reservation.apartment_price ? parseFloat(String(reservation.apartment_price)) : 0,
+        guestType: '',
+        companions: 0,
+        discountType: reservation.discount_type === 'percent' ? 'percentage' : reservation.discount_type === 'fixed' ? 'fixed' : '',
+        receiptVoucher: '',
+        returnVouchers: '',
+        invoices: '',
+        order: '',
+        // Map new fields
+        vatOnly: reservation.vat_only,
+        lodgingTax: reservation.lodging_tax,
+        payment: reservation.payment,
+        refund: reservation.refund,
+        checkedInAt: reservation.checked_in_at,
+        checkedOutAt: reservation.checked_out_at,
+        createdBy: reservation.created_by,
+        updatedBy: reservation.updated_by,
+        statusDisplay: reservation.status_display,
+        rentalDisplay: reservation.rental_display,
+        discountDisplay: reservation.discount_display,
+        companionsData: Array.isArray(reservation.companions) ? reservation.companions.map((c: any) => ({
+            guestId: c.guest || c.guest_id, // Handle potential API variations
+            guestName: c.guest_name || '', // API might not verify name, handle gracefully
+            relationship: c.relationship,
+            notes: c.note
+        })) : [],
+    };
+};
 
 const toReservationPayload = (booking: Booking): Partial<Reservation> => ({
     hotel: 1, // Default hotel id; adjust when multi-hotel context is available
@@ -267,9 +277,12 @@ const BookingsPage: React.FC = () => {
         setError(null);
         try {
             const payload = toReservationPayload(bookingData as Booking);
+
             let saved: Reservation;
             if (editingBooking) {
-                saved = await updateReservation(editingBooking.id, payload);
+                // Ensure ID is passed as number if service expects number
+                const idToUpdate = typeof editingBooking.id === 'string' ? parseInt(editingBooking.id) : editingBooking.id;
+                saved = await updateReservation(idToUpdate, payload);
                 const updated = mapReservationToBooking(saved);
                 setBookings(prev => prev.map(b => (b.id === updated.id ? updated : b)));
             } else {
@@ -285,17 +298,32 @@ const BookingsPage: React.FC = () => {
         }
     };
 
-    const handleSaveGroupBooking = (newBookings: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>[]) => {
-        const maxId = Math.max(0, ...bookings.map(b => b.id));
-        const bookingsToAdd: Booking[] = newBookings.map((booking, index) => ({
-            ...booking,
-            id: maxId + 1 + index,
-            bookingNumber: `GRP-${maxId + 1 + index}`, // Differentiate group bookings
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        } as Booking));
-        setBookings(prev => [...bookingsToAdd, ...prev]);
-        setIsAddGroupPanelOpen(false);
+    const handleSaveGroupBooking = async (newBookings: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>[]) => {
+        setIsSaving(true);
+        setError(null);
+        try {
+            // Process all bookings in parallel
+            await Promise.all(newBookings.map(bookingData => {
+                // Ensure payload is correct. toReservationPayload expects a Booking object, so we cast.
+                // Critical: Ensure guestName and unitName are IDs here (AddGroupBookingPanel now sets IDs).
+                const payload = toReservationPayload(bookingData as Booking);
+                return createReservation(payload);
+            }));
+
+            // Refresh all bookings from API to reflect changes accurately
+            const response = await listReservations();
+            const items = Array.isArray(response)
+                ? response
+                : (response as any)?.results || (response as any)?.data || [];
+            setBookings(items.map(mapReservationToBooking));
+
+            setIsAddGroupPanelOpen(false);
+        } catch (err) {
+            console.error("Group booking failed", err);
+            setError(err instanceof Error ? err.message : 'Failed to save group bookings');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
 
@@ -317,8 +345,10 @@ const BookingsPage: React.FC = () => {
         if (!bookingToDeleteId) return;
         setLoading(true);
         setError(null);
+        setError(null);
         try {
-            await deleteReservation(bookingToDeleteId);
+            const idToDelete = typeof bookingToDeleteId === 'string' ? parseInt(bookingToDeleteId) : bookingToDeleteId;
+            await deleteReservation(idToDelete);
             setBookings(bookings.filter(b => b.id !== bookingToDeleteId));
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');
@@ -330,7 +360,8 @@ const BookingsPage: React.FC = () => {
 
     const handlePrintClick = async (booking: Booking) => {
         try {
-            const fullReservation = await getReservation(booking.id);
+            const idToGet = typeof booking.id === 'string' ? parseInt(booking.id) : booking.id;
+            const fullReservation = await getReservation(idToGet);
             setPrintingReservation(fullReservation);
             setTimeout(() => {
                 window.print();

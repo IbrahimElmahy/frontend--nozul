@@ -7,7 +7,9 @@ import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import SearchableSelect from './SearchableSelect';
 import PlusIcon from './icons-redesign/PlusIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
-import { apiClient } from '../apiClient';
+import { calculateOrder as calculateOrderApi } from '../services/orders';
+import { listUnits } from '../services/units';
+import { listCategories, listServices } from '../services/items';
 
 interface AddOrderPanelProps {
     initialData: Order | Omit<Order, 'id' | 'createdAt' | 'updatedAt'>;
@@ -66,7 +68,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
     const fetchData = async () => {
         try {
             // Fetch Occupied Apartments
-            const apartmentsRes = await apiClient<{ data: any[] }>('/ar/apartment/api/apartments/?availability=reserved');
+            const apartmentsRes = await listUnits(new URLSearchParams({ availability: 'reserved' }));
             const aptOptions = apartmentsRes.data
                 .filter((apt: any) => apt.reservation)
                 .map((apt: any) => ({
@@ -76,7 +78,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
             setApartmentOptions(aptOptions);
 
             // Fetch Categories only (don't fetch all services at once)
-            const categoriesRes = await apiClient<{ data: any[] }>('/ar/category/api/categories/?is_active=true&length=1000');
+            const categoriesRes = await listCategories(new URLSearchParams({ is_active: 'true', length: '1000' }));
 
             setCategories(categoriesRes.data.map((c: any) => ({
                 id: c.id,
@@ -115,19 +117,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
 
         setCalculating(true);
         try {
-            const payload = {
-                reservation: reservationId,
-                order_items: validItems.map(item => ({
-                    service: item.service,
-                    category: item.category,
-                    quantity: item.quantity
-                }))
-            };
-
-            const response = await apiClient<any>('/ar/order/api/orders/calculation/', {
-                method: 'POST',
-                body: payload
-            });
+            const response = await calculateOrderApi(reservationId, items);
 
             // The response structure from calculation endpoint isn't explicitly detailed in prompt 
             // beyond "Returns totals, taxes, and final amounts". 
@@ -163,7 +153,7 @@ const AddOrderPanel: React.FC<AddOrderPanelProps> = ({ initialData, isEditing, i
 
         setLoadingServices(prev => ({ ...prev, [categoryId]: true }));
         try {
-            const res = await apiClient<{ data: any[] }>(`/ar/service/api/services/?category=${categoryId}&is_active=true&length=1000`);
+            const res = await listServices(new URLSearchParams({ category: categoryId, is_active: 'true', length: '1000' }));
             const fetchedServices = res.data.map((s: any) => ({
                 ...s,
                 id: s.id,

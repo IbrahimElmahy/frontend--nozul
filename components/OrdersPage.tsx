@@ -6,7 +6,8 @@ import ConfirmationModal from './ConfirmationModal';
 import OrderCard from './OrderCard';
 import AddOrderPanel from './AddOrderPanel';
 import OrderDetailsModal from './OrderDetailsModal';
-import { apiClient } from '../apiClient';
+import { listOrders, createOrder, updateOrder, deleteOrder } from '../services/orders';
+
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -67,35 +68,10 @@ const OrdersPage: React.FC = () => {
             params.append('length', itemsPerPage.toString());
             if (searchTerm) params.append('search', searchTerm);
 
-            const response = await apiClient<{ data: any[], recordsFiltered: number }>(`/ar/order/api/orders/?${params.toString()}`);
-
-            const mappedOrders: Order[] = response.data.map((o: any) => ({
-                id: o.id,
-                orderNumber: o.number, // API field is 'number'
-                // API returns reservation number as a string directly
-                bookingNumber: o.reservation || '',
-                // API returns apartment name as a string directly
-                apartmentName: o.apartment || '',
-                value: parseFloat(o.amount),
-                discount: parseFloat(o.discount || 0),
-                subtotal: parseFloat(o.subtotal),
-                tax: parseFloat(o.tax),
-                total: parseFloat(o.total),
-                createdAt: o.created_at,
-                updatedAt: o.updated_at,
-                notes: o.note,
-                items: o.order_items ? o.order_items.map((item: any) => ({
-                    id: item.id,
-                    // Service and Category might be strings or objects depending on API version, handling both
-                    service: typeof item.service === 'string' ? item.service : (item.service?.name_ar ?? item.service?.name_en ?? ''),
-                    category: typeof item.category === 'string' ? item.category : (item.category?.name_ar ?? item.category?.name_en ?? ''),
-                    quantity: item.quantity,
-                    price: parseFloat(item.price)
-                })) : []
-            }));
+            const { orders: mappedOrders, total } = await listOrders(params);
 
             setOrders(mappedOrders);
-            setTotalRecords(response.recordsFiltered);
+            setTotalRecords(total);
 
         } catch (error) {
             console.error("Failed to fetch orders", error);
@@ -131,16 +107,9 @@ const OrdersPage: React.FC = () => {
 
             if (editingOrder) {
                 // MUST append 'order' ID when updating as per API docs
-                payload.order = editingOrder.id;
-                await apiClient(`/ar/order/api/orders/${editingOrder.id}/`, {
-                    method: 'PUT',
-                    body: payload
-                });
+                await updateOrder(editingOrder.id, payload);
             } else {
-                await apiClient('/ar/order/api/orders/', {
-                    method: 'POST',
-                    body: payload
-                });
+                await createOrder(payload);
             }
             fetchOrders();
             handleClosePanel();
@@ -166,7 +135,7 @@ const OrdersPage: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (orderToDeleteId) {
             try {
-                await apiClient(`/ar/order/api/orders/${orderToDeleteId}/`, { method: 'DELETE' });
+                await deleteOrder(orderToDeleteId);
                 fetchOrders();
                 setOrderToDeleteId(null);
             } catch (err) {

@@ -7,7 +7,7 @@ import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
 import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import EyeIcon from './icons-redesign/EyeIcon';
 import ApartmentPriceEditPanel from './ApartmentPriceEditPanel';
-import { apiClient } from '../apiClient';
+import { listApartmentPrices } from '../services/prices';
 
 const ApartmentPricesPage: React.FC = () => {
     const { t } = useContext(LanguageContext);
@@ -21,7 +21,7 @@ const ApartmentPricesPage: React.FC = () => {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
     const [panelMode, setPanelMode] = useState<'view' | 'edit'>('view');
     const [selectedPriceData, setSelectedPriceData] = useState<ApartmentPrice | null>(null);
-    
+
     const fetchPrices = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -30,9 +30,9 @@ const ApartmentPricesPage: React.FC = () => {
             params.append('start', ((pagination.currentPage - 1) * pagination.itemsPerPage).toString());
             params.append('length', pagination.itemsPerPage.toString());
             if (searchTerm) params.append('search', searchTerm);
-            
-            const response = await apiClient<{ data: any[], recordsFiltered: number }>(`/ar/apartment/api/apartments-prices/?${params.toString()}`);
-            
+
+            const response = await listApartmentPrices(params);
+
             setPrices(response.data);
             setPagination(p => ({ ...p, totalRecords: response.recordsFiltered }));
 
@@ -48,7 +48,7 @@ const ApartmentPricesPage: React.FC = () => {
     }, [fetchPrices]);
 
     useEffect(() => {
-        setPagination(p => ({...p, currentPage: 1}));
+        setPagination(p => ({ ...p, currentPage: 1 }));
     }, [searchTerm, pagination.itemsPerPage]);
 
 
@@ -65,7 +65,7 @@ const ApartmentPricesPage: React.FC = () => {
         setPanelMode('edit');
         setIsPanelOpen(true);
     };
-    
+
     const handleClosePanel = () => {
         setIsPanelOpen(false);
         setSelectedPriceData(null);
@@ -94,11 +94,11 @@ const ApartmentPricesPage: React.FC = () => {
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
+                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 mb-4">
                     <span>{t('units.showing')}</span>
                     <select
                         value={pagination.itemsPerPage}
-                        onChange={(e) => setPagination(p => ({...p, itemsPerPage: Number(e.target.value), currentPage: 1 }))}
+                        onChange={(e) => setPagination(p => ({ ...p, itemsPerPage: Number(e.target.value), currentPage: 1 }))}
                         className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
                     >
                         <option value={10}>10</option>
@@ -164,19 +164,19 @@ const ApartmentPricesPage: React.FC = () => {
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} ${pagination.totalRecords > 0 ? (pagination.currentPage - 1) * pagination.itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalRecords)} ${t('usersPage.of')} ${pagination.totalRecords} ${t('usersPage.entries')}`}
+                        {`${t('usersPage.showing' as any)} ${pagination.totalRecords > 0 ? (pagination.currentPage - 1) * pagination.itemsPerPage + 1 : 0} ${t('usersPage.to' as any)} ${Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalRecords)} ${t('usersPage.of' as any)} ${pagination.totalRecords} ${t('usersPage.entries' as any)}`}
                     </div>
                     {totalPages > 1 && (
-                         <nav className="flex items-center gap-1" aria-label="Pagination">
-                            <button onClick={() => setPagination(p => ({...p, currentPage: Math.max(1, p.currentPage - 1)}))} disabled={pagination.currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
-                             <span className="text-sm font-semibold px-2">{pagination.currentPage} / {totalPages}</span>
-                            <button onClick={() => setPagination(p => ({...p, currentPage: Math.min(totalPages, p.currentPage + 1)}))} disabled={pagination.currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
+                        <nav className="flex items-center gap-1" aria-label="Pagination">
+                            <button onClick={() => setPagination(p => ({ ...p, currentPage: Math.max(1, p.currentPage - 1) }))} disabled={pagination.currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>
+                            <span className="text-sm font-semibold px-2">{pagination.currentPage} / {totalPages}</span>
+                            <button onClick={() => setPagination(p => ({ ...p, currentPage: Math.min(totalPages, p.currentPage + 1) }))} disabled={pagination.currentPage === totalPages} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRightIcon className="w-5 h-5" /></button>
                         </nav>
                     )}
                 </div>
             </div>
 
-            <ApartmentPriceEditPanel 
+            <ApartmentPriceEditPanel
                 isOpen={isPanelOpen}
                 onClose={handleClosePanel}
                 onSave={handleSavePrice}

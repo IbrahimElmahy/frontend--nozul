@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { apiClient } from '../apiClient';
+import { fetchStatementAccount, exportStatementAccount, fetchReceiptTypes } from '../services/reports';
+import { listCashAccounts, listCurrencies, listUsers, listPaymentMethods } from '../services/financials';
 import { FundReportItem, ReportFilterOption } from '../types';
 import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
 import PrinterIcon from './icons-redesign/PrinterIcon';
@@ -37,11 +38,11 @@ const ReportFundMovement: React.FC = () => {
         const fetchOptions = async () => {
             try {
                 const [typesRes, cashRes, currRes, payRes, userRes] = await Promise.all([
-                    apiClient<{ data: any[] }>('/ar/transaction/api/transactions/receipt-types/?length=1000'),
-                    apiClient<{ data: any[] }>('/ar/cash/api/cash/?category=cash&is_active=true&length=1000'),
-                    apiClient<{ data: any[] }>('/ar/currency/api/currencies/?length=1000'),
-                    apiClient<{ data: any[] }>('/ar/payment/api/payments-methods/?length=1000'),
-                    apiClient<{ data: any[] }>('/ar/user/api/users/?length=1000'),
+                    fetchReceiptTypes(),
+                    listCashAccounts('category=cash&is_active=true&length=1000'),
+                    listCurrencies(),
+                    listPaymentMethods(),
+                    listUsers('length=1000'),
                 ]);
 
                 // Helper to map name based on language
@@ -98,11 +99,11 @@ const ReportFundMovement: React.FC = () => {
             if (filters.paymentMethod) params.append('payment_method', filters.paymentMethod);
             if (filters.accountType) params.append('account_type', filters.accountType);
 
-            const response = await apiClient<any>('/ar/report/api/statement-account/?' + params.toString());
+            const response = await fetchStatementAccount(Object.fromEntries(params));
 
             // Map response
             // API returns { data: { legs: [], credit: ..., debit: ..., balance: ... } }
-            const responseData = response.data || {};
+            const responseData: any = (response as any).data || {};
             const rawLegs = responseData.legs || [];
 
             const mappedData: FundReportItem[] = rawLegs.map((item: any) => ({
@@ -136,56 +137,28 @@ const ReportFundMovement: React.FC = () => {
     };
 
     const fetchFullData = async () => {
-        const params = new URLSearchParams();
-        if (filters.account) params.append('account', filters.account);
-        if (filters.currency) params.append('currency', filters.currency);
-        if (filters.startDate) params.append('start_date', filters.startDate);
-        if (filters.endDate) params.append('end_date', filters.endDate);
-        if (filters.userId) params.append('created_by', filters.userId);
-        if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
-        if (filters.paymentMethod) params.append('payment_method', filters.paymentMethod);
-        if (filters.accountType) params.append('account_type', filters.accountType);
-        params.append('is_export', 'true');
-
-        const response = await apiClient<any>('/ar/report/api/statement-account/?' + params.toString());
-        return response.data || {};
+        // Not used directly for export anymore, replaced by blob export
+        return {};
     };
 
     const handleExport = async () => {
         try {
             setLoading(true);
-            const data = await fetchFullData();
-            const legs = data.legs || [];
+            const params = new URLSearchParams();
+            if (filters.account) params.append('account', filters.account);
+            if (filters.currency) params.append('currency', filters.currency);
+            if (filters.startDate) params.append('start_date', filters.startDate);
+            if (filters.endDate) params.append('end_date', filters.endDate);
+            if (filters.userId) params.append('created_by', filters.userId);
+            if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
+            if (filters.paymentMethod) params.append('payment_method', filters.paymentMethod);
+            if (filters.accountType) params.append('account_type', filters.accountType);
 
-            // Convert to CSV
-            const headers = [
-                t('receipts.th_date'),
-                t('receipts.addReceiptPanel.voucher'),
-                t('receipts.th_transactionNumber'),
-                t('receipts.addReceiptPanel.description'),
-                t('receipts.addReceiptPanel.debitAccount'),
-                t('receipts.addReceiptPanel.creditAccount'),
-                t('bookings.balance')
-            ];
-
-            const csvContent = [
-                headers.join(','),
-                ...legs.map((item: any) => [
-                    item.date,
-                    item.type,
-                    item.number,
-                    `"${(item.description || '').replace(/"/g, '""')}"`, // Escape quotes
-                    item.debit,
-                    item.credit,
-                    item.balance
-                ].join(','))
-            ].join('\n');
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const blob = await exportStatementAccount(Object.fromEntries(params));
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', `fund_movement_${new Date().toISOString().split('T')[0]}.csv`);
+            link.href = url;
+            link.setAttribute('download', `fund_movement_${new Date().toISOString().split('T')[0]}.xlsx`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -200,7 +173,18 @@ const ReportFundMovement: React.FC = () => {
     const handlePrint = async () => {
         try {
             setLoading(true);
-            const data = await fetchFullData();
+            const params = new URLSearchParams();
+            if (filters.account) params.append('account', filters.account);
+            if (filters.currency) params.append('currency', filters.currency);
+            if (filters.startDate) params.append('start_date', filters.startDate);
+            if (filters.endDate) params.append('end_date', filters.endDate);
+            if (filters.userId) params.append('created_by', filters.userId);
+            if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
+            if (filters.paymentMethod) params.append('payment_method', filters.paymentMethod);
+            if (filters.accountType) params.append('account_type', filters.accountType);
+
+            const response = await fetchStatementAccount(Object.fromEntries(params));
+            const data: any = (response as any).data || {};
             const legs = data.legs || [];
             const summary = {
                 debit: data.debit,
@@ -291,8 +275,8 @@ const ReportFundMovement: React.FC = () => {
                         <SearchableSelect
                             id="accountType"
                             options={accountTypes.map(o => o.name)}
-                            value={accountTypes.find(o => o.id === filters.accountType)?.name || ''}
-                            onChange={val => { const f = accountTypes.find(o => o.name === val); if (f) setFilters(p => ({ ...p, accountType: f.id })) }}
+                            value={accountTypes.find(o => String(o.id) === String(filters.accountType))?.name || ''}
+                            onChange={val => { const f = accountTypes.find(o => o.name === val); if (f) setFilters(p => ({ ...p, accountType: String(f.id) })) }}
                             placeholder="Select Type"
                         />
                     </div>
@@ -301,8 +285,8 @@ const ReportFundMovement: React.FC = () => {
                         <SearchableSelect
                             id="account"
                             options={cashAccounts.map(o => o.name)}
-                            value={cashAccounts.find(o => o.id === filters.account)?.name || ''}
-                            onChange={val => { const f = cashAccounts.find(o => o.name === val); if (f) setFilters(p => ({ ...p, account: f.id })) }}
+                            value={cashAccounts.find(o => String(o.id) === String(filters.account))?.name || ''}
+                            onChange={val => { const f = cashAccounts.find(o => o.name === val); if (f) setFilters(p => ({ ...p, account: String(f.id) })) }}
                             placeholder="Select Account"
                         />
                     </div>
@@ -311,8 +295,8 @@ const ReportFundMovement: React.FC = () => {
                         <SearchableSelect
                             id="currency"
                             options={currencies.map(o => o.name)}
-                            value={currencies.find(o => o.id === filters.currency)?.name || ''}
-                            onChange={val => { const f = currencies.find(o => o.name === val); if (f) setFilters(p => ({ ...p, currency: f.id })) }}
+                            value={currencies.find(o => String(o.id) === String(filters.currency))?.name || ''}
+                            onChange={val => { const f = currencies.find(o => o.name === val); if (f) setFilters(p => ({ ...p, currency: String(f.id) })) }}
                             placeholder="Select Currency"
                         />
                     </div>
@@ -321,8 +305,8 @@ const ReportFundMovement: React.FC = () => {
                         <SearchableSelect
                             id="paymentMethod"
                             options={paymentMethods.map(o => o.name)}
-                            value={paymentMethods.find(o => o.id === filters.paymentMethod)?.name || ''}
-                            onChange={val => { const f = paymentMethods.find(o => o.name === val); if (f) setFilters(p => ({ ...p, paymentMethod: f.id })) }}
+                            value={paymentMethods.find(o => String(o.id) === String(filters.paymentMethod))?.name || ''}
+                            onChange={val => { const f = paymentMethods.find(o => o.name === val); if (f) setFilters(p => ({ ...p, paymentMethod: String(f.id) })) }}
                             placeholder="Select Method"
                         />
                     </div>
@@ -339,8 +323,8 @@ const ReportFundMovement: React.FC = () => {
                         <SearchableSelect
                             id="user"
                             options={users.map(o => o.name)}
-                            value={users.find(o => o.id === filters.userId)?.name || ''}
-                            onChange={val => { const f = users.find(o => o.name === val); if (f) setFilters(p => ({ ...p, userId: f.id })) }}
+                            value={users.find(o => String(o.id) === String(filters.userId))?.name || ''}
+                            onChange={val => { const f = users.find(o => o.name === val); if (f) setFilters(p => ({ ...p, userId: String(f.id) })) }}
                             placeholder="Select User"
                         />
                     </div>

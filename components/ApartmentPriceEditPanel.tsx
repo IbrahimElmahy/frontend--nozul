@@ -3,7 +3,7 @@ import { LanguageContext } from '../contexts/LanguageContext';
 import { ApartmentPrice } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
-import { apiClient } from '../apiClient';
+import { updateApartmentPrice } from '../services/prices';
 
 interface ApartmentPriceEditPanelProps {
     data: ApartmentPrice | null;
@@ -52,20 +52,21 @@ const ApartmentPriceEditPanel: React.FC<ApartmentPriceEditPanelProps> = ({ data,
         if (!formData) return;
         setIsSaving(true);
         try {
-            const payload = {
-                hourly_price: formData.hourly_price,
-                hourly_minimum_price: formData.hourly_minimum_price,
-                regular_price: formData.regular_price,
-                regular_minimum_price: formData.regular_minimum_price,
-                monthly_price: formData.monthly_price,
-                monthly_minimum_price: formData.monthly_minimum_price,
-                peak_price: formData.peak_price,
-            };
-            const updatedData = await apiClient<ApartmentPrice>(`/ar/apartment/api/apartments-prices/${formData.apartment_id}/`, {
-                method: 'PUT',
-                body: payload,
-            });
-            onSave({ ...formData, ...updatedData });
+            const payload = new FormData();
+            payload.append('hourly_price', formData.hourly_price.toString());
+            payload.append('hourly_minimum_price', formData.hourly_minimum_price.toString());
+            payload.append('regular_price', formData.regular_price.toString());
+            payload.append('regular_minimum_price', formData.regular_minimum_price.toString());
+            payload.append('monthly_price', formData.monthly_price.toString());
+            payload.append('monthly_minimum_price', formData.monthly_minimum_price.toString());
+            payload.append('peak_price', formData.peak_price.toString());
+
+            const updatedData = await updateApartmentPrice(formData.apartment_id, payload);
+            if (updatedData) {
+                onSave({ ...formData, ...(updatedData as any) });
+            } else {
+                onSave({ ...formData }); // Fallback should update return data
+            }
         } catch (error) {
             alert(`Error saving prices: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
@@ -123,10 +124,10 @@ const ApartmentPriceEditPanel: React.FC<ApartmentPriceEditPanelProps> = ({ data,
                                 <input type="number" name="monthly_minimum_price" value={formData.monthly_minimum_price} onChange={handleInputChange} className={inputBaseClass} disabled={isViewMode} />
                             </FormField>
                         </div>
-                        
+
                         <SectionHeader title={t('apartmentPrices.th_peak')} />
                         <div className="grid grid-cols-2 gap-4">
-                             <FormField label={t('apartmentPrices.th_price')}>
+                            <FormField label={t('apartmentPrices.th_price')}>
                                 <input type="number" name="peak_price" value={formData.peak_price} onChange={handleInputChange} className={inputBaseClass} disabled={isViewMode} />
                             </FormField>
                         </div>
@@ -135,7 +136,7 @@ const ApartmentPriceEditPanel: React.FC<ApartmentPriceEditPanelProps> = ({ data,
 
                 <footer className="flex items-center justify-start p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-900">
                     {!isViewMode && (
-                         <button onClick={handleSaveClick} disabled={isSaving} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 disabled:bg-blue-400">
+                        <button onClick={handleSaveClick} disabled={isSaving} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 disabled:bg-blue-400">
                             {isSaving ? (
                                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

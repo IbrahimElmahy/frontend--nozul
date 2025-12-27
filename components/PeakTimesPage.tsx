@@ -11,7 +11,7 @@ import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import CheckIcon from './icons-redesign/CheckIcon';
 import { PeakTime } from '../types';
-import { apiClient } from '../apiClient';
+import { listPeakTimes, createPeakTime, updatePeakTime, deletePeakTime } from '../services/peakTimes';
 import AddPeakTimePanel from './AddPeakTimePanel';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -34,7 +34,7 @@ const PeakTimesPage: React.FC = () => {
         try {
             // Note: The API documentation doesn't explicitly mention pagination params for GET,
             // but standard list endpoints usually support them. Using basic GET for now.
-            const response = await apiClient<{ data: PeakTime[], recordsFiltered: number }>('/ar/peak/api/peaks/');
+            const response = await listPeakTimes();
             setPeakTimes(response.data);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -70,7 +70,7 @@ const PeakTimesPage: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (peakTimeToDelete) {
             try {
-                await apiClient(`/ar/peak/api/peaks/${peakTimeToDelete.id}/`, { method: 'DELETE' });
+                await deletePeakTime(peakTimeToDelete.id);
                 setPeakTimes(prev => prev.filter(p => p.id !== peakTimeToDelete.id));
                 setPeakTimeToDelete(null);
             } catch (err) {
@@ -87,15 +87,9 @@ const PeakTimesPage: React.FC = () => {
     const handleSavePeakTime = async (formData: FormData) => {
         try {
             if (editingPeakTime) {
-                await apiClient(`/ar/peak/api/peaks/${editingPeakTime.id}/`, {
-                    method: 'PUT',
-                    body: formData
-                });
+                await updatePeakTime(editingPeakTime.id, formData);
             } else {
-                await apiClient('/ar/peak/api/peaks/', {
-                    method: 'POST',
-                    body: formData
-                });
+                await createPeakTime(formData);
             }
             fetchPeakTimes();
             handleClosePanel();

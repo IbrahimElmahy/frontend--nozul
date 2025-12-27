@@ -7,10 +7,10 @@ import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import DatePicker from './DatePicker';
 import SearchableSelect from './SearchableSelect';
 import Switch from './Switch';
-import { apiClient } from '../apiClient';
+import { createTax, updateTax, getTaxNames, getTaxApplies, getTaxTypes } from '../services/taxes';
 
 interface AddTaxPanelProps {
-    initialData: Omit<Tax, 'id' | 'createdAt' | 'updatedAt'>;
+    initialData: Omit<Tax, 'id' | 'created_at' | 'updated_at'>;
     isEditing: boolean;
     isOpen: boolean;
     onClose: () => void;
@@ -20,7 +20,7 @@ interface AddTaxPanelProps {
 const AddTaxPanel: React.FC<AddTaxPanelProps> = ({ initialData, isEditing, isOpen, onClose, onSave }) => {
     const { t, language } = useContext(LanguageContext);
     const [formData, setFormData] = useState(initialData);
-    
+
     const [taxNames, setTaxNames] = useState<[string, string][]>([]);
     const [appliesToOptions, setAppliesToOptions] = useState<[string, string][]>([]);
     const [taxTypes, setTaxTypes] = useState<[string, string][]>([]);
@@ -35,9 +35,9 @@ const AddTaxPanel: React.FC<AddTaxPanelProps> = ({ initialData, isEditing, isOpe
     const fetchOptions = async () => {
         try {
             const [names, applies, types] = await Promise.all([
-                apiClient<[string, string][]>('/ar/tax/api/taxes/names/'),
-                apiClient<[string, string][]>('/ar/tax/api/taxes/applies/'),
-                apiClient<[string, string][]>('/ar/tax/api/taxes/types/')
+                getTaxNames(),
+                getTaxApplies(),
+                getTaxTypes()
             ]);
             setTaxNames(names);
             setAppliesToOptions(applies);
@@ -56,7 +56,7 @@ const AddTaxPanel: React.FC<AddTaxPanelProps> = ({ initialData, isEditing, isOpe
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
     };
-    
+
     const handleDateChange = (name: 'start_date' | 'end_date', date: string) => {
         // Keep the time part if it exists
         const timePart = formData[name]?.split(' ')[1] || '00:00:00';
@@ -72,19 +72,15 @@ const AddTaxPanel: React.FC<AddTaxPanelProps> = ({ initialData, isEditing, isOpe
             data.append('applies_to', formData.applies_to);
             data.append('start_date', formData.start_date);
             data.append('end_date', formData.end_date);
-            
+
             if (formData.is_added_to_price) data.append('is_added_to_price', 'on');
             if (formData.is_vat_included) data.append('is_vat_included', 'on');
-            
-            let endpoint = '/ar/tax/api/taxes/';
-            let method: 'POST' | 'PUT' = 'POST';
 
             if (isEditing && (initialData as any).id) {
-                endpoint += `${(initialData as any).id}/`;
-                method = 'PUT';
+                await updateTax((initialData as any).id, data);
+            } else {
+                await createTax(data);
             }
-
-            await apiClient(endpoint, { method, body: data });
             onSave(null); // Signal success to parent
         } catch (error) {
             alert(`Error saving tax: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -93,7 +89,7 @@ const AddTaxPanel: React.FC<AddTaxPanelProps> = ({ initialData, isEditing, isOpe
 
     const inputBaseClass = `w-full px-3 py-2 bg-white dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 text-sm`;
     const labelBaseClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1`;
-    
+
     return (
         <div className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} role="dialog">
             <div className="fixed inset-0 bg-black/40" onClick={onClose} aria-hidden="true"></div>
@@ -106,14 +102,14 @@ const AddTaxPanel: React.FC<AddTaxPanelProps> = ({ initialData, isEditing, isOpe
                     <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                         <div>
                             <label htmlFor="name" className={labelBaseClass}>{t('taxes.th_name')}</label>
-                            <SearchableSelect 
-                                id="name" 
-                                options={taxNames.map(n => n[1])} 
-                                value={taxNames.find(n => n[0] === formData.name)?.[1] || formData.name} 
+                            <SearchableSelect
+                                id="name"
+                                options={taxNames.map(n => n[1])}
+                                value={taxNames.find(n => n[0] === formData.name)?.[1] || formData.name}
                                 onChange={label => {
                                     const found = taxNames.find(n => n[1] === label);
-                                    if (found) setFormData(p => ({...p, name: found[0]}));
-                                }} 
+                                    if (found) setFormData(p => ({ ...p, name: found[0] }));
+                                }}
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -123,27 +119,27 @@ const AddTaxPanel: React.FC<AddTaxPanelProps> = ({ initialData, isEditing, isOpe
                             </div>
                             <div>
                                 <label htmlFor="tax_type" className={labelBaseClass}>Type</label>
-                                <SearchableSelect 
-                                    id="tax_type" 
-                                    options={taxTypes.map(t => t[1])} 
-                                    value={taxTypes.find(t => t[0] === formData.tax_type)?.[1] || formData.tax_type} 
+                                <SearchableSelect
+                                    id="tax_type"
+                                    options={taxTypes.map(t => t[1])}
+                                    value={taxTypes.find(t => t[0] === formData.tax_type)?.[1] || formData.tax_type}
                                     onChange={label => {
                                         const found = taxTypes.find(t => t[1] === label);
-                                        if(found) setFormData(p => ({...p, tax_type: found[0]}));
-                                    }} 
+                                        if (found) setFormData(p => ({ ...p, tax_type: found[0] }));
+                                    }}
                                 />
                             </div>
                         </div>
                         <div>
                             <label htmlFor="applies_to" className={labelBaseClass}>{t('taxes.th_applyTo')}</label>
-                            <SearchableSelect 
-                                id="applies_to" 
-                                options={appliesToOptions.map(a => a[1])} 
-                                value={appliesToOptions.find(a => a[0] === formData.applies_to)?.[1] || formData.applies_to} 
+                            <SearchableSelect
+                                id="applies_to"
+                                options={appliesToOptions.map(a => a[1])}
+                                value={appliesToOptions.find(a => a[0] === formData.applies_to)?.[1] || formData.applies_to}
                                 onChange={label => {
                                     const found = appliesToOptions.find(a => a[1] === label);
-                                    if(found) setFormData(p => ({...p, applies_to: found[0]}));
-                                }} 
+                                    if (found) setFormData(p => ({ ...p, applies_to: found[0] }));
+                                }}
                             />
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -156,11 +152,11 @@ const AddTaxPanel: React.FC<AddTaxPanelProps> = ({ initialData, isEditing, isOpe
                                 <DatePicker value={formData.end_date.split(' ')[0]} onChange={date => handleDateChange('end_date', date)} />
                             </div>
                         </div>
-                         <div className="space-y-3 pt-4">
-                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><label htmlFor="is_added_to_price" className="text-sm font-medium">{t('taxes.th_addedToFees')}</label><Switch id="is_added_to_price" checked={formData.is_added_to_price} onChange={c => setFormData(p => ({...p, is_added_to_price: c}))} /></div>
-                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><label htmlFor="is_vat_included" className="text-sm font-medium">{t('taxes.th_subjectToVat')}</label><Switch id="is_vat_included" checked={formData.is_vat_included} onChange={c => setFormData(p => ({...p, is_vat_included: c}))} /></div>
-                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><label htmlFor="is_active" className="text-sm font-medium">{t('taxes.th_status')}</label><Switch id="is_active" checked={formData.is_active} onChange={c => setFormData(p => ({...p, is_active: c}))} /></div>
-                         </div>
+                        <div className="space-y-3 pt-4">
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><label htmlFor="is_added_to_price" className="text-sm font-medium">{t('taxes.th_addedToFees')}</label><Switch id="is_added_to_price" checked={formData.is_added_to_price} onChange={c => setFormData(p => ({ ...p, is_added_to_price: c }))} /></div>
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><label htmlFor="is_vat_included" className="text-sm font-medium">{t('taxes.th_subjectToVat')}</label><Switch id="is_vat_included" checked={formData.is_vat_included} onChange={c => setFormData(p => ({ ...p, is_vat_included: c }))} /></div>
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><label htmlFor="is_active" className="text-sm font-medium">{t('taxes.th_status')}</label><Switch id="is_active" checked={formData.is_active} onChange={c => setFormData(p => ({ ...p, is_active: c }))} /></div>
+                        </div>
                     </form>
                 </div>
                 <footer className="flex items-center justify-start p-4 border-t dark:border-slate-700 flex-shrink-0 gap-3 sticky bottom-0 bg-white dark:bg-slate-800">

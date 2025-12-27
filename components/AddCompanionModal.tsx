@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { Guest, Companion, ReservationRelationship } from '../types';
 import SearchableSelect from './SearchableSelect';
-import { apiClient } from '../apiClient';
+
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import PlusIcon from './icons-redesign/PlusIcon';
 import PencilIcon from './icons-redesign/PencilIcon';

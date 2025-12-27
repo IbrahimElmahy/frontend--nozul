@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../contexts/LanguageContext';
-import { apiClient } from '../apiClient';
+import { fetchStatementAccount, exportStatementAccount } from '../services/reports';
+import { listCashAccounts, listCurrencies, listUsers } from '../services/financials';
 import { FundReportItem, ReportFilterOption } from '../types';
 import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
 import PrinterIcon from './icons-redesign/PrinterIcon';
@@ -45,9 +46,9 @@ const ReportFinancial: React.FC = () => {
         const fetchOptions = async () => {
             try {
                 const [cashRes, currRes, userRes] = await Promise.all([
-                    apiClient<{ data: any[] }>('/ar/cash/api/cash/'), // Or specific account list API if available
-                    apiClient<{ data: any[] }>('/ar/currency/api/currencies/'),
-                    apiClient<{ data: any[] }>('/ar/user/api/users/'),
+                    listCashAccounts(),
+                    listCurrencies(),
+                    listUsers(),
                 ]);
 
                 const mapOptions = (list: any) => {
@@ -58,9 +59,9 @@ const ReportFinancial: React.FC = () => {
                     }));
                 };
 
-                setAccounts(mapOptions(cashRes.data));
-                setCurrencies(mapOptions(currRes.data));
-                setUsers(mapOptions(userRes.data));
+                setAccounts(mapOptions(cashRes));
+                setCurrencies(mapOptions(currRes));
+                setUsers(mapOptions(userRes));
 
             } catch (error) {
                 console.error("Failed to fetch report options", error);
@@ -80,8 +81,8 @@ const ReportFinancial: React.FC = () => {
             if (filters.userId) params.append('created_by', filters.userId);
             if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
 
-            const response = await apiClient<any>('/ar/report/api/statement-account/?' + params.toString());
-            const raw = Array.isArray(response) ? response : Array.isArray(response?.data) ? response.data : Array.isArray(response?.results) ? response.results : [];
+            const response = await fetchStatementAccount(Object.fromEntries(params));
+            const raw = response.data || [];
             const mappedData: FundReportItem[] = raw.map((item: any) => ({
                 id: item.id,
                 date: item.date,
@@ -98,7 +99,7 @@ const ReportFinancial: React.FC = () => {
 
             const totalDebit = mappedData.reduce((sum, item) => sum + item.debit, 0);
             const totalCredit = mappedData.reduce((sum, item) => sum + item.credit, 0);
-            const netBalance = totalDebit - totalCredit; 
+            const netBalance = totalDebit - totalCredit;
 
             setSummary({ totalDebit, totalCredit, netBalance });
 
@@ -111,11 +112,31 @@ const ReportFinancial: React.FC = () => {
         }
     };
 
-    const handleExport = () => {
-        const params = new URLSearchParams();
-        // Add filters
-        const url = `https://www.osusideas.online/ar/report/api/statement-account/export-excel-file/?${params.toString()}`;
-        window.open(url, '_blank');
+    const handleExport = async () => {
+        try {
+            setLoading(true);
+            const params = new URLSearchParams();
+            if (filters.account) params.append('account', filters.account);
+            if (filters.currency) params.append('currency', filters.currency);
+            if (filters.startDate) params.append('start_date', filters.startDate);
+            if (filters.endDate) params.append('end_date', filters.endDate);
+            if (filters.userId) params.append('created_by', filters.userId);
+            if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
+
+            const blob = await exportStatementAccount(Object.fromEntries(params));
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `statement_account_${new Date().toISOString().split('T')[0]}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Export failed", error);
+            alert("Export failed");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handlePrint = () => {
@@ -130,53 +151,53 @@ const ReportFinancial: React.FC = () => {
             {/* Filter Section */}
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
                 <h3 className={`text-lg font-bold text-slate-700 dark:text-slate-200 mb-4 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{t('receipts.searchInfo')}</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <div>
                         <label className={labelClass}>{t('receipts.addReceiptPanel.paymentTo')}</label>
-                        <SearchableSelect 
-                            id="account" 
-                            options={accounts.map(o => o.name)} 
-                            value={accounts.find(o => o.id === filters.account)?.name || ''} 
-                            onChange={val => { const f = accounts.find(o => o.name === val); if(f) setFilters(p => ({...p, account: f.id})) }} 
+                        <SearchableSelect
+                            id="account"
+                            options={accounts.map(o => o.name)}
+                            value={accounts.find(o => String(o.id) === String(filters.account))?.name || ''}
+                            onChange={val => { const f = accounts.find(o => o.name === val); if (f) setFilters(p => ({ ...p, account: String(f.id) })) }}
                             placeholder="Select Account"
                         />
                     </div>
                     <div>
                         <label className={labelClass}>{t('receipts.addReceiptPanel.currency')}</label>
-                        <SearchableSelect 
-                            id="currency" 
-                            options={currencies.map(o => o.name)} 
-                            value={currencies.find(o => o.id === filters.currency)?.name || ''} 
-                            onChange={val => { const f = currencies.find(o => o.name === val); if(f) setFilters(p => ({...p, currency: f.id})) }} 
+                        <SearchableSelect
+                            id="currency"
+                            options={currencies.map(o => o.name)}
+                            value={currencies.find(o => String(o.id) === String(filters.currency))?.name || ''}
+                            onChange={val => { const f = currencies.find(o => o.name === val); if (f) setFilters(p => ({ ...p, currency: String(f.id) })) }}
                             placeholder="Select Currency"
                         />
                     </div>
                     <div>
                         <label className={labelClass}>{t('bookings.from')}</label>
-                        <DatePicker value={filters.startDate} onChange={d => setFilters(p => ({...p, startDate: d}))} />
+                        <DatePicker value={filters.startDate} onChange={d => setFilters(p => ({ ...p, startDate: d }))} />
                     </div>
                     <div>
                         <label className={labelClass}>{t('bookings.to')}</label>
-                        <DatePicker value={filters.endDate} onChange={d => setFilters(p => ({...p, endDate: d}))} />
+                        <DatePicker value={filters.endDate} onChange={d => setFilters(p => ({ ...p, endDate: d }))} />
                     </div>
                     <div>
                         <label className={labelClass}>{t('receipts.addReceiptPanel.accountant')}</label>
-                        <SearchableSelect 
-                            id="user" 
-                            options={users.map(o => o.name)} 
-                            value={users.find(o => o.id === filters.userId)?.name || ''} 
-                            onChange={val => { const f = users.find(o => o.name === val); if(f) setFilters(p => ({...p, userId: f.id})) }} 
+                        <SearchableSelect
+                            id="user"
+                            options={users.map(o => o.name)}
+                            value={users.find(o => String(o.id) === String(filters.userId))?.name || ''}
+                            onChange={val => { const f = users.find(o => o.name === val); if (f) setFilters(p => ({ ...p, userId: String(f.id) })) }}
                             placeholder="Select User"
                         />
                     </div>
                     <div>
                         <label className={labelClass}>{t('bookings.bookingNumber')}</label>
-                        <input 
-                            type="text" 
-                            value={filters.reservationNumber} 
-                            onChange={e => setFilters(p => ({...p, reservationNumber: e.target.value}))} 
-                            className={inputClass} 
+                        <input
+                            type="text"
+                            value={filters.reservationNumber}
+                            onChange={e => setFilters(p => ({ ...p, reservationNumber: e.target.value }))}
+                            className={inputClass}
                             placeholder="Reservation No."
                         />
                     </div>

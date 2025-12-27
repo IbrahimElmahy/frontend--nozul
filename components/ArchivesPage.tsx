@@ -8,7 +8,7 @@ import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import EyeIcon from './icons-redesign/EyeIcon';
 import XMarkIcon from './icons-redesign/XMarkIcon';
-import { apiClient } from '../apiClient';
+import { listArchiveLogs } from '../services/archives';
 import { ArchiveLog } from '../types';
 
 const archivesData = [
@@ -30,7 +30,7 @@ const ArchivesPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
     const [favorites, setFavorites] = useState<string[]>([]);
-    
+
     // Master-Detail State
     const [selectedArchiveId, setSelectedArchiveId] = useState<string | null>(null);
     const [logs, setLogs] = useState<ArchiveLog[]>([]);
@@ -64,8 +64,8 @@ const ArchivesPage: React.FC = () => {
                     start: ((pagination.currentPage - 1) * pagination.itemsPerPage).toString(),
                     length: pagination.itemsPerPage.toString(),
                 });
-                
-                const response = await apiClient<{ data: ArchiveLog[], recordsFiltered: number }>(`/ar/archive/api/archive/?${params.toString()}`);
+
+                const response = await listArchiveLogs(params);
                 setLogs(response.data);
                 setPagination(prev => ({ ...prev, totalRecords: response.recordsFiltered }));
             } catch (error) {
@@ -80,8 +80,8 @@ const ArchivesPage: React.FC = () => {
 
     const handleToggleFavorite = (e: React.MouseEvent, archiveId: string) => {
         e.stopPropagation();
-        setFavorites(prev => 
-            prev.includes(archiveId) 
+        setFavorites(prev =>
+            prev.includes(archiveId)
                 ? prev.filter(id => id !== archiveId)
                 : [...prev, archiveId]
         );
@@ -92,15 +92,15 @@ const ArchivesPage: React.FC = () => {
             const title = t(`archivesPage.archives.${archive.id}.title` as any).toLowerCase();
             const description = t(`archivesPage.archives.${archive.id}.description` as any).toLowerCase();
             const lowerSearchTerm = searchTerm.toLowerCase();
-            
+
             const matchesSearch = title.includes(lowerSearchTerm) || description.includes(lowerSearchTerm);
-            
+
             if (activeCategory === 'all') return matchesSearch;
             if (activeCategory === 'favorites') return matchesSearch && favorites.includes(archive.id);
             return matchesSearch && archive.category === activeCategory;
         });
     }, [searchTerm, activeCategory, favorites, t]);
-    
+
     const sidebarCategories = [
         { id: 'favorites', nameKey: 'archivesPage.favorites', icon: StarIcon },
         { id: 'all', nameKey: 'archivesPage.allArchives', icon: ArchiveBoxIcon },
@@ -115,7 +115,7 @@ const ArchivesPage: React.FC = () => {
             <div className="space-y-6">
                 <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                     <div className="flex items-center gap-4">
-                        <button 
+                        <button
                             onClick={() => { setSelectedArchiveId(null); setLogs([]); }}
                             className={`flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors`}
                         >
@@ -149,11 +149,10 @@ const ArchivesPage: React.FC = () => {
                                 ) : logs.map((log, idx) => (
                                     <tr key={idx} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                         <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                                log.action_type.includes('إضافة') || log.action_type.includes('Create') ? 'bg-green-100 text-green-800' :
+                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${log.action_type.includes('إضافة') || log.action_type.includes('Create') ? 'bg-green-100 text-green-800' :
                                                 log.action_type.includes('تعديل') || log.action_type.includes('Update') ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-red-100 text-red-800'
-                                            }`}>
+                                                    'bg-red-100 text-red-800'
+                                                }`}>
                                                 {log.action_type}
                                             </span>
                                         </td>
@@ -161,7 +160,7 @@ const ArchivesPage: React.FC = () => {
                                         <td className="px-6 py-4">{log.role}</td>
                                         <td className="px-6 py-4" dir="ltr">{new Date(log.action_time).toLocaleString()}</td>
                                         <td className="px-6 py-4">
-                                            <button 
+                                            <button
                                                 onClick={() => setSelectedLog(log)}
                                                 className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center justify-center gap-1 mx-auto"
                                             >
@@ -181,7 +180,7 @@ const ArchivesPage: React.FC = () => {
                             <span>{t('archivesPage.showing')}</span>
                             <select
                                 value={pagination.itemsPerPage}
-                                onChange={(e) => setPagination(p => ({...p, itemsPerPage: Number(e.target.value), currentPage: 1}))}
+                                onChange={(e) => setPagination(p => ({ ...p, itemsPerPage: Number(e.target.value), currentPage: 1 }))}
                                 className="py-1 px-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none"
                             >
                                 <option value={10}>10</option>
@@ -193,17 +192,17 @@ const ArchivesPage: React.FC = () => {
                             <span>{`${pagination.totalRecords > 0 ? (pagination.currentPage - 1) * pagination.itemsPerPage + 1 : 0} - ${Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalRecords)} ${t('archivesPage.of')} ${pagination.totalRecords}`}</span>
                         </div>
                         <nav className="flex items-center gap-1">
-                            <button 
-                                onClick={() => setPagination(p => ({...p, currentPage: Math.max(1, p.currentPage - 1)}))} 
-                                disabled={pagination.currentPage === 1} 
+                            <button
+                                onClick={() => setPagination(p => ({ ...p, currentPage: Math.max(1, p.currentPage - 1) }))}
+                                disabled={pagination.currentPage === 1}
                                 className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50"
                             >
                                 <ChevronLeftIcon className="w-5 h-5" />
                             </button>
                             <span className="text-sm font-semibold px-2">{pagination.currentPage} / {totalPages || 1}</span>
-                            <button 
-                                onClick={() => setPagination(p => ({...p, currentPage: Math.min(totalPages, p.currentPage + 1)}))} 
-                                disabled={pagination.currentPage === totalPages || totalPages === 0} 
+                            <button
+                                onClick={() => setPagination(p => ({ ...p, currentPage: Math.min(totalPages, p.currentPage + 1) }))}
+                                disabled={pagination.currentPage === totalPages || totalPages === 0}
                                 className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50"
                             >
                                 <ChevronRightIcon className="w-5 h-5" />
@@ -246,11 +245,10 @@ const ArchivesPage: React.FC = () => {
                             <button
                                 key={cat.id}
                                 onClick={() => setActiveCategory(cat.id)}
-                                className={`w-full flex items-center gap-3 p-3 rounded-lg text-sm font-medium transition-colors duration-150 ${
-                                    activeCategory === cat.id
-                                        ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                                }`}
+                                className={`w-full flex items-center gap-3 p-3 rounded-lg text-sm font-medium transition-colors duration-150 ${activeCategory === cat.id
+                                    ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                    }`}
                             >
                                 <cat.icon className="w-5 h-5" />
                                 <span>{t(cat.nameKey as any)}</span>
@@ -262,7 +260,7 @@ const ArchivesPage: React.FC = () => {
 
             {/* Main Content */}
             <main className="flex-grow w-full md:w-2/3">
-                 <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm h-full">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm h-full">
                     <div className="relative mb-6">
                         <input
                             type="text"
@@ -272,9 +270,9 @@ const ArchivesPage: React.FC = () => {
                             className="w-full py-3 px-4 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200"
                         />
                     </div>
-                    
+
                     <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4">{t('archivesPage.allArchives')}</h2>
-                    
+
                     <div className="space-y-6">
                         {categoryData.map(category => {
                             const archivesInCategory = filteredArchives.filter(r => r.category === category.id);
@@ -285,8 +283,8 @@ const ArchivesPage: React.FC = () => {
                                     <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300 mb-2 border-b dark:border-slate-700 pb-2">{t(category.nameKey as any)}</h3>
                                     <div className="space-y-2">
                                         {archivesInCategory.map(archive => (
-                                            <div 
-                                                key={archive.id} 
+                                            <div
+                                                key={archive.id}
                                                 onClick={() => setSelectedArchiveId(archive.id)}
                                                 className="flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors duration-150 cursor-pointer group"
                                             >
@@ -307,7 +305,7 @@ const ArchivesPage: React.FC = () => {
                             );
                         })}
                     </div>
-                 </div>
+                </div>
             </main>
         </div>
     );
