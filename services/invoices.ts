@@ -25,10 +25,18 @@ const toFormData = (payload: Record<string, any>) => {
     return formData;
 };
 
-const INVOICES_ENDPOINT = '/invoice/api/invoices/';
+const INVOICES_ENDPOINT = '/ar/invoice/api/invoices/';
 
-export const createInvoice = (payload: Partial<Invoice>) =>
-    apiClient<Invoice>(INVOICES_ENDPOINT, { method: 'POST', body: toFormData(payload) });
+export const createInvoice = (payload: URLSearchParams | FormData) => {
+    const isUrlEncoded = payload instanceof URLSearchParams;
+    const headers = isUrlEncoded ? { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } : undefined;
+
+    return apiClient<Invoice>(INVOICES_ENDPOINT, {
+        method: 'POST',
+        headers, // apiClient implementation should merge or respect this 
+        body: payload
+    });
+};
 
 export const listInvoices = (query?: Query) =>
     apiClient<InvoiceListResponse>(`${INVOICES_ENDPOINT}${buildQueryString(query)}`);

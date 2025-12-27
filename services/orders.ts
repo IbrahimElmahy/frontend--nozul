@@ -1,61 +1,95 @@
 import { apiClient } from '../apiClient';
-import { Order, OrderCalculationRequest, OrderCalculationResponse, OrderListResponse } from '../types';
+import { Order, OrderItem } from '../types';
 
-type Query = Record<string, string | number | undefined | null>;
+interface OrderListResponse {
+    data: any[]; // The raw API response often has snake_case fields that need mapping
+    recordsFiltered: number;
+}
 
-const buildQueryString = (query?: Query) => {
-    if (!query) return '';
-    const params = new URLSearchParams();
-    Object.entries(query).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-            params.append(key, String(value));
-        }
-    });
-    const qs = params.toString();
-    return qs ? `?${qs}` : '';
+export const listOrders = async (params: URLSearchParams = new URLSearchParams()): Promise<{ orders: Order[], total: number }> => {
+    // Convert URLSearchParams to query string
+    const response = await apiClient<OrderListResponse>(`/ar/order/api/orders/?${params.toString()}`);
+
+    const mappedOrders: Order[] = response.data.map((o: any) => ({
+        id: o.id,
+        orderNumber: o.number,
+        bookingNumber: o.reservation || '',
+        apartmentName: o.apartment || '',
+        value: parseFloat(o.amount),
+        discount: parseFloat(o.discount || 0),
+        subtotal: parseFloat(o.subtotal),
+        tax: parseFloat(o.tax),
+        total: parseFloat(o.total),
+        createdAt: o.created_at,
+        updatedAt: o.updated_at,
+        notes: o.note,
+        items: o.order_items ? o.order_items.map((item: any) => ({
+            id: item.id,
+            service: typeof item.service === 'string' ? item.service : (item.service?.name_ar || item.service?.name_en || ''),
+            category: typeof item.category === 'string' ? item.category : (item.category?.name_ar || item.category?.name_en || ''),
+            quantity: item.quantity,
+            price: parseFloat(item.price)
+        })) : []
+    }));
+
+    return { orders: mappedOrders, total: response.recordsFiltered };
 };
 
-const toFormData = (payload: Record<string, any>) => {
-    const formData = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-            if (Array.isArray(value)) {
-                value.forEach((item, index) => {
-                    if (typeof item === 'object' && item !== null) {
-                        Object.entries(item).forEach(([itemKey, itemValue]) => {
-                            formData.append(`${key}[${index}]${itemKey}`, itemValue as any);
-                        });
-                    } else {
-                        formData.append(`${key}[]`, item as any);
-                    }
-                });
-            } else {
-                formData.append(key, value as any);
-            }
-        }
+export const createOrder = async (orderData: any): Promise<void> => {
+    // orderData needs to be transformed to match API expectations
+    const payload = {
+        reservation: orderData.bookingNumber, // mapped from frontend model
+        note: orderData.notes,
+        order_items: orderData.items ? orderData.items.map((item: any) => ({
+            service: item.service,
+            category: item.category,
+            quantity: item.quantity
+        })) : []
+    };
+
+    await apiClient('/ar/order/api/orders/', {
+        method: 'POST',
+        body: payload
     });
-    return formData;
 };
 
-const ORDERS_ENDPOINT = '/order/api/orders/';
+export const updateOrder = async (id: string, orderData: any): Promise<void> => {
+    const payload = {
+        order: id,
+        reservation: orderData.bookingNumber,
+        note: orderData.notes,
+        order_items: orderData.items ? orderData.items.map((item: any) => ({
+            service: item.service,
+            category: item.category,
+            quantity: item.quantity
+        })) : []
+    };
 
-export const calculateOrder = (payload: OrderCalculationRequest) =>
-    apiClient<OrderCalculationResponse>(`${ORDERS_ENDPOINT}calculation/`, { method: 'POST', body: toFormData(payload) });
+    await apiClient(`/ar/order/api/orders/${id}/`, {
+        method: 'PUT',
+        body: payload
+    });
+};
 
-export const createOrder = (payload: OrderCalculationRequest) =>
-    apiClient<Order>(ORDERS_ENDPOINT, { method: 'POST', body: toFormData(payload) });
+export const deleteOrder = async (id: string): Promise<void> => {
+    await apiClient(`/ar/order/api/orders/${id}/`, { method: 'DELETE' });
+};
 
-export const listOrders = (query?: Query) =>
-    apiClient<OrderListResponse>(`${ORDERS_ENDPOINT}${buildQueryString(query)}`);
+export const calculateOrder = async (reservationId: string, items: OrderItem[]): Promise<any> => {
+    const validItems = items.filter(item => item.service);
+    if (validItems.length === 0) return null;
 
-export const updateOrder = (id: string, payload: Partial<OrderCalculationRequest>) =>
-    apiClient<Order>(`${ORDERS_ENDPOINT}${id}/`, { method: 'PUT', body: toFormData(payload) });
+    const payload = {
+        reservation: reservationId,
+        order_items: validItems.map(item => ({
+            service: item.service,
+            category: item.category,
+            quantity: item.quantity
+        }))
+    };
 
-export const deleteOrder = (id: string) =>
-    apiClient<void>(`${ORDERS_ENDPOINT}${id}/`, { method: 'DELETE' });
-
-export const activateOrder = (id: string) =>
-    apiClient<void>(`${ORDERS_ENDPOINT}${id}/active/`, { method: 'POST' });
-
-export const disableOrder = (id: string) =>
-    apiClient<void>(`${ORDERS_ENDPOINT}${id}/disable/`, { method: 'POST' });
+    return await apiClient<any>('/order/api/orders/calculation/', {
+        method: 'POST',
+        body: payload
+    });
+};
