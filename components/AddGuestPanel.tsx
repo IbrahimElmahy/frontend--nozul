@@ -53,8 +53,17 @@ const AddGuestPanel: React.FC<AddGuestPanelProps> = ({ initialData, isEditing, i
     useEffect(() => {
         if (isOpen) {
             if (isEditing && initialData) {
-                const guestTypeObj = guestTypes.find(gt => gt.name === initialData.guest_type);
-                const idTypeObj = idTypes.find(it => it.name === initialData.ids);
+                // Robust matching: Check canonical name, AR, or EN
+                const guestTypeObj = guestTypes.find(gt =>
+                    gt.name === initialData.guest_type ||
+                    gt.name_ar === initialData.guest_type ||
+                    gt.name_en === initialData.guest_type
+                );
+                const idTypeObj = idTypes.find(it =>
+                    it.name === initialData.ids ||
+                    it.name_ar === initialData.ids ||
+                    it.name_en === initialData.ids
+                );
 
                 // Map initialData fields to formData state
                 setFormData({
@@ -198,7 +207,12 @@ const AddGuestPanel: React.FC<AddGuestPanelProps> = ({ initialData, isEditing, i
             }
 
             if (val !== null && val !== undefined) {
-                dataToSave.append(key, String(val));
+                // Sanitize phone numbers: remove spaces (keep +)
+                if ((key === 'phone_number' || key === 'work_number') && typeof val === 'string') {
+                    dataToSave.append(key, val.replace(/[\s-]/g, ''));
+                } else {
+                    dataToSave.append(key, String(val));
+                }
             }
         });
 
@@ -207,6 +221,15 @@ const AddGuestPanel: React.FC<AddGuestPanelProps> = ({ initialData, isEditing, i
         // 'nationality': Required by backend alias for 'country'
         if (formData.country) {
             dataToSave.append('nationality', formData.country);
+        }
+
+        // Defensive Payload: Map new field names to potential legacy backend names
+        // based on code comments "Renamed from ...", sending both ensures compatibility.
+        if (formData.id_serial) {
+            dataToSave.append('serial_number', String(formData.id_serial));
+        }
+        if (formData.issue_place) {
+            dataToSave.append('issue_location', formData.issue_place);
         }
 
         if (isEditing) {

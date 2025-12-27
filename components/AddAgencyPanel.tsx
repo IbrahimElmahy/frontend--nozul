@@ -8,7 +8,7 @@ import DatePicker from './DatePicker';
 import PhoneNumberInput from './PhoneNumberInput';
 import SearchableSelect from './SearchableSelect';
 import Switch from './Switch';
-import { apiClient } from '../apiClient';
+import { getCountries, getGuestTypes, getDiscountTypes, getIdTypes } from '../services/guests';
 
 interface AddAgencyPanelProps {
     initialData: Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'> | null;
@@ -38,9 +38,9 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
         const fetchOptions = async () => {
             try {
                 const [countriesRes, agentTypesRes, discountTypesRes] = await Promise.all([
-                    apiClient<CountryAPI>('/ar/country/api/countries/'),
-                    apiClient<{ data: GuestTypeAPI[] }>('/ar/guest/api/guests-types/?category=agent'),
-                    apiClient<[string, string][]>('/ar/discount/api/discount-types/')
+                    getCountries(),
+                    getGuestTypes('agent'),
+                    getDiscountTypes()
                 ]);
                 setCountries(countriesRes);
                 setAgentTypes(agentTypesRes.data);
@@ -113,7 +113,7 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
 
                 if (selectedAgentType) {
                     try {
-                        const idTypesRes = await apiClient<{ data: IdTypeAPI[] }>(`/ar/guest/api/ids/?guests_types=${selectedAgentType.id}`);
+                        const idTypesRes = await getIdTypes(selectedAgentType.id);
                         setIdTypes(idTypesRes.data);
 
                         // Now resolve IDs for the ID Type field similarly
@@ -260,7 +260,7 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                         </div>
 
 
-                        <SectionHeader title={t('guests.guestInfo')} />
+                        <SectionHeader title={t('guests.guestInfo' as any)} />
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
                                 <label htmlFor="guest_type" className={labelBaseClass}>{t('agencies.th_agencyType')}</label>
@@ -280,11 +280,11 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                             </div>
                             <div>
                                 <label className={labelBaseClass}>{t('guests.issueDate')}</label>
-                                <DatePicker selected={formData.issue_date ? new Date(formData.issue_date) : null} onChange={date => setFormData(p => ({ ...p, issue_date: date || '' }))} placeholderText={t('guests.issueDate')} />
+                                <DatePicker selectedDate={formData.issue_date ? new Date(formData.issue_date) : null} onChange={date => setFormData(p => ({ ...p, issue_date: date || '' }))} />
                             </div>
                             <div>
                                 <label className={labelBaseClass}>{t('guests.expiryDate')}</label>
-                                <DatePicker selected={formData.expiry_date ? new Date(formData.expiry_date) : null} onChange={date => setFormData(p => ({ ...p, expiry_date: date || '' }))} placeholderText={t('guests.expiryDate')} />
+                                <DatePicker selectedDate={formData.expiry_date ? new Date(formData.expiry_date) : null} onChange={date => setFormData(p => ({ ...p, expiry_date: date || '' }))} />
                             </div>
                             <div className="md:col-span-2">
                                 <label htmlFor="issue_place" className={labelBaseClass}>{t('guests.issuePlace')}</label>

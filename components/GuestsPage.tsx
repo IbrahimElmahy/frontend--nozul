@@ -5,7 +5,8 @@ import ConfirmationModal from './ConfirmationModal';
 import GuestCard from './GuestCard';
 import AddGuestPanel from './AddGuestPanel';
 import GuestDetailsModal from './GuestDetailsModal';
-import { apiClient, ApiValidationError } from '../apiClient';
+import { ApiValidationError } from '../apiClient';
+import { listGuests, createGuest, updateGuest, deleteGuest, disableGuest, activateGuest, getGuestTypes, getIdTypes, getCountries } from '../services/guests';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -58,9 +59,9 @@ const GuestsPage: React.FC = () => {
             // Fetch options first, only if they are not already loaded
             if (guestTypes.length === 0) {
                 const [guestTypesRes, idTypesRes, countriesRes] = await Promise.all([
-                    apiClient<{ data: GuestTypeAPI[] }>('/ar/guest/api/guests-types/'),
-                    apiClient<{ data: IdTypeAPI[] }>('/ar/guest/api/ids/'),
-                    apiClient<CountryAPI>('/ar/country/api/countries/'),
+                    getGuestTypes(),
+                    getIdTypes(),
+                    getCountries(),
                 ]);
                 setGuestTypes(guestTypesRes.data);
                 setIdTypes(idTypesRes.data);
@@ -68,12 +69,13 @@ const GuestsPage: React.FC = () => {
             }
 
             // Fetch guests with current pagination and search
-            const params = new URLSearchParams();
-            params.append('start', ((pagination.currentPage - 1) * pagination.itemsPerPage).toString());
-            params.append('length', pagination.itemsPerPage.toString());
-            if (searchTerm) params.append('search', searchTerm);
+            const query: any = {
+                start: (pagination.currentPage - 1) * pagination.itemsPerPage,
+                length: pagination.itemsPerPage,
+            };
+            if (searchTerm) query.search = searchTerm;
 
-            const guestsRes = await apiClient<{ data: Guest[], recordsFiltered: number }>(`/ar/guest/api/guests/?${params.toString()}`);
+            const guestsRes = await listGuests(query);
             setGuests(guestsRes.data);
             setPagination(p => ({ ...p, totalRecords: guestsRes.recordsFiltered }));
 
@@ -105,15 +107,15 @@ const GuestsPage: React.FC = () => {
     };
 
     const handleSaveGuest = async (formData: FormData) => {
-        const isEditing = !!editingGuest;
-        const endpoint = isEditing ? `/ar/guest/api/guests/${editingGuest.id}/` : '/ar/guest/api/guests/';
-        const method = isEditing ? 'PUT' : 'POST';
-
         setValidationErrors({});
         setErrorMessage(null);
 
         try {
-            await apiClient(endpoint, { method, body: formData });
+            if (editingGuest) {
+                await updateGuest(editingGuest.id, formData);
+            } else {
+                await createGuest(formData);
+            }
             setIsAddPanelOpen(false);
             setEditingGuest(null);
             fetchGuestsAndOptions(); // Refresh data
@@ -133,13 +135,13 @@ const GuestsPage: React.FC = () => {
         try {
             switch (action) {
                 case 'delete':
-                    await apiClient(`/ar/guest/api/guests/${guest.id}/`, { method: 'DELETE' });
+                    await deleteGuest(guest.id);
                     break;
                 case 'deactivate':
-                    await apiClient(`/ar/guest/api/guests/${guest.id}/disable/`, { method: 'POST' });
+                    await disableGuest(guest.id);
                     break;
                 case 'activate':
-                    await apiClient(`/ar/guest/api/guests/${guest.id}/active/`, { method: 'POST' });
+                    await activateGuest(guest.id);
                     break;
             }
             fetchGuestsAndOptions(); // Refresh data

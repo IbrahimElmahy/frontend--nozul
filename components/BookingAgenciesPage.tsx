@@ -6,7 +6,7 @@ import ConfirmationModal from './ConfirmationModal';
 import AgencyCard from './AgencyCard';
 import AddAgencyPanel from './AddAgencyPanel';
 import AgencyDetailsModal from './AgencyDetailsModal';
-import { apiClient } from '../apiClient';
+import { listAgencies, createAgency, updateAgency, deleteAgency, toggleAgencyStatus } from '../services/agencies';
 
 // Icons
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
@@ -74,7 +74,7 @@ const BookingAgenciesPage: React.FC = () => {
             params.append('length', itemsPerPage.toString());
             if (searchTerm) params.append('search', searchTerm);
 
-            const response = await apiClient<{ data: BookingAgency[], recordsFiltered: number }>(`/ar/guest/api/guests/?${params.toString()}`);
+            const response = await listAgencies(params);
             setAgencies(response.data);
             setTotalRecords(response.recordsFiltered);
         } catch (err) {
@@ -122,15 +122,9 @@ const BookingAgenciesPage: React.FC = () => {
     const handleSaveAgency = async (formData: FormData) => {
         try {
             if (editingAgency) {
-                await apiClient(`/ar/guest/api/guests/${editingAgency.id}/`, {
-                    method: 'PUT',
-                    body: formData
-                });
+                await updateAgency(editingAgency.id, formData);
             } else {
-                await apiClient('/ar/guest/api/guests/', {
-                    method: 'POST',
-                    body: formData
-                });
+                await createAgency(formData);
             }
             fetchAgencies();
             handleClosePanel();
@@ -141,8 +135,7 @@ const BookingAgenciesPage: React.FC = () => {
 
     const handleToggleStatus = async (agency: BookingAgency, newStatus: boolean) => {
         try {
-            const action = newStatus ? 'active' : 'disable';
-            await apiClient(`/ar/guest/api/guests/${agency.id}/${action}/`, { method: 'POST' });
+            await toggleAgencyStatus(agency.id, newStatus);
             // Optimistically update
             setAgencies(prev => prev.map(a => a.id === agency.id ? { ...a, is_active: newStatus } : a));
         } catch (err) {
@@ -168,7 +161,7 @@ const BookingAgenciesPage: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (agencyToDeleteId) {
             try {
-                await apiClient(`/ar/guest/api/guests/${agencyToDeleteId}/`, { method: 'DELETE' });
+                await deleteAgency(agencyToDeleteId);
                 fetchAgencies();
                 setAgencyToDeleteId(null);
             } catch (err) {
