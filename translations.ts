@@ -9,6 +9,8 @@ export const translations = {
             cancel: "إلغاء",
             edit: "تعديل",
             delete: "حذف",
+            error: "خطأ",
+            dismiss: "تجاهل",
         },
         "walid_ullah": "وليد উল্লাহ",
         "manager": "مدير",
@@ -293,6 +295,7 @@ export const translations = {
             error: "خطأ",
             close: "إغلاق",
             requiredField: "هذا الحقل مطلوب",
+            invalidPhone: "رقم الهاتف غير صحيح",
         },
         bookings: {
             manageBookings: "إدارة الحجوزات",
@@ -401,6 +404,9 @@ export const translations = {
             notesPlaceholder: "اكتب بعض الملاحظات ...",
             cancel: "إلغاء",
             saveBooking: "حفظ الحجز",
+            selectUnit: "اختر وحدة",
+            calculating: "جاري الحساب...",
+            saving: "جاري الحفظ...",
             alerts: {
                 addingNewApartment: "إضافة شقة جديدة...",
                 editingApartment: "تعديل الشقة: {0}",
@@ -421,6 +427,9 @@ export const translations = {
                 editingOrder: "تعديل الطلب: {0}",
                 previewingOrder: "معاينة الطلب: {0}",
                 fillAllFields: "يرجى تعبئة جميع الحقول المطلوبة",
+                selectUnitFirst: "الرجاء اختيار وحدة أولاً",
+                selectGuestFirst: "الرجاء اختيار ضيف أولاً",
+                saveBookingFirst: "الرجاء حفظ الحجز أولاً",
             },
             details: {
                 title: "تفاصيل الحجز",

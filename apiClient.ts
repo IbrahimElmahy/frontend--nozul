@@ -15,22 +15,26 @@ interface ApiClientOptions {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
     body?: any;
     responseType?: 'json' | 'blob';
+    headers?: HeadersInit;
 }
 
 export const apiClient = async <T>(endpoint: string, options: ApiClientOptions = {}): Promise<T> => {
-    const { method = 'GET', body = null, responseType = 'json' } = options;
+    const { method = 'GET', body = null, responseType = 'json', headers: customHeaders = {} } = options;
     const token = localStorage.getItem('accessToken');
     if (!token) {
         throw new Error('Authentication token not found. Please log in again.');
     }
 
     const isFormData = body instanceof FormData;
+    const isUrlSearchParams = body instanceof URLSearchParams;
 
     const headers: HeadersInit = {
         'Authorization': `JWT ${token}`,
+        'Accept-Language': document.documentElement.lang || 'ar',
+        ...customHeaders as any,
     };
 
-    if (!isFormData) {
+    if (!isFormData && !isUrlSearchParams && !headers['Content-Type']) {
         headers['Content-Type'] = 'application/json';
     }
 
@@ -40,7 +44,7 @@ export const apiClient = async <T>(endpoint: string, options: ApiClientOptions =
     };
 
     if (body) {
-        config.body = isFormData ? body : JSON.stringify(body);
+        config.body = (isFormData || isUrlSearchParams) ? body : JSON.stringify(body);
     }
 
     // For GET request with body, we should not send it. Instead we handle it with query params.

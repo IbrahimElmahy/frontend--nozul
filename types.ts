@@ -59,6 +59,7 @@ export interface User {
     role_name: string;
     role: string;
     id?: string;
+    image_url: string | null;
 }
 
 export type BookingStatus = 'check-in' | 'check-out' | 'pending' | 'confirmed' | 'cancelled';
@@ -238,6 +239,7 @@ export interface Order {
     updatedAt: string;
     items?: OrderItem[];
     notes?: string;
+    isActive?: boolean;
 }
 
 export interface Receipt {
@@ -457,7 +459,7 @@ export interface Notification {
     };
 }
 
-export interface HotelCondition {
+export interface Condition {
     id: string;
     hotel: string;
     content_en: string;
@@ -465,6 +467,8 @@ export interface HotelCondition {
     created_at: string;
     updated_at: string;
 }
+
+export type HotelCondition = Condition;
 
 // ---------- Reports & Reservations ----------
 
