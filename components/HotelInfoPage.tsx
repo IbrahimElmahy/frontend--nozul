@@ -5,8 +5,7 @@ import SearchableSelect from './SearchableSelect';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import { Page } from '../App';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
-import { apiClient } from '../apiClient';
-import { CountryAPI } from '../types';
+import { getHotelDetails, updateHotelDetails, listCountries } from '../services/hotel';
 
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -76,8 +75,8 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                 // This ID should ideally come from the user's session or a global state.
                 const hotelId = '32af5628-6b26-4ee7-8c11-3f82363007ff';
                 const [hotelData, countriesData] = await Promise.all([
-                    apiClient<any>(`/ar/hotel/api/hotels/${hotelId}/`),
-                    apiClient<CountryAPI>('/ar/country/api/countries/')
+                    getHotelDetails(hotelId),
+                    listCountries()
                 ]);
 
                 const countryCode = Object.keys(countriesData).find(code => countriesData[code] === hotelData.country) || '';
@@ -164,10 +163,8 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
 
         try {
             const hotelId = '32af5628-6b26-4ee7-8c11-3f82363007ff';
-            await apiClient(`/ar/hotel/api/hotels/${hotelId}/`, {
-                method: 'PUT',
-                body: data,
-            });
+
+            await updateHotelDetails(hotelId, data);
             setSuccess('Hotel information saved successfully!');
             // Clear file input state after successful upload
             setLogoFile(null);
@@ -220,29 +217,29 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                 </Section>
 
                 <Section title={t('hotelInfo.addressInfo')}>
-                    <FormField label={t('hotelInfo.country')}><SearchableSelect id="country" options={countries.map(c => c[1])} value={countries.find(c => c[0] === formData.country)?.[1] || ''} onChange={val => setFormData(p => ({ ...p, country: countries.find(c => c[1] === val)?.[0] || '' }))} /></FormField>
-                    <FormField label={t('hotelInfo.city')}><input name="city" value={formData.city} onChange={handleInputChange} className={inputClass} /></FormField>
-                    <FormField label={t('hotelInfo.district')}><input name="district" value={formData.district} onChange={handleInputChange} className={inputClass} /></FormField>
-                    <FormField label={t('hotelInfo.street')}><input name="street" value={formData.street} onChange={handleInputChange} className={inputClass} /></FormField>
-                    <FormField label={t('hotelInfo.timeZone')}><SearchableSelect id="timezone" options={timezones} value={formData.timeZone} onChange={val => setFormData(p => ({ ...p, timeZone: val }))} /></FormField>
-                    <FormField label={t('hotelInfo.postalCode')}><input name="postalCode" value={formData.postalCode} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.country' as any)}><SearchableSelect id="country" options={countries.map(c => c[1])} value={countries.find(c => c[0] === formData.country)?.[1] || ''} onChange={val => setFormData(p => ({ ...p, country: countries.find(c => c[1] === val)?.[0] || '' }))} /></FormField>
+                    <FormField label={t('hotelInfo.city' as any)}><input name="city" value={formData.city} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.district' as any)}><input name="district" value={formData.district} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.street' as any)}><input name="street" value={formData.street} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.timeZone' as any)}><SearchableSelect id="timezone" options={timezones} value={formData.timeZone} onChange={val => setFormData(p => ({ ...p, timeZone: val }))} /></FormField>
+                    <FormField label={t('hotelInfo.postalCode' as any)}><input name="postalCode" value={formData.postalCode} onChange={handleInputChange} className={inputClass} /></FormField>
                 </Section>
 
                 <Section title={t('hotelInfo.companyInfo')}>
-                    <FormField label={t('hotelInfo.taxNumber')}><input name="taxNumber" value={formData.taxNumber} onChange={handleInputChange} className={inputClass} /></FormField>
-                    <FormField label={t('hotelInfo.commercialRegNo')}><input name="commercialRegNo" value={formData.commercialRegNo} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.taxNumber' as any)}><input name="taxNumber" value={formData.taxNumber} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.commercialRegNo' as any)}><input name="commercialRegNo" value={formData.commercialRegNo} onChange={handleInputChange} className={inputClass} /></FormField>
                 </Section>
 
                 <Section title={t('hotelInfo.contactInfo')}>
-                    <FormField label={t('hotelInfo.mobileNumber')}><PhoneNumberInput value={formData.mobileNumber} onChange={val => setFormData(p => ({ ...p, mobileNumber: val }))} /></FormField>
-                    <FormField label={t('hotelInfo.phoneNumber')}><PhoneNumberInput value={formData.phoneNumber} onChange={val => setFormData(p => ({ ...p, phoneNumber: val }))} /></FormField>
-                    <FormField label={t('hotelInfo.quickContact')}><PhoneNumberInput value={formData.quickContact} onChange={val => setFormData(p => ({ ...p, quickContact: val }))} /></FormField>
-                    <FormField label={t('hotelInfo.fax')}><PhoneNumberInput value={formData.fax} onChange={val => setFormData(p => ({ ...p, fax: val }))} /></FormField>
+                    <FormField label={t('hotelInfo.mobileNumber' as any)}><PhoneNumberInput value={formData.mobileNumber} onChange={val => setFormData(p => ({ ...p, mobileNumber: val }))} /></FormField>
+                    <FormField label={t('hotelInfo.phoneNumber' as any)}><PhoneNumberInput value={formData.phoneNumber} onChange={val => setFormData(p => ({ ...p, phoneNumber: val }))} /></FormField>
+                    <FormField label={t('hotelInfo.quickContact' as any)}><PhoneNumberInput value={formData.quickContact} onChange={val => setFormData(p => ({ ...p, quickContact: val }))} /></FormField>
+                    <FormField label={t('hotelInfo.fax' as any)}><PhoneNumberInput value={formData.fax} onChange={val => setFormData(p => ({ ...p, fax: val }))} /></FormField>
                 </Section>
 
                 <Section title={t('hotelInfo.description')}>
                     <FormField label="" className="md:col-span-2">
-                        <textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} placeholder={t('hotelInfo.descriptionPlaceholder')} className={inputClass}></textarea>
+                        <textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} placeholder={t('hotelInfo.descriptionPlaceholder' as any)} className={inputClass}></textarea>
                     </FormField>
                 </Section>
 
@@ -253,7 +250,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                         ) : (
                             <CheckCircleIcon className="w-5 h-5" />
                         )}
-                        <span>{isSaving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : t('hotelInfo.saveChanges')}</span>
+                        <span>{isSaving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : t('hotelInfo.saveChanges' as any)}</span>
                     </button>
                 </div>
             </form>
