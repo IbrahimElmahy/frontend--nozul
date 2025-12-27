@@ -8,7 +8,12 @@ import TrashIcon from './icons-redesign/TrashIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
 import { TranslationKey } from '../translations';
-import { apiClient } from '../apiClient';
+import {
+    listNotifications,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    deleteNotification
+} from '../services/notifications';
 import { Notification } from '../types';
 
 const timeAgo = (isoString: string, t: (key: TranslationKey, ...args: any[]) => string): string => {
@@ -36,8 +41,8 @@ const NotificationsPage: React.FC = () => {
         const fetchNotifications = async () => {
             try {
                 setLoading(true);
-                const response = await apiClient<{ data: Notification[] }>('/notification/api/notifications/');
-                setNotifications(response.data);
+                const data = await listNotifications();
+                setNotifications(data);
             } catch (error) {
                 console.error("Failed to fetch notifications", error);
             } finally {
@@ -47,19 +52,31 @@ const NotificationsPage: React.FC = () => {
         fetchNotifications();
     }, []);
 
-    const handleMarkAsRead = (id: string) => {
-        setNotifications(prev => prev.map(n => n.pk === id ? { ...n, unread: false } : n));
-        // In a real app, call API here
+    const handleMarkAsRead = async (id: string) => {
+        try {
+            await markNotificationAsRead(id);
+            setNotifications(prev => prev.map(n => n.pk === id ? { ...n, unread: false } : n));
+        } catch (error) {
+            console.error("Failed to mark as read", error);
+        }
     };
 
-    const handleDelete = (id: string) => {
-        setNotifications(prev => prev.filter(n => n.pk !== id));
-        // In a real app, call API DELETE here
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteNotification(id);
+            setNotifications(prev => prev.filter(n => n.pk !== id));
+        } catch (error) {
+            console.error("Failed to delete notification", error);
+        }
     };
 
-    const handleMarkAllAsRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
-        // Call API
+    const handleMarkAllAsRead = async () => {
+        try {
+            await markAllNotificationsAsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+        } catch (error) {
+            console.error("Failed to mark all as read", error);
+        }
     };
 
     const filteredNotifications = useMemo(() => {

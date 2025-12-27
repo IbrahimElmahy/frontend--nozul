@@ -1,7 +1,7 @@
 
 import React, { useState, useContext } from 'react';
 import { ThemeSettings, Page } from '../App';
-import { apiClient } from '../apiClient';
+import { listNotifications } from '../services/notifications';
 import { API_BASE_URL } from '../config/api';
 import DashboardIcon from './icons-redesign/DashboardIcon';
 import CalendarIcon from './icons-redesign/CalendarIcon';
@@ -212,8 +212,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, settings, isMobileMenuOpen,
     React.useEffect(() => {
         const fetchNotifications = async () => {
             try {
-                const response = await apiClient<{ data: Notification[] }>('/ar/notification/api/notifications/');
-                setNotifications(response.data);
+                const notificationsData = await listNotifications();
+                setNotifications(notificationsData);
             } catch (error) {
                 console.error("Failed to fetch notifications in Sidebar", error);
             }
