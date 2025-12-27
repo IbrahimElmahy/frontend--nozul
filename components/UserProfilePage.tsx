@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { apiClient } from '../apiClient';
+import { updateProfile } from '../services/users';
 import { API_BASE_URL } from '../config/api';
 import ProfileStatCard from './ProfileStatCard';
 import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
@@ -100,10 +100,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
             }
 
             // Using PUT to update profile without specific ID (as ID endpoint gave 404)
-            const updatedUserResponse = await apiClient<User>(`/ar/user/api/profile/`, {
-                method: 'PUT',
-                body: formData,
-            });
+            const updatedUserResponse = await updateProfile(formData);
 
             // Update local storage with the new user data
             // We need to merge the new data with the existing token/refresh info just in case

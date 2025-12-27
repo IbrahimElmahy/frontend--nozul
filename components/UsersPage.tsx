@@ -14,7 +14,7 @@ import ConfirmationModal from './ConfirmationModal';
 import UserDetailsModal from './UserDetailsModal';
 import Switch from './Switch';
 import { Page } from '../App';
-import { apiClient } from '../apiClient';
+import { listUsers, createUser, updateUser, deleteUser, toggleUserStatus } from '../services/users';
 
 
 const newUserTemplate: Omit<HotelUser, 'id' | 'last_login' | 'created_at' | 'updated_at' | 'profile' | 'role_display' | 'image_url'> = {
@@ -57,7 +57,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
             params.append('length', itemsPerPage.toString());
             if (searchTerm) params.append('search', searchTerm);
 
-            const response = await apiClient<{ data: HotelUser[], recordsFiltered: number }>(`/ar/user/api/users/?${params.toString()}`);
+            const response = await listUsers(params);
             setUsers(response.data);
             setTotalRecords(response.recordsFiltered);
         } catch (error) {
@@ -89,15 +89,9 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
     const handleSaveUser = async (formData: FormData) => {
         try {
             if (editingUser) {
-                await apiClient(`/ar/user/api/users/${editingUser.id}/`, {
-                    method: 'PUT',
-                    body: formData
-                });
+                await updateUser(editingUser.id, formData);
             } else {
-                await apiClient('/ar/user/api/users/', {
-                    method: 'POST',
-                    body: formData
-                });
+                await createUser(formData);
             }
             fetchUsers();
             handleClosePanel();
@@ -113,7 +107,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
     const handleConfirmDelete = async () => {
         if (userToDelete) {
             try {
-                await apiClient(`/ar/user/api/users/${userToDelete.id}/`, { method: 'DELETE' });
+                await deleteUser(userToDelete.id);
                 setUsers(users.filter(u => u.id !== userToDelete.id));
                 setUserToDelete(null);
             } catch (e) {
@@ -124,8 +118,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
 
     const handleToggleStatus = async (user: HotelUser, newStatus: boolean) => {
         try {
-            const action = newStatus ? 'active' : 'disable';
-            await apiClient(`/ar/user/api/users/${user.id}/${action}/`, { method: 'POST' });
+            await toggleUserStatus(user.id, newStatus);
             // Optimistically update
             setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_active: newStatus } : u));
         } catch (err) {
@@ -146,12 +139,12 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex items-center gap-4">
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('usersPage.pageTitle')}</h2>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('usersPage.pageTitle' as any)}</h2>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
                         <PlusCircleIcon className="w-5 h-5" />
-                        <span>{t('usersPage.addUser')}</span>
+                        <span>{t('usersPage.addUser' as any)}</span>
                     </button>
                     <button
                         onClick={() => setCurrentPage('hotel-settings')}
@@ -166,7 +159,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 pb-4 border-b dark:border-slate-700">
                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                        <span>{t('usersPage.showing')}</span>
+                        <span>{t('usersPage.showing' as any)}</span>
                         <select
                             value={itemsPerPage}
                             onChange={(e) => { setItemsPerPage(Number(e.target.value)); setPaginationCurrentPage(1); }}
@@ -176,7 +169,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                             <option value={25}>25</option>
                             <option value={50}>50</option>
                         </select>
-                        <span>{t('usersPage.entries')}</span>
+                        <span>{t('usersPage.entries' as any)}</span>
                     </div>
                     <div className="relative w-full sm:w-auto sm:flex-grow max-w-lg">
                         <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
@@ -237,7 +230,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        {`${t('usersPage.showing')} ${users.length > 0 ? (paginationCurrentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to')} ${Math.min(paginationCurrentPage * itemsPerPage, totalRecords)} ${t('usersPage.of')} ${totalRecords} ${t('usersPage.entries')}`}
+                        {`${t('usersPage.showing' as any)} ${users.length > 0 ? (paginationCurrentPage - 1) * itemsPerPage + 1 : 0} ${t('usersPage.to' as any)} ${Math.min(paginationCurrentPage * itemsPerPage, totalRecords)} ${t('usersPage.of' as any)} ${totalRecords} ${t('usersPage.entries' as any)}`}
                     </div>
                     {totalPages > 1 && (
                         <nav className="flex items-center gap-1" aria-label="Pagination">
@@ -263,8 +256,8 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                 isOpen={!!userToDelete}
                 onClose={() => setUserToDelete(null)}
                 onConfirm={handleConfirmDelete}
-                title={t('usersPage.deleteUserTitle')}
-                message={t('usersPage.confirmDeleteMessage')}
+                title={t('usersPage.deleteUserTitle' as any)}
+                message={t('usersPage.confirmDeleteMessage' as any)}
             />
 
             <UserDetailsModal

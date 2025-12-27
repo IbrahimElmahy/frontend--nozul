@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { login } from '../services/auth';
 import Logo from './icons/Logo';
 import EyeIcon from './icons-redesign/EyeIcon';
 import EyeOffIcon from './icons-redesign/EyeOffIcon';
 import { LanguageContext } from '../contexts/LanguageContext';
 import welcomeBg from '../images/login-hero.png';
-import { API_BASE_URL } from '../config/api';
 
 interface LoginPageProps {
     onLoginSuccess: () => void;
@@ -46,31 +46,26 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         setError('');
         setLoading(true);
 
-        const body = new URLSearchParams();
-        body.append('role', 'hotel');
-        body.append('username', username);
-        body.append('password', password);
+        const formData = new FormData();
+        formData.append('role', 'hotel');
+        formData.append('username', username);
+        formData.append('password', password);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/ar/auth/api/sessions/login/`, {
-                method: 'POST',
-                body,
-            });
-            const data = await response.json();
+            const data = await login(formData);
 
-            if (response.ok) {
-                localStorage.setItem('accessToken', data.access_token);
-                localStorage.setItem('user', JSON.stringify(data));
-                if (rememberMe) localStorage.setItem('rememberedUser', username);
-                else localStorage.removeItem('rememberedUser');
-                onLoginSuccess();
-            } else {
-                const errorMessage =
-                    data.detail || (Object.values(data).flat() as string[]).join(' ') || t('login.error');
-                setError(errorMessage);
-            }
-        } catch {
-            setError(t('login.error'));
+            localStorage.setItem('accessToken', data.access_token);
+            // Assuming data contains user info or we need to fetch it separately?
+            // LoginPage logic: localStorage.setItem('user', JSON.stringify(data));
+            localStorage.setItem('user', JSON.stringify(data));
+
+            if (rememberMe) localStorage.setItem('rememberedUser', username);
+            else localStorage.removeItem('rememberedUser');
+            onLoginSuccess();
+        } catch (err: any) {
+            // Error handling tailored to service response
+            const errorMessage = err.message || t('login.error');
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
