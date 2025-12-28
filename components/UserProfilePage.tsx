@@ -134,14 +134,13 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
 
                 // FIX: Flatten nested profile fields if they exist (API mismatch handling)
                 const responseAny = updatedUserResponse as any;
-                if (responseAny.profile) {
-                    newUserData.gender = responseAny.profile.gender || newUserData.gender;
-                    newUserData.birthdate = responseAny.profile.birthdate || newUserData.birthdate;
-                    // If image is nested
-                    if (responseAny.profile.image) {
-                        newUserData.image = responseAny.profile.image;
-                    }
-                }
+                // FIX: Force update with form data to ensure changes persist even if API response is partial
+                newUserData.name = profileData.name;
+                newUserData.email = profileData.email;
+                newUserData.username = profileData.username;
+                newUserData.phone_number = profileData.phoneNumber;
+                newUserData.gender = profileData.gender; // Directly set from form
+                newUserData.birthdate = profileData.dob; // Directly set from form
 
                 // If backend returns 'image' but not 'image_url', clear the stale 'image_url'
                 if ('image' in updatedUserResponse && !('image_url' in updatedUserResponse)) {
