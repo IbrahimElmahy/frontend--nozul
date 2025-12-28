@@ -3,6 +3,7 @@ export const translations = {
     ar: {
         buttons: {
             back: "رجوع",
+            goToPage: "اذهب إلى الصفحة",
         },
         common: {
             save: "حفظ",
@@ -11,6 +12,8 @@ export const translations = {
             delete: "حذف",
             error: "خطأ",
             dismiss: "تجاهل",
+            saving: "جاري الحفظ...",
+            unexpectedError: "حدث خطأ غير متوقع.",
         },
         "walid_ullah": "وليد উল্লাহ",
         "manager": "مدير",
@@ -200,6 +203,8 @@ export const translations = {
             userRole: "دور المستخدم",
             hotel: "فندق",
             save: "حفظ",
+            updateSuccess: "تم تحديث الملف الشخصي بنجاح",
+            updateError: "فشل تحديث الملف الشخصي",
         },
         datepicker: {
             months: ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"],
@@ -449,6 +454,7 @@ export const translations = {
                 bookingInfo: "معلومات الحجز المشتركة",
                 generateBookings: "إنشاء الحجوزات",
             },
+            printError: "فشلت طباعة الحجز",
         },
         guests: {
             manageGuests: "إدارة الضيوف",
@@ -692,6 +698,7 @@ export const translations = {
                 }
             },
             exportFailed: "فشل التصدير",
+            editReadOnly: "وظيفة التعديل للتقارير هي للقراءة فقط في هذا العرض.",
 
         },
         archivesPage: {
@@ -747,6 +754,7 @@ export const translations = {
             title: "الإشعارات",
             all: "الكل",
             unread: "غير مقروء",
+            markAsRead: "تعيين كمقروء",
             markAllAsRead: "وضع علامة على الكل كـ مقروء",
             today: "اليوم",
             yesterday: "الأمس",
@@ -792,8 +800,13 @@ export const translations = {
         },
         hotelInfo: {
             pageTitle: "معلومات الفندق",
-            breadcrumb: "إدارة الفندق",
             hotelManagement: "إدارة الفندق",
+            breadcrumb: "إدارة الفندق",
+            descriptionPlaceholder: "اكتب وصفاً للفندق...",
+            website: "الموقع الإلكتروني",
+            loadError: "فشل تحميل بيانات الفندق",
+            saveSuccess: "تم حفظ معلومات الفندق بنجاح",
+            saveError: "فشل حفظ بيانات الفندق",
             addressInfo: "معلومات العنوان",
             companyInfo: "معلومات الشركة",
             contactInfo: "معلومات التواصل",
@@ -2051,6 +2064,7 @@ export const translations = {
             th_roomType: "Room Type",
             th_floor: "Floor",
             th_rooms: "Rooms",
+            th_hourly: "Hourly",
             th_daily: "Daily",
             th_monthly: "Monthly",
             th_peak: "Peak",

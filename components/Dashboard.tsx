@@ -106,7 +106,7 @@ const Dashboard: React.FC = () => {
                 if (err instanceof Error) {
                     setError(err.message);
                 } else {
-                    setError('An unexpected error occurred.');
+                    setError(t('common.unexpectedError'));
                 }
             } finally {
                 setLoading(false);
@@ -166,10 +166,10 @@ const Dashboard: React.FC = () => {
         return (
             <div className="flex justify-center items-center h-full p-4">
                 <div className="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative" role="alert">
-                    <strong className="font-bold">Error: </strong>
+                    <strong className="font-bold">{t('common.error')}: </strong>
                     <span className="block sm:inline">{error}</span>
                 </div>
-            </div>
+            </div >
         );
     }
 

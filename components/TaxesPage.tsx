@@ -98,7 +98,7 @@ const TaxesPage: React.FC = () => {
                 fetchTaxes();
                 setTaxToDelete(null);
             } catch (error) {
-                alert(`Error deleting tax: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                alert(`${t('taxes.deleteError' as any)}: ${error instanceof Error ? error.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -108,7 +108,7 @@ const TaxesPage: React.FC = () => {
             await toggleTaxStatus(tax.id, newStatus);
             setTaxes(prev => prev.map(t => t.id === tax.id ? { ...t, is_active: newStatus } : t));
         } catch (error) {
-            alert(`Error updating tax status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            alert(`${t('taxes.statusError' as any)}: ${error instanceof Error ? error.message : t('common.unexpectedError')}`);
         }
     };
 
@@ -139,7 +139,7 @@ const TaxesPage: React.FC = () => {
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center border-b dark:border-slate-700 pb-3 mb-4">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('receipts.searchInfo')}</h3>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('taxes.searchInfo' as any)}</h3>
                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5" /></button>
                         <button onClick={handleAddNewClick} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><PlusIcon className="w-5 h-5" /></button>
@@ -175,7 +175,7 @@ const TaxesPage: React.FC = () => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={12} className="text-center py-10">Loading...</td></tr>
+                                <tr><td colSpan={12} className="text-center py-10"><div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div></td></tr>
                             ) : taxes.map(tax => (
                                 <tr key={tax.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                     <td className="px-4 py-2 hidden sm:table-cell">{tax.id.substring(0, 8)}</td>

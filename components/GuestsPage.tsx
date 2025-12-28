@@ -80,7 +80,7 @@ const GuestsPage: React.FC = () => {
             setPagination(p => ({ ...p, totalRecords: guestsRes.recordsFiltered }));
 
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unknown error occurred');
+            setError(err instanceof Error ? err.message : t('common.unexpectedError'));
         } finally {
             setLoading(false);
         }
@@ -124,7 +124,7 @@ const GuestsPage: React.FC = () => {
                 setValidationErrors(err.errors);
                 setErrorMessage(err.message);
             } else {
-                setErrorMessage(err instanceof Error ? err.message : 'An unknown error occurred');
+                setErrorMessage(err instanceof Error ? err.message : t('common.unexpectedError'));
             }
         }
     };
@@ -146,7 +146,7 @@ const GuestsPage: React.FC = () => {
             }
             fetchGuestsAndOptions(); // Refresh data
         } catch (err) {
-            alert(`Error performing action: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
         } finally {
             setGuestToAction(null);
         }
@@ -284,8 +284,8 @@ const GuestsPage: React.FC = () => {
                 isOpen={!!guestToAction}
                 onClose={() => setGuestToAction(null)}
                 onConfirm={handleConfirmAction}
-                title={`Confirm ${guestToAction?.action || ''}`}
-                message={`Are you sure you want to ${guestToAction?.action} this guest?`}
+                title={guestToAction ? t(`guests.confirmAction_${guestToAction.action}_title` as any) : ''}
+                message={guestToAction ? t(`guests.confirmAction_${guestToAction.action}_message` as any) : ''}
             />
 
             {errorMessage && (

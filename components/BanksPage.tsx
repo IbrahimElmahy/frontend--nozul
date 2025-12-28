@@ -102,7 +102,7 @@ const BanksPage: React.FC = () => {
             fetchBanks();
             handleClosePanel();
         } catch (err) {
-            alert(`Error saving bank: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`${t('banksPage.saveError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
         }
     };
 
@@ -132,7 +132,7 @@ const BanksPage: React.FC = () => {
                 fetchBanks();
                 setBankToDelete(null);
             } catch (err) {
-                alert(`Error deleting bank: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`${t('banksPage.deleteError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -195,7 +195,7 @@ const BanksPage: React.FC = () => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={7} className="py-8 text-center">Loading...</td></tr>
+                                <tr><td colSpan={7} className="py-8 text-center"><div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div></td></tr>
                             ) : banks.map(bank => (
                                 <tr key={bank.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                     <td className="px-4 py-2 hidden md:table-cell">{bank.id}</td>
@@ -226,7 +226,7 @@ const BanksPage: React.FC = () => {
 
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4">
                     <div className="text-sm text-slate-600 dark:text-slate-300">
-                        Page {currentPage}
+                        {currentPage}
                     </div>
                     <nav className="flex items-center gap-1" aria-label="Pagination">
                         <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-5 h-5" /></button>

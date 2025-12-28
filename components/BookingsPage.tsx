@@ -200,7 +200,7 @@ const BookingsPage: React.FC = () => {
                     [];
                 setBookings(items.map(mapReservationToBooking));
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Unknown error');
+                setError(err instanceof Error ? err.message : t('common.unexpectedError'));
             } finally {
                 setLoading(false);
             }
@@ -292,7 +292,7 @@ const BookingsPage: React.FC = () => {
             }
             handleClosePanel();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unknown error');
+            setError(err instanceof Error ? err.message : t('common.unexpectedError'));
         } finally {
             setIsSaving(false);
         }
@@ -320,7 +320,7 @@ const BookingsPage: React.FC = () => {
             setIsAddGroupPanelOpen(false);
         } catch (err) {
             console.error("Group booking failed", err);
-            setError(err instanceof Error ? err.message : 'Failed to save group bookings');
+            setError(err instanceof Error ? err.message : t('common.unexpectedError'));
         } finally {
             setIsSaving(false);
         }
@@ -351,7 +351,7 @@ const BookingsPage: React.FC = () => {
             await deleteReservation(idToDelete);
             setBookings(bookings.filter(b => b.id !== bookingToDeleteId));
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unknown error');
+            setError(err instanceof Error ? err.message : t('common.unexpectedError'));
         } finally {
             setBookingToDeleteId(null);
             setLoading(false);

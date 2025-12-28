@@ -96,7 +96,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
             fetchUsers();
             handleClosePanel();
         } catch (err) {
-            alert(`Error saving user: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`${t('usersPage.saveError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
         }
     };
 
@@ -111,7 +111,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                 setUsers(users.filter(u => u.id !== userToDelete.id));
                 setUserToDelete(null);
             } catch (e) {
-                alert(`Failed to delete user: ${e instanceof Error ? e.message : 'Unknown error'}`);
+                alert(`${t('usersPage.deleteError' as any)}: ${e instanceof Error ? e.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -122,7 +122,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
             // Optimistically update
             setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_active: newStatus } : u));
         } catch (err) {
-            alert(`Error changing status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`${t('usersPage.statusError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             fetchUsers(); // Revert
         }
     };
@@ -192,7 +192,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={12} className="text-center py-8">Loading...</td></tr>
+                                <tr><td colSpan={12} className="text-center py-8"><div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div></td></tr>
                             ) : users.map(user => (
                                 <tr key={user.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                     <td className="px-6 py-4"><span className="font-mono text-xs">{user.id.substring(0, 8)}</span></td>

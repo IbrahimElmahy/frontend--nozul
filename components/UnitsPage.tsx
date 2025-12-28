@@ -190,7 +190,7 @@ const UnitsPage: React.FC = () => {
 
             } catch (err) {
                 if (err instanceof Error) setError(err.message);
-                else setError('An unexpected error occurred.');
+                else setError(t('common.unexpectedError'));
             } finally {
                 setLoading(false);
             }
@@ -493,7 +493,7 @@ const UnitsPage: React.FC = () => {
             {loading ? (
                 <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div></div>
             ) : error ? (
-                <div className="flex justify-center items-center h-full p-4"><div className="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative" role="alert"><strong className="font-bold">Error: </strong><span className="block sm:inline">{error}</span></div></div>
+                <div className="flex justify-center items-center h-full p-4"><div className="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative" role="alert"><strong className="font-bold">{t('common.error')}: </strong><span className="block sm:inline">{error}</span></div></div>
             ) : viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {unitsData.map(unit => (<UnitCard key={unit.id} unit={unit} onViewClick={() => handleEditUnit(unit)} onEditClick={() => handleEditUnit(unit)} onDeleteClick={() => handleDeleteClick(unit.id)} onAddReservationClick={() => handleAddReservation(unit)} />))}

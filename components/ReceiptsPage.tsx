@@ -100,7 +100,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
 
         } catch (err) {
             console.error("Error fetching data:", err);
-            setError("Failed to fetch data");
+            setError(t('common.unexpectedError'));
         } finally {
             setLoading(false);
         }
@@ -132,7 +132,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 fetchData();
                 setVoucherToDelete(null);
             } catch (err) {
-                alert(`Error deleting transaction: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -166,7 +166,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 fetchData();
                 setInvoiceToDelete(null);
             } catch (err) {
-                alert(`Error deleting invoice: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -279,7 +279,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={currentTableHeaders.length} className="text-center py-10">Loading...</td></tr>
+                                <tr><td colSpan={currentTableHeaders.length} className="text-center py-10"><div className="flex justify-center items-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div></td></tr>
                             ) : displayData.length > 0 ? (
                                 isInvoiceView ? (
                                     (displayData as Invoice[]).map(invoice => (

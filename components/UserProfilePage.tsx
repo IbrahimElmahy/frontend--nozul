@@ -132,7 +132,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
 
         } catch (error) {
             console.error("Failed to update profile:", error);
-            alert("Failed to update profile.");
+            alert(t('profilePage.updateError'));
         } finally {
             setLoading(false);
         }
@@ -269,7 +269,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                     <div className={`flex ${language === 'ar' ? 'justify-start' : 'justify-start'} pt-4`}>
                         <button type="submit" disabled={loading} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50">
                             <CheckCircleIcon className="w-5 h-5" />
-                            <span>{loading ? 'Saving...' : t('profilePage.save')}</span>
+                            <span>{loading ? t('common.saving') : t('profilePage.save')}</span>
                         </button>
                     </div>
                 </form>

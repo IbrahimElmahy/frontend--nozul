@@ -128,7 +128,7 @@ const CurrenciesPage: React.FC = () => {
             fetchCurrencies();
             handleClosePanel();
         } catch (err) {
-            alert(`Error saving currency: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`${t('currenciesPage.saveError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
         }
     };
 
@@ -153,7 +153,7 @@ const CurrenciesPage: React.FC = () => {
                 fetchCurrencies();
                 setCurrencyToDelete(null);
             } catch (err) {
-                alert(`Error deleting currency: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`${t('currenciesPage.deleteError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -220,7 +220,9 @@ const CurrenciesPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedData.map(currency => (
+                            {loading ? (
+                                <tr><td colSpan={13} className="text-center py-10"><div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div></td></tr>
+                            ) : paginatedData.map(currency => (
                                 <tr key={currency.id} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                     <td className="px-4 py-2">{currency.id}</td>
                                     <td className="px-4 py-2 hidden sm:table-cell">{currency.name_en}</td>

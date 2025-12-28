@@ -24,9 +24,9 @@ interface SettingsCardProps {
 }
 
 const SettingsCard: React.FC<SettingsCardProps> = ({ icon: Icon, title, description, onClick }) => {
-    const { language } = useContext(LanguageContext);
+    const { language, t } = useContext(LanguageContext);
     return (
-        <button 
+        <button
             onClick={onClick}
             className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 flex flex-col items-start text-left h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
@@ -36,7 +36,7 @@ const SettingsCard: React.FC<SettingsCardProps> = ({ icon: Icon, title, descript
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-2">{title}</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 flex-grow mb-4">{description}</p>
             <div className="flex items-center gap-2 mt-auto text-sm font-semibold text-blue-600 group-hover:text-blue-700 dark:text-blue-400 dark:group-hover:text-blue-300">
-                <span>{language === 'ar' ? 'اذهب إلى الصفحة' : 'Go to Page'}</span>
+                <span>{t('buttons.goToPage')}</span>
                 <ChevronLeftIcon className={`w-4 h-4 transform ${language === 'en' ? 'rotate-180' : ''}`} />
             </div>
         </button>
@@ -84,7 +84,7 @@ const HotelSettingsPage: React.FC<HotelSettingsPageProps> = ({ setCurrentPage })
                     />
                 ))}
             </div>
-            
+
             <footer className="text-center text-sm text-slate-500 dark:text-slate-400 pt-8">
                 {t('hotelSettings.footer')}
             </footer>

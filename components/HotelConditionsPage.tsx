@@ -52,14 +52,14 @@ const HotelConditionsPage: React.FC = () => {
 
             if (editingCondition) {
                 await updateCondition(editingCondition.id, formData);
-                alert(t('hotelInfo.updateSuccess' as any) || 'Condition updated successfully!');
+                alert(t('hotelInfo.updateSuccess' as any));
             } else {
                 await createCondition(formData);
-                alert(t('hotelInfo.createSuccess' as any) || 'Condition created successfully!');
+                alert(t('hotelInfo.createSuccess' as any));
             }
             fetchConditions();
         } catch (err) {
-            alert(`Error saving condition: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`${t('hotelConditions.saveError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
         } finally {
             setIsSaving(false);
         }
@@ -109,7 +109,7 @@ const HotelConditionsPage: React.FC = () => {
                     ) : (
                         <CheckCircleIcon className="w-5 h-5" />
                     )}
-                    <span>{isSaving ? (t('hotelInfo.saving' as any) || 'Saving...') : t('hotelConditions.saveChanges')}</span>
+                    <span>{isSaving ? t('common.saving') : t('hotelConditions.saveChanges')}</span>
                 </button>
             </div>
         </div>

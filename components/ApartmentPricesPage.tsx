@@ -37,7 +37,7 @@ const ApartmentPricesPage: React.FC = () => {
             setPagination(p => ({ ...p, totalRecords: response.recordsFiltered }));
 
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+            setError(err instanceof Error ? err.message : t('common.unexpectedError'));
         } finally {
             setLoading(false);
         }
@@ -116,7 +116,7 @@ const ApartmentPricesPage: React.FC = () => {
                                 <th rowSpan={2} className="px-6 py-3 border dark:border-slate-600 hidden lg:table-cell">{t('apartmentPrices.th_roomType')}</th>
                                 <th rowSpan={2} className="px-2 py-3 border dark:border-slate-600 hidden xl:table-cell">{t('apartmentPrices.th_floor')}</th>
                                 <th rowSpan={2} className="px-2 py-3 border dark:border-slate-600 hidden xl:table-cell">{t('apartmentPrices.th_rooms')}</th>
-                                <th colSpan={2} className="px-6 py-3 border dark:border-slate-600 hidden sm:table-cell">Hourly</th>
+                                <th colSpan={2} className="px-6 py-3 border dark:border-slate-600 hidden sm:table-cell">{t('apartmentPrices.th_hourly')}</th>
                                 <th colSpan={2} className="px-6 py-3 border dark:border-slate-600 hidden md:table-cell">{t('apartmentPrices.th_daily')}</th>
                                 <th colSpan={2} className="px-6 py-3 border dark:border-slate-600 hidden lg:table-cell">{t('apartmentPrices.th_monthly')}</th>
                                 <th colSpan={1} className="px-6 py-3 border dark:border-slate-600 hidden xl:table-cell">{t('apartmentPrices.th_peak')}</th>
@@ -134,7 +134,7 @@ const ApartmentPricesPage: React.FC = () => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={12} className="text-center py-10">Loading...</td></tr>
+                                <tr><td colSpan={12} className="text-center py-10"><div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div></td></tr>
                             ) : error ? (
                                 <tr><td colSpan={12} className="text-center py-10 text-red-500">{error}</td></tr>
                             ) : prices.map(item => (

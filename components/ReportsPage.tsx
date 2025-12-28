@@ -72,7 +72,7 @@ const ReportsPage: React.FC = () => {
                             className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                         >
                             <ChevronLeftIcon className={`w-5 h-5 ${language === 'ar' ? 'rotate-180' : ''}`} />
-                            <span className="font-bold text-lg">{t('archivesPage.backToArchives')}</span> {/* Reusing generic back translation or add new */}
+                            <span className="font-bold text-lg">{t('buttons.back')}</span> {/* Reusing generic back translation or add new */}
                         </button>
                         <div className="h-6 w-px bg-slate-300 dark:bg-slate-700"></div>
                         <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400">

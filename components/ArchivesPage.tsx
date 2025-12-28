@@ -37,6 +37,7 @@ const ArchivesPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({ currentPage: 1, itemsPerPage: 10, totalRecords: 0 });
     const [selectedLog, setSelectedLog] = useState<ArchiveLog | null>(null); // For details modal
+    const [error, setError] = useState<string | null>(null);
 
     // Query Param Mapper
     const getArchiveParams = (archiveId: string): Record<string, string> => {
@@ -70,6 +71,7 @@ const ArchivesPage: React.FC = () => {
                 setPagination(prev => ({ ...prev, totalRecords: response.recordsFiltered }));
             } catch (error) {
                 console.error("Failed to fetch archive logs", error);
+                setError(error instanceof Error ? error.message : t('common.unexpectedError'));
             } finally {
                 setLoading(false);
             }
@@ -130,6 +132,12 @@ const ArchivesPage: React.FC = () => {
                 </div>
 
                 <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
+                    {error && (
+                        <div className="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
+                            <span className="font-semibold">{t('common.error')}: </span>
+                            <span>{error}</span>
+                        </div>
+                    )}
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-center text-slate-500 dark:text-slate-400">
                             <thead className="text-xs text-slate-700 uppercase bg-slate-100 dark:bg-slate-700 dark:text-slate-300">
@@ -143,9 +151,9 @@ const ArchivesPage: React.FC = () => {
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <tr><td colSpan={5} className="py-8 text-center">Loading...</td></tr>
+                                    <tr><td colSpan={5} className="py-8 text-center"><div className="flex justify-center items-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div></td></tr>
                                 ) : logs.length === 0 ? (
-                                    <tr><td colSpan={5} className="py-8 text-center text-slate-400">No records found</td></tr>
+                                    <tr><td colSpan={5} className="py-8 text-center text-slate-400">{t('orders.noData')}</td></tr>
                                 ) : logs.map((log, idx) => (
                                     <tr key={idx} className="bg-white border-b dark:bg-slate-800 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
                                         <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">

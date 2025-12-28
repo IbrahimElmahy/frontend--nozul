@@ -220,7 +220,7 @@ const ReportDailyBookings: React.FC = () => {
 
         } catch (error) {
             console.error("Export failed", error);
-            alert(t('reportsPage.exportFailed') || "Export failed");
+            alert(t('reportsPage.exportFailed'));
         } finally {
             setLoading(false);
         }
@@ -245,13 +245,13 @@ const ReportDailyBookings: React.FC = () => {
                 fetchData();
                 setItemToDelete(null);
             } catch (err) {
-                alert(`Error deleting reservation: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     };
 
     const handleEditRow = (item: any) => {
-        alert('Edit functionality for reports is currently read-only in this view.');
+        alert(t('reportsPage.editReadOnly'));
     };
 
     const handlePrintRow = async (item: any) => {
@@ -261,7 +261,7 @@ const ReportDailyBookings: React.FC = () => {
             // Don't auto-print immediately, let user see the preview
         } catch (err) {
             console.error("Failed to fetch reservation for printing", err);
-            alert(t('bookings.printError' as any) || "Failed to print reservation");
+            alert(t('bookings.printError' as any));
         }
     };
 

@@ -78,7 +78,7 @@ const BookingAgenciesPage: React.FC = () => {
             setAgencies(response.data);
             setTotalRecords(response.recordsFiltered);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unknown error occurred');
+            setError(err instanceof Error ? err.message : t('common.unexpectedError'));
         } finally {
             setLoading(false);
         }
@@ -129,7 +129,7 @@ const BookingAgenciesPage: React.FC = () => {
             fetchAgencies();
             handleClosePanel();
         } catch (err) {
-            alert(`Error saving agency: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
         }
     };
 
@@ -139,7 +139,7 @@ const BookingAgenciesPage: React.FC = () => {
             // Optimistically update
             setAgencies(prev => prev.map(a => a.id === agency.id ? { ...a, is_active: newStatus } : a));
         } catch (err) {
-            alert(`Error changing status: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             fetchAgencies(); // Revert on error
         }
     };
@@ -165,7 +165,7 @@ const BookingAgenciesPage: React.FC = () => {
                 fetchAgencies();
                 setAgencyToDeleteId(null);
             } catch (err) {
-                alert(`Error deleting agency: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -261,7 +261,7 @@ const BookingAgenciesPage: React.FC = () => {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-10">Loading...</div>
+                    <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div></div>
                 ) : viewMode === 'grid' ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {sortedAgencies.map(agency => (

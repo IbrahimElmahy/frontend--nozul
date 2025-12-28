@@ -58,6 +58,7 @@ const OrdersPage: React.FC = () => {
     const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
     const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
 
     const fetchOrders = useCallback(async () => {
@@ -75,6 +76,7 @@ const OrdersPage: React.FC = () => {
 
         } catch (error) {
             console.error("Failed to fetch orders", error);
+            setError(error instanceof Error ? error.message : t('common.unexpectedError'));
         } finally {
             setLoading(false);
         }
@@ -114,7 +116,7 @@ const OrdersPage: React.FC = () => {
             fetchOrders();
             handleClosePanel();
         } catch (err) {
-            alert(`Error saving order: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
         }
     };
 
@@ -139,7 +141,7 @@ const OrdersPage: React.FC = () => {
                 fetchOrders();
                 setOrderToDeleteId(null);
             } catch (err) {
-                alert(`Error deleting order: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     }
@@ -255,8 +257,15 @@ const OrdersPage: React.FC = () => {
                     )}
                 </div>
 
+                {error && (
+                    <div className="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
+                        <span className="font-semibold">{t('common.error')}: </span>
+                        <span>{error}</span>
+                    </div>
+                )}
+
                 {loading ? (
-                    <div className="text-center py-10">Loading...</div>
+                    <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div></div>
                 ) : viewMode === 'grid' ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {orders.map(order => (

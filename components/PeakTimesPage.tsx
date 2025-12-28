@@ -37,7 +37,7 @@ const PeakTimesPage: React.FC = () => {
             const response = await listPeakTimes();
             setPeakTimes(response.data);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+            setError(err instanceof Error ? err.message : t('common.unexpectedError'));
         } finally {
             setLoading(false);
         }
@@ -74,7 +74,7 @@ const PeakTimesPage: React.FC = () => {
                 setPeakTimes(prev => prev.filter(p => p.id !== peakTimeToDelete.id));
                 setPeakTimeToDelete(null);
             } catch (err) {
-                alert(`Error deleting peak time: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                alert(`${t('peakTimes.deleteError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -94,7 +94,7 @@ const PeakTimesPage: React.FC = () => {
             fetchPeakTimes();
             handleClosePanel();
         } catch (err) {
-            alert(`Error saving peak time: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            alert(`${t('peakTimes.saveError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
         }
     };
 
@@ -129,7 +129,7 @@ const PeakTimesPage: React.FC = () => {
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex justify-between items-center border-b dark:border-slate-700 pb-3 mb-4">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('apartmentPrices.searchInfo')}</h3>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{t('peakTimes.searchInfo' as any)}</h3>
                     <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <button className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><XMarkIcon className="w-5 h-5" /></button>
                         <button onClick={fetchPeakTimes} className="p-1 hover:text-slate-700 dark:hover:text-slate-200"><ArrowPathIcon className="w-5 h-5" /></button>
@@ -160,7 +160,7 @@ const PeakTimesPage: React.FC = () => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={tableHeaders.length} className="text-center py-10">Loading...</td></tr>
+                                <tr><td colSpan={tableHeaders.length} className="text-center py-10"><div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div></div></td></tr>
                             ) : error ? (
                                 <tr><td colSpan={tableHeaders.length} className="text-center py-10 text-red-500">{error}</td></tr>
                             ) : paginatedData.length > 0 ? paginatedData.map(item => (

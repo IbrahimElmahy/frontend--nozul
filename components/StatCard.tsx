@@ -9,10 +9,10 @@ interface StatCardProps {
 }
 
 const colorClasses = {
-    orange: 'bg-orange-400',
-    yellow: 'bg-amber-400',
-    blue: 'bg-cyan-400',
-    green: 'bg-teal-400',
+  orange: 'bg-orange-400',
+  yellow: 'bg-amber-400',
+  blue: 'bg-cyan-400',
+  green: 'bg-teal-400',
 };
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon: Icon }) => {

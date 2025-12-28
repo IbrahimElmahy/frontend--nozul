@@ -6,7 +6,7 @@ interface BarChartCardProps {
   title: string;
   data: ChartData[];
   barColor: string;
-  stats?: {label: string, value: number}[];
+  stats?: { label: string, value: number }[];
 }
 
 const BarChartCard: React.FC<BarChartCardProps> = ({ title, data, barColor, stats }) => {
@@ -20,14 +20,14 @@ const BarChartCard: React.FC<BarChartCardProps> = ({ title, data, barColor, stat
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{title}</h3>
         {stats && (
-            <div className="flex space-x-4 space-x-reverse text-right">
-                {stats.map((stat, index) => (
-                    <div key={index}>
-                        <p className="font-bold text-slate-700 dark:text-slate-300">{stat.value}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
-                    </div>
-                ))}
-            </div>
+          <div className="flex space-x-4 space-x-reverse text-right">
+            {stats.map((stat, index) => (
+              <div key={index}>
+                <p className="font-bold text-slate-700 dark:text-slate-300">{stat.value}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         )}
       </div>
       <div className="flex-grow w-full h-64">
@@ -35,16 +35,16 @@ const BarChartCard: React.FC<BarChartCardProps> = ({ title, data, barColor, stat
           <BarChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
             <XAxis dataKey="name" tick={{ fontSize: 12, fill: tickColor }} axisLine={false} tickLine={false} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: tickColor }} allowDecimals={false}/>
-            <Tooltip 
-                cursor={{fill: isDarkMode ? 'rgba(51, 65, 85, 0.5)' : 'rgba(239, 246, 255, 0.5)'}} 
-                contentStyle={{
-                    backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
-                    borderColor: isDarkMode ? '#334155' : '#e5e7eb',
-                    borderRadius: '0.5rem',
-                    fontSize: '0.875rem'
-                }}
-                labelStyle={{color: isDarkMode ? '#cbd5e1' : '#1f2937'}}
+            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: tickColor }} allowDecimals={false} />
+            <Tooltip
+              cursor={{ fill: isDarkMode ? 'rgba(51, 65, 85, 0.5)' : 'rgba(239, 246, 255, 0.5)' }}
+              contentStyle={{
+                backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                borderColor: isDarkMode ? '#334155' : '#e5e7eb',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem'
+              }}
+              labelStyle={{ color: isDarkMode ? '#cbd5e1' : '#1f2937' }}
             />
             <Bar dataKey="value" fill={barColor} barSize={10} radius={[4, 4, 0, 0]} />
           </BarChart>

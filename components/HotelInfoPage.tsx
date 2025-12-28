@@ -111,7 +111,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                 setTimezones(['Asia/Riyadh', 'Asia/Dubai', 'Asia/Aden', 'Africa/Cairo', 'Europe/London']);
 
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to load hotel data.');
+                setError(err instanceof Error ? err.message : t('hotelInfo.loadError'));
             } finally {
                 setLoading(false);
             }
@@ -165,11 +165,11 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
             const hotelId = '32af5628-6b26-4ee7-8c11-3f82363007ff';
 
             await updateHotelDetails(hotelId, data);
-            setSuccess('Hotel information saved successfully!');
+            setSuccess(t('hotelInfo.saveSuccess'));
             // Clear file input state after successful upload
             setLogoFile(null);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to save hotel data.');
+            setError(err instanceof Error ? err.message : t('hotelInfo.saveError'));
         } finally {
             setIsSaving(false);
         }
@@ -213,7 +213,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                         </div>
                     </FormField>
                     <FormField label={t('hotelInfo.poBox')}><input name="poBox" value={formData.poBox} onChange={handleInputChange} className={inputClass} /></FormField>
-                    <FormField label={"Website"}><input name="website" value={formData.website} onChange={handleInputChange} className={inputClass} /></FormField>
+                    <FormField label={t('hotelInfo.website')}><input name="website" value={formData.website} onChange={handleInputChange} className={inputClass} /></FormField>
                 </Section>
 
                 <Section title={t('hotelInfo.addressInfo')}>
@@ -250,7 +250,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                         ) : (
                             <CheckCircleIcon className="w-5 h-5" />
                         )}
-                        <span>{isSaving ? (language === 'ar' ? 'جاري الحفظ...' : 'Saving...') : t('hotelInfo.saveChanges' as any)}</span>
+                        <span>{isSaving ? t('common.saving') : t('hotelInfo.saveChanges' as any)}</span>
                     </button>
                 </div>
             </form>

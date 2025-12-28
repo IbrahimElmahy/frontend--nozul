@@ -36,6 +36,7 @@ const NotificationsPage: React.FC = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -45,6 +46,7 @@ const NotificationsPage: React.FC = () => {
                 setNotifications(data);
             } catch (error) {
                 console.error("Failed to fetch notifications", error);
+                setError(error instanceof Error ? error.message : t('common.unexpectedError'));
             } finally {
                 setLoading(false);
             }
@@ -131,6 +133,12 @@ const NotificationsPage: React.FC = () => {
             </header>
 
             <div className="p-6 space-y-6">
+                {error && (
+                    <div className="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
+                        <span className="font-semibold">{t('common.error')}: </span>
+                        <span>{error}</span>
+                    </div>
+                )}
                 {groupedNotifications.length > 0 ? (
                     groupedNotifications.map((group, index) => (
                         <div key={index}>
@@ -153,11 +161,11 @@ const NotificationsPage: React.FC = () => {
                                         </div>
                                         <div className="flex items-center gap-1">
                                             {notification.unread && (
-                                                <button onClick={() => handleMarkAsRead(notification.pk)} className="p-2 rounded-full text-green-500 hover:bg-green-100 dark:hover:bg-green-500/10" title="Mark as read">
+                                                <button onClick={() => handleMarkAsRead(notification.pk)} className="p-2 rounded-full text-green-500 hover:bg-green-100 dark:hover:bg-green-500/10" title={t('notificationsPage.markAsRead')}>
                                                     <CheckCircleIcon className="w-5 h-5" />
                                                 </button>
                                             )}
-                                            <button onClick={() => handleDelete(notification.pk)} className="p-2 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" title="Delete">
+                                            <button onClick={() => handleDelete(notification.pk)} className="p-2 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/10" title={t('common.delete')}>
                                                 <TrashIcon className="w-5 h-5" />
                                             </button>
                                         </div>
