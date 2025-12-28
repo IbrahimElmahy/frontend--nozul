@@ -17,6 +17,7 @@ interface ApiClientOptions {
     responseType?: 'json' | 'blob';
     headers?: HeadersInit;
     skipAuth?: boolean;
+    suppressGlobalError?: boolean;
 }
 
 export const apiClient = async <T>(endpoint: string, options: ApiClientOptions = {}): Promise<T> => {
@@ -105,12 +106,14 @@ export const apiClient = async <T>(endpoint: string, options: ApiClientOptions =
         // Avoid double dispatch if the error was already dispatched (e.g. nested calls if any - unlikely for fetch)
         // Check if it's a validation error, maybe we act differently, but for now show all as requested.
 
-        window.dispatchEvent(new CustomEvent('global-error', {
-            detail: {
-                message: message,
-                title: 'Error'
-            }
-        }));
+        if (!options.suppressGlobalError) {
+            window.dispatchEvent(new CustomEvent('global-error', {
+                detail: {
+                    message: message,
+                    title: 'Error'
+                }
+            }));
+        }
 
         if (error instanceof ApiValidationError) {
             throw error;
