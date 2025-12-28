@@ -90,25 +90,24 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
             formData.append('name', profileData.name);
             formData.append('email', profileData.email);
             formData.append('phone_number', profileData.phoneNumber);
-            // Mapping 'dob' to 'profile.birth_date' as per docs
+            // Mapping 'dob' to 'profile[birthdate]' as per docs
             if (profileData.dob) {
-                formData.append('profile.birth_date', profileData.dob);
+                formData.append('profile[birthdate]', profileData.dob);
             }
             if (profileData.gender) {
-                // Map localized gender to API values 'male'/'female'
+                // Map localized gender to API values 'M'/'F'
                 const genderMap: { [key: string]: string } = {
-                    'ذكر': 'male',
-                    'أنثى': 'female',
-                    'Male': 'male',
-                    'Female': 'female'
+                    'ذكر': 'M',
+                    'أنثى': 'F',
+                    'Male': 'M',
+                    'Female': 'F'
                 };
-                formData.append('profile.gender', genderMap[profileData.gender] || profileData.gender);
+                formData.append('profile[gender]', genderMap[profileData.gender] || profileData.gender);
             }
 
             if (selectedFile) {
-                formData.append('profile.image', selectedFile);
-                // Also append as 'image' top-level just in case the backend expects it there
-                formData.append('image', selectedFile);
+                // Docs specify 'profile[image]' for file upload
+                formData.append('profile[image]', selectedFile);
             }
 
             // Using PUT to update profile without specific ID (as ID endpoint gave 404)
@@ -119,6 +118,12 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
             // or assume the response is the full user object (usually is for profile endpoints).
             if (user) {
                 const newUserData = { ...user, ...updatedUserResponse };
+
+                // If backend returns 'image' but not 'image_url', clear the stale 'image_url'
+                if ('image' in updatedUserResponse && !('image_url' in updatedUserResponse)) {
+                    newUserData.image_url = null;
+                }
+
                 localStorage.setItem('user', JSON.stringify(newUserData));
             }
 
@@ -212,6 +217,10 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                                 src={previewUrl || `${getImageUrl(user?.image_url || user?.image)}?t=${mountTime}`}
                                 alt="Profile"
                                 loading="lazy"
+                                onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E%3F%3C/text%3E%3C/svg%3E";
+                                }}
                                 className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg"
                             />
                             <label htmlFor="photo" className={labelAlignClass}>{t('profilePage.photo')}</label>
