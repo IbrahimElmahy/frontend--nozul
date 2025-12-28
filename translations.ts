@@ -205,6 +205,10 @@ export const translations = {
             save: "حفظ",
             updateSuccess: "تم تحديث الملف الشخصي بنجاح",
             updateError: "فشل تحديث الملف الشخصي",
+            dummySubscriptionDate: "09 ديسمبر 2024",
+            dummySubscriptionEndDate: "09 ديسمبر 2025",
+            dummyBalance: "131",
+            selectGender: "اختر الجنس",
         },
         datepicker: {
             months: ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"],

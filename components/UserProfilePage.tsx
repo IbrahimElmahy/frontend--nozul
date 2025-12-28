@@ -23,8 +23,8 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
     const { t, language } = useContext(LanguageContext);
     const [profileData, setProfileData] = useState({
         name: '',
-        gender: 'ذكر',
-        dob: '2000-02-29',
+        gender: 'male',
+        dob: '2000-01-01',
         notes: '',
         username: '',
         phoneNumber: '',
@@ -33,6 +33,8 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
     // Memoize timestamp to prevent image refreshing on every keystroke/render
     const mountTime = React.useMemo(() => new Date().getTime(), []);
 
@@ -40,8 +42,8 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
         if (user) {
             setProfileData({
                 name: user.name || '',
-                gender: 'ذكر',
-                dob: '2000-02-29',
+                gender: user.gender || 'male',
+                dob: user.birthdate || '2000-01-01',
                 notes: '',
                 username: user.username || '',
                 phoneNumber: user.phone_number || '',
@@ -84,40 +86,62 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
         e.preventDefault();
         if (!user) return;
 
+        setError(null);
+
+        // Basic Validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (profileData.email && !emailRegex.test(profileData.email)) {
+            setError(t('common.invalidEmail' as any) || "Invalid email format");
+            return;
+        }
+
         setLoading(true);
         try {
-            const formData = new FormData();
-            formData.append('name', profileData.name);
-            formData.append('email', profileData.email);
-            formData.append('phone_number', profileData.phoneNumber);
-            // Mapping 'dob' to 'profile.birthdate' as per backend log
-            if (profileData.dob) {
-                formData.append('profile.birthdate', profileData.dob);
-            }
-            if (profileData.gender) {
-                // Map localized gender to API values 'male'/'female'
-                const genderMap: { [key: string]: string } = {
-                    'ذكر': 'male',
-                    'أنثى': 'female',
-                    'Male': 'male',
-                    'Female': 'female'
-                };
-                formData.append('profile.gender', genderMap[profileData.gender] || profileData.gender);
-            }
+            let bodyData: FormData | URLSearchParams;
 
             if (selectedFile) {
-                // Backend log confirms 'profile.image'
+                // Use FormData for file upload (includes all other fields + file)
+                const formData = new FormData();
+                formData.append('name', profileData.name);
+                formData.append('email', profileData.email);
+                formData.append('username', profileData.username);
+                formData.append('phonenumber', profileData.phoneNumber);
+                if (profileData.dob) formData.append('profile.birthdate', profileData.dob);
+                if (profileData.gender) formData.append('profile.gender', profileData.gender);
                 formData.append('profile.image', selectedFile);
+                formData.append('profile.summary', profileData.notes || '');
+                bodyData = formData;
+            } else {
+                // Use URLSearchParams for text-only update (matches valid x-www-form-urlencoded pattern)
+                const params = new URLSearchParams();
+                params.append('name', profileData.name);
+                params.append('email', profileData.email);
+                params.append('username', profileData.username);
+                params.append('phonenumber', profileData.phoneNumber);
+                if (profileData.dob) params.append('profile.birthdate', profileData.dob);
+                if (profileData.gender) params.append('profile.gender', profileData.gender);
+                params.append('profile.image', '');
+                params.append('profile.summary', profileData.notes || '');
+                bodyData = params;
             }
 
             // Using PUT to update profile without specific ID (as ID endpoint gave 404)
-            const updatedUserResponse = await updateProfile(formData);
+            const updatedUserResponse = await updateProfile(bodyData);
 
             // Update local storage with the new user data
-            // We need to merge the new data with the existing token/refresh info just in case
-            // or assume the response is the full user object (usually is for profile endpoints).
             if (user) {
-                const newUserData = { ...user, ...updatedUserResponse };
+                let newUserData = { ...user, ...updatedUserResponse };
+
+                // FIX: Flatten nested profile fields if they exist (API mismatch handling)
+                const responseAny = updatedUserResponse as any;
+                if (responseAny.profile) {
+                    newUserData.gender = responseAny.profile.gender || newUserData.gender;
+                    newUserData.birthdate = responseAny.profile.birthdate || newUserData.birthdate;
+                    // If image is nested
+                    if (responseAny.profile.image) {
+                        newUserData.image = responseAny.profile.image;
+                    }
+                }
 
                 // If backend returns 'image' but not 'image_url', clear the stale 'image_url'
                 if ('image' in updatedUserResponse && !('image_url' in updatedUserResponse)) {
@@ -130,14 +154,19 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
             // Reload page to reflect changes (App.tsx will read new localStorage)
             window.location.reload();
 
-        } catch (error) {
-            console.error("Failed to update profile:", error);
-            alert(t('profilePage.updateError'));
+        } catch (err) {
+            console.error("Failed to update profile:", err);
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError(t('profilePage.updateError'));
+            }
         } finally {
             setLoading(false);
         }
     };
 
+    // ... (getImageUrl)
     const getImageUrl = (url: string | null | undefined) => {
         if (!url) return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E%3F%3C/text%3E%3C/svg%3E";
 
@@ -166,19 +195,19 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                     iconBgColor="bg-purple-500"
                 />
                 <ProfileStatCard
-                    title="09 ديسمبر 2024"
+                    title={t('profilePage.dummySubscriptionDate' as any)}
                     subtitle={t('profilePage.subscriptionDate')}
                     icon={ArrowRightCircleIcon}
                     iconBgColor="bg-cyan-500"
                 />
                 <ProfileStatCard
-                    title="09 ديسمبر 2025"
+                    title={t('profilePage.dummySubscriptionEndDate' as any)}
                     subtitle={t('profilePage.subscriptionEndDate')}
                     icon={ArrowLeftCircleIcon}
                     iconBgColor="bg-red-500"
                 />
                 <ProfileStatCard
-                    title="131"
+                    title={t('profilePage.dummyBalance' as any)}
                     subtitle={t('profilePage.messageBalance')}
                     icon={DesktopComputerIcon}
                     iconBgColor="bg-slate-700"
@@ -193,6 +222,12 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                         <span>{t('profilePage.accountInfo')}</span>
                     </h3>
                 </div>
+                {error && (
+                    <div className="mx-6 mt-6 bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded relative" role="alert">
+                        <strong className="font-bold">{t('common.error')}: </strong>
+                        <span className="block sm:inline">{error}</span>
+                    </div>
+                )}
                 <form className="p-6 space-y-6" onSubmit={handleSave}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         {/* Name */}
@@ -205,9 +240,9 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                         <div>
                             <label htmlFor="gender" className={labelAlignClass}>{t('profilePage.gender')}</label>
                             <select id="gender" name="gender" value={profileData.gender} onChange={handleInputChange} className={`${inputBaseClass} ${textAlignClass}`}>
-                                <option>{t('profilePage.genderSelect')}</option>
-                                <option>{t('profilePage.male')}</option>
-                                <option>{t('profilePage.female')}</option>
+                                <option value="">{t('profilePage.selectGender' as any)}</option>
+                                <option value="male">{t('profilePage.male')}</option>
+                                <option value="female">{t('profilePage.female')}</option>
                             </select>
                         </div>
 

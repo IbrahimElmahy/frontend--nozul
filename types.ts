@@ -61,6 +61,8 @@ export interface User {
     id?: string;
     image_url: string | null;
     image?: string | null;
+    gender?: string | null;
+    birthdate?: string | null;
 }
 
 export type BookingStatus = 'check-in' | 'check-out' | 'pending' | 'confirmed' | 'cancelled';

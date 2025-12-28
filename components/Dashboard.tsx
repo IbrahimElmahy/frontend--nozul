@@ -116,40 +116,40 @@ const Dashboard: React.FC = () => {
         fetchData();
     }, [t]);
 
-    // Derived data for rendering
+    // Derived data for rendering - with Robust Null Checks
     const statCardsData = numericStats ? [
-        { title: t('dashboard.arrivals'), value: numericStats.arrivals, color: 'green', icon: ArrowRightOnRectangleIcon },
-        { title: t('dashboard.checkedIn'), value: numericStats.occupied, color: 'blue', icon: DesktopComputerIcon },
-        { title: t('dashboard.departures'), value: numericStats.departures, color: 'yellow', icon: ArrowPathIcon },
-        { title: t('dashboard.checkedOut'), value: numericStats.departed, color: 'orange', icon: ArrowLeftOnRectangleIcon },
+        { title: t('dashboard.arrivals'), value: numericStats.arrivals ?? 0, color: 'green', icon: ArrowRightOnRectangleIcon },
+        { title: t('dashboard.checkedIn'), value: numericStats.occupied ?? 0, color: 'blue', icon: DesktopComputerIcon },
+        { title: t('dashboard.departures'), value: numericStats.departures ?? 0, color: 'yellow', icon: ArrowPathIcon },
+        { title: t('dashboard.checkedOut'), value: numericStats.departed ?? 0, color: 'orange', icon: ArrowLeftOnRectangleIcon },
     ] as const : [];
 
-    const apartmentAvailabilityTotal = apartmentAvailability.reduce((sum, item) => sum + item.value, 0);
+    const apartmentAvailabilityTotal = apartmentAvailability.reduce((sum, item) => sum + (item.value || 0), 0);
 
     const weeklyDays = [t('dashboard.sunday'), t('dashboard.monday'), t('dashboard.tuesday'), t('dashboard.wednesday'), t('dashboard.thursday'), t('dashboard.friday'), t('dashboard.saturday')];
     const weeklyStatsData: ChartData[] = apartmentTimeSeries?.apartment_this_week
-        ? apartmentTimeSeries.apartment_this_week.map((value, index) => ({ name: weeklyDays[index], value }))
+        ? apartmentTimeSeries.apartment_this_week.map((value, index) => ({ name: weeklyDays[index] || '', value: value || 0 }))
         : [];
 
-    const apartmentAnnualTotal = apartmentTimeSeries?.apartment_this_year?.reduce((a, b) => a + b, 0) || 0;
-    const apartmentMonthlyTotal = apartmentTimeSeries?.apartment_this_month?.reduce((a, b) => a + b, 0) || 0;
-    const apartmentWeeklyTotal = apartmentTimeSeries?.apartment_this_week?.reduce((a, b) => a + b, 0) || 0;
+    const apartmentAnnualTotal = apartmentTimeSeries?.apartment_this_year?.reduce((a, b) => a + (b || 0), 0) || 0;
+    const apartmentMonthlyTotal = apartmentTimeSeries?.apartment_this_month?.reduce((a, b) => a + (b || 0), 0) || 0;
+    const apartmentWeeklyTotal = apartmentTimeSeries?.apartment_this_week?.reduce((a, b) => a + (b || 0), 0) || 0;
 
     const yearlyMonths = [t('dashboard.january'), t('dashboard.february'), t('dashboard.march'), t('dashboard.april'), t('dashboard.may'), t('dashboard.june'), t('dashboard.july'), t('dashboard.august'), t('dashboard.september'), t('dashboard.october'), t('dashboard.november'), t('dashboard.december')];
     const monthlyStatsData: ChartData[] = reservationTimeSeries?.reservation_this_year
-        ? reservationTimeSeries.reservation_this_year.map((value, index) => ({ name: yearlyMonths[index], value }))
+        ? reservationTimeSeries.reservation_this_year.map((value, index) => ({ name: yearlyMonths[index] || '', value: value || 0 }))
         : [];
 
-    const reservationAnnualTotal = reservationTimeSeries?.reservation_this_year?.reduce((a, b) => a + b, 0) || 0;
-    const reservationMonthlyTotal = reservationTimeSeries?.reservation_this_month?.reduce((a, b) => a + b, 0) || 0;
-    const reservationWeeklyTotal = reservationTimeSeries?.reservation_this_week?.reduce((a, b) => a + b, 0) || 0;
+    const reservationAnnualTotal = reservationTimeSeries?.reservation_this_year?.reduce((a, b) => a + (b || 0), 0) || 0;
+    const reservationMonthlyTotal = reservationTimeSeries?.reservation_this_month?.reduce((a, b) => a + (b || 0), 0) || 0;
+    const reservationWeeklyTotal = reservationTimeSeries?.reservation_this_week?.reduce((a, b) => a + (b || 0), 0) || 0;
 
-    const bookingStatusTotal = reservationStatus.reduce((sum, item) => sum + item.value, 0);
+    const bookingStatusTotal = reservationStatus.reduce((sum, item) => sum + (item.value || 0), 0);
     const checkinValue = reservationStatus.find(d => d.name === t('dashboard.checkin'))?.value ?? 0;
     const checkoutValue = reservationStatus.find(d => d.name === t('dashboard.checkout'))?.value ?? 0;
     const pendingValue = reservationStatus.find(d => d.name === t('dashboard.pending'))?.value ?? 0;
 
-    const apartmentCleaningTotal = apartmentCleanliness.reduce((sum, item) => sum + item.value, 0);
+    const apartmentCleaningTotal = apartmentCleanliness.reduce((sum, item) => sum + (item.value || 0), 0);
     const notCleanValue = apartmentCleanliness.find(d => d.name === t('dashboard.notClean'))?.value ?? 0;
     const cleanValue = apartmentCleanliness.find(d => d.name === t('dashboard.clean'))?.value ?? 0;
 

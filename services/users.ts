@@ -34,7 +34,7 @@ export const toggleUserStatus = async (id: string | number, isActive: boolean) =
     return apiClient(`/ar/user/api/users/${id}/${action}/`, { method: 'POST' });
 };
 
-export const updateProfile = async (formData: FormData) => {
+export const updateProfile = async (formData: FormData | URLSearchParams) => {
     return apiClient<User>('/ar/user/api/profile/', {
         method: 'PUT',
         body: formData,
