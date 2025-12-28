@@ -60,6 +60,7 @@ export interface User {
     role: string;
     id?: string;
     image_url: string | null;
+    image?: string | null;
 }
 
 export type BookingStatus = 'check-in' | 'check-out' | 'pending' | 'confirmed' | 'cancelled';

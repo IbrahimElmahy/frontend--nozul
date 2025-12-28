@@ -31,6 +31,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
         email: '',
     });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     // Memoize timestamp to prevent image refreshing on every keystroke/render
     const mountTime = React.useMemo(() => new Date().getTime(), []);
@@ -49,6 +50,15 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
         }
     }, [user]);
 
+    // Cleanup preview URL on unmount
+    useEffect(() => {
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, [previewUrl]);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setProfileData(prev => ({ ...prev, [name]: value }));
@@ -64,7 +74,9 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setSelectedFile(e.target.files[0]);
+            const file = e.target.files[0];
+            setSelectedFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
         }
     };
 
@@ -191,7 +203,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                         {/* Photo */}
                         <div className="relative">
                             <img
-                                src={`${getImageUrl(user?.image_url)}?t=${mountTime}`}
+                                src={previewUrl || `${getImageUrl(user?.image_url || user?.image)}?t=${mountTime}`}
                                 alt="Profile"
                                 loading="lazy"
                                 className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg"
