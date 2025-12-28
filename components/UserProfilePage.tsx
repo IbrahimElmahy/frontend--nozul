@@ -213,6 +213,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
 
                         {/* Photo */}
                         <div className="relative">
+                            <label htmlFor="photo" className={labelAlignClass}>{t('profilePage.photo')}</label>
                             <img
                                 src={previewUrl || `${getImageUrl(user?.image_url || user?.image)}?t=${mountTime}`}
                                 alt="Profile"
@@ -221,9 +222,8 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                                     const target = e.target as HTMLImageElement;
                                     target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E%3F%3C/text%3E%3C/svg%3E";
                                 }}
-                                className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg"
+                                className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg mb-4"
                             />
-                            <label htmlFor="photo" className={labelAlignClass}>{t('profilePage.photo')}</label>
                             <input type="file" id="photo" onChange={handleFileChange} className={fileInputClass} accept="image/*" />
                         </div>
 
