@@ -5,6 +5,7 @@ import ArrowDownTrayIcon from './icons-redesign/ArrowDownTrayIcon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
 import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
+import ErrorModal from './ErrorModal';
 
 interface BaladyItem {
     id: string;
@@ -27,6 +28,7 @@ const ReportBalady: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
     const [data, setData] = useState<BaladyItem[]>([]);
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [pagination, setPagination] = useState({ currentPage: 1, itemsPerPage: 10, totalRecords: 0 });
 
     // Filter State
@@ -151,7 +153,7 @@ const ReportBalady: React.FC = () => {
 
         } catch (error) {
             console.error("Export failed", error);
-            alert("Export failed");
+            setErrorMessage("Export failed");
         } finally {
             setLoading(false);
         }
@@ -281,6 +283,12 @@ const ReportBalady: React.FC = () => {
                     </nav>
                 </div>
             </div>
+
+            <ErrorModal
+                isOpen={!!errorMessage}
+                onClose={() => setErrorMessage(null)}
+                message={errorMessage}
+            />
         </div>
     );
 };

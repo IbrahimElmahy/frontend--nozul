@@ -256,8 +256,11 @@ const UnitsPage: React.FC = () => {
                 setUnitsData(unitsData.map(u => u.id === updatedUnit.id ? mapApiUnitToUnit(updatedApiUnit) : u));
             }
             handleClosePanel();
+            handleClosePanel();
         } catch (err) {
-            if (err instanceof Error) alert(`Error saving unit: ${err.message}`);
+            console.error("Failed to save unit:", err);
+            if (err instanceof Error) setError(err.message);
+            else setError(t('common.unexpectedError'));
         }
     };
 
@@ -274,7 +277,9 @@ const UnitsPage: React.FC = () => {
             setPagination(prev => ({ ...prev, totalRecords: Math.max(0, prev.totalRecords - 1) }));
             setUnitToDeleteId(null);
         } catch (err) {
-            if (err instanceof Error) alert(`Error deleting unit: ${err.message}`);
+            console.error("Failed to delete unit:", err);
+            if (err instanceof Error) setError(err.message);
+            else setError(t('common.unexpectedError'));
         }
     };
 
@@ -317,8 +322,11 @@ const UnitsPage: React.FC = () => {
             setPagination(prev => ({ ...prev, totalRecords: response.recordsFiltered }));
 
             setIsAddBookingPanelOpen(false);
+            setIsAddBookingPanelOpen(false);
         } catch (err) {
-            if (err instanceof Error) alert(`Error creating reservation: ${err.message}`);
+            console.error("Failed to create reservation:", err);
+            if (err instanceof Error) setError(err.message);
+            else setError(t('common.unexpectedError'));
         } finally {
             setIsSavingBooking(false);
         }
@@ -335,8 +343,13 @@ const UnitsPage: React.FC = () => {
             setUnitsData(prev => [...addedUnits, ...prev]);
             setPagination(prev => ({ ...prev, totalRecords: prev.totalRecords + addedUnits.length }));
             setIsAddGroupPanelOpen(false);
+            setUnitsData(prev => [...addedUnits, ...prev]);
+            setPagination(prev => ({ ...prev, totalRecords: prev.totalRecords + addedUnits.length }));
+            setIsAddGroupPanelOpen(false);
         }).catch(err => {
-            if (err instanceof Error) alert(`Error saving group: ${err.message}`);
+            console.error("Failed to save group:", err);
+            if (err instanceof Error) setError(err.message);
+            else setError(t('common.unexpectedError'));
         });
     };
 

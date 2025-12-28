@@ -368,7 +368,7 @@ const BookingsPage: React.FC = () => {
             }, 500);
         } catch (err) {
             console.error("Failed to fetch reservation for printing", err);
-            // alert(t('bookings.printError')); // Optional: add translation key if needed
+            setError(t('bookings.printError'));
         }
     };
 

@@ -32,6 +32,7 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
     const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
     const [units, setUnits] = useState<Unit[]>([]);
     const [guestsList, setGuestsList] = useState<Guest[]>([]);
+    const [error, setError] = useState<string>('');
     const [commonData, setCommonData] = useState({
         guestName: '',
         checkInDate: new Date().toLocaleDateString('en-CA'),
@@ -83,9 +84,10 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
     const handleGenerateBookings = () => {
         if (selectedUnits.length === 0 || !commonData.guestName) {
             // Basic validation
-            alert('Please select at least one unit and a guest.');
+            setError('Please select at least one unit and a guest.');
             return;
         }
+        setError('');
 
         const newBookings: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>[] = selectedUnits.map(unitId => {
             const unit = units.find(u => u.id.toString() === unitId) || { unitName: unitId } as any;
@@ -148,6 +150,7 @@ const AddGroupBookingPanel: React.FC<AddGroupBookingPanelProps> = ({ isOpen, onC
                         {/* Column 1: Apartment Selection */}
                         <div>
                             <SectionHeader title={t('bookings.addGroupBookingPanel.apartmentsInfo')} />
+                            {error && <div className="p-2 mb-2 text-sm text-red-600 bg-red-100 rounded">{error}</div>}
                             <div className="p-3 border dark:border-slate-600 rounded-md max-h-96 overflow-y-auto">
                                 <label className={labelBaseClass}>{t('bookings.addGroupBookingPanel.selectApartments')}</label>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">

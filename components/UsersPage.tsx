@@ -11,6 +11,7 @@ import TrashIcon from './icons-redesign/TrashIcon';
 import PlusCircleIcon from './icons-redesign/PlusCircleIcon';
 import AddUserPanel from './AddUserPanel';
 import ConfirmationModal from './ConfirmationModal';
+import ErrorModal from './ErrorModal';
 import UserDetailsModal from './UserDetailsModal';
 import Switch from './Switch';
 import { Page } from '../App';
@@ -42,6 +43,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
     const [paginationCurrentPage, setPaginationCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [totalRecords, setTotalRecords] = useState(0);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<HotelUser | null>(null);
@@ -96,7 +98,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
             fetchUsers();
             handleClosePanel();
         } catch (err) {
-            alert(`${t('usersPage.saveError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
+            setErrorMessage(`${t('usersPage.saveError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
         }
     };
 
@@ -111,7 +113,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
                 setUsers(users.filter(u => u.id !== userToDelete.id));
                 setUserToDelete(null);
             } catch (e) {
-                alert(`${t('usersPage.deleteError' as any)}: ${e instanceof Error ? e.message : t('common.unexpectedError')}`);
+                setErrorMessage(`${t('usersPage.deleteError' as any)}: ${e instanceof Error ? e.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -122,7 +124,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
             // Optimistically update
             setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_active: newStatus } : u));
         } catch (err) {
-            alert(`${t('usersPage.statusError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
+            setErrorMessage(`${t('usersPage.statusError' as any)}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             fetchUsers(); // Revert
         }
     };
@@ -263,6 +265,11 @@ const UsersPage: React.FC<UsersPageProps> = ({ setCurrentPage }) => {
             <UserDetailsModal
                 user={viewingUser}
                 onClose={() => setViewingUser(null)}
+            />
+            <ErrorModal
+                isOpen={!!errorMessage}
+                onClose={() => setErrorMessage(null)}
+                message={errorMessage}
             />
         </div>
     );

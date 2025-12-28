@@ -13,6 +13,7 @@ import SearchableSelect from './SearchableSelect';
 import PencilSquareIcon from './icons-redesign/PencilSquareIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import ConfirmationModal from './ConfirmationModal';
+import ErrorModal from './ErrorModal';
 import { getReservation, getReservationStatuses, getRentalTypes, getReservationSources, getReservationReasons, getApartmentTypes, deleteReservation } from '../services/reservations';
 import RentalContract from './RentalContract';
 import { Reservation } from '../types';
@@ -32,6 +33,7 @@ const ReportDailyBookings: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
     const [data, setData] = useState<DailyBookingItem[]>([]);
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [pagination, setPagination] = useState({ currentPage: 1, itemsPerPage: 10, totalRecords: 0 });
 
     // Filters Options
@@ -159,7 +161,7 @@ const ReportDailyBookings: React.FC = () => {
             const allData = await fetchAllReservationsMovements(query);
 
             if (!allData || allData.length === 0) {
-                alert(t('orders.noData'));
+                setErrorMessage(t('orders.noData'));
                 return;
             }
 
@@ -220,7 +222,7 @@ const ReportDailyBookings: React.FC = () => {
 
         } catch (error) {
             console.error("Export failed", error);
-            alert(t('reportsPage.exportFailed'));
+            setErrorMessage(t('reportsPage.exportFailed'));
         } finally {
             setLoading(false);
         }
@@ -245,13 +247,13 @@ const ReportDailyBookings: React.FC = () => {
                 fetchData();
                 setItemToDelete(null);
             } catch (err) {
-                alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
+                setErrorMessage(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     };
 
     const handleEditRow = (item: any) => {
-        alert(t('reportsPage.editReadOnly'));
+        setErrorMessage(t('reportsPage.editReadOnly'));
     };
 
     const handlePrintRow = async (item: any) => {
@@ -261,7 +263,7 @@ const ReportDailyBookings: React.FC = () => {
             // Don't auto-print immediately, let user see the preview
         } catch (err) {
             console.error("Failed to fetch reservation for printing", err);
-            alert(t('bookings.printError' as any));
+            setErrorMessage(t('bookings.printError' as any));
         }
     };
 
@@ -462,6 +464,12 @@ const ReportDailyBookings: React.FC = () => {
                 onConfirm={handleConfirmDelete}
                 title={t('bookings.deleteBookingTitle')}
                 message={t('bookings.confirmDeleteMessage')}
+            />
+
+            <ErrorModal
+                isOpen={!!errorMessage}
+                onClose={() => setErrorMessage(null)}
+                message={errorMessage}
             />
 
             {/* Print Preview Modal */}

@@ -18,6 +18,8 @@ import TableCellsIcon from './icons-redesign/TableCellsIcon';
 import Squares2x2Icon from './icons-redesign/Squares2x2Icon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
+import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
+import XCircleIcon from './icons-redesign/XCircleIcon';
 
 import { listTransactions, listInvoices, deleteTransaction, deleteInvoice } from '../services/financials';
 
@@ -52,6 +54,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
     const [editingVoucher, setEditingVoucher] = useState<Receipt | null>(null);
@@ -132,7 +135,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 fetchData();
                 setVoucherToDelete(null);
             } catch (err) {
-                alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
+                setErrorMessage(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -166,7 +169,7 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 fetchData();
                 setInvoiceToDelete(null);
             } catch (err) {
-                alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
+                setErrorMessage(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -389,6 +392,27 @@ const ReceiptsPage: React.FC<ReceiptsPageProps> = ({ user }) => {
                 invoice={invoiceForPreview}
                 onClose={() => setInvoiceForPreview(null)}
             />
+
+            {errorMessage && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center" role="dialog" aria-modal="true">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setErrorMessage(null)}></div>
+                    <div className="relative bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 transform transition-all">
+                        <div className="text-center">
+                            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 mb-4">
+                                <XCircleIcon className="h-8 w-8 text-red-600 dark:text-red-300" />
+                            </div>
+                            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">{t('units.error')}</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{errorMessage}</p>
+                            <button
+                                onClick={() => setErrorMessage(null)}
+                                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
+                            >
+                                {t('units.close')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {printingReceipt && <PrintableReceipt receipt={printingReceipt} />}
         </div>

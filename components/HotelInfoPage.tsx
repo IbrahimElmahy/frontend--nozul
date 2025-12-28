@@ -5,6 +5,7 @@ import SearchableSelect from './SearchableSelect';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import { Page } from '../App';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
+import ErrorModal from './ErrorModal';
 import { getHotelDetails, updateHotelDetails, listCountries } from '../services/hotel';
 
 
@@ -61,7 +62,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
 
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
     const [countries, setCountries] = useState<[string, string][]>([]);
@@ -70,7 +71,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
     useEffect(() => {
         const fetchHotelData = async () => {
             setLoading(true);
-            setError(null);
+            setErrorMessage(null);
             try {
                 // This ID should ideally come from the user's session or a global state.
                 const hotelId = '32af5628-6b26-4ee7-8c11-3f82363007ff';
@@ -111,7 +112,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                 setTimezones(['Asia/Riyadh', 'Asia/Dubai', 'Asia/Aden', 'Africa/Cairo', 'Europe/London']);
 
             } catch (err) {
-                setError(err instanceof Error ? err.message : t('hotelInfo.loadError'));
+                setErrorMessage(err instanceof Error ? err.message : t('hotelInfo.loadError'));
             } finally {
                 setLoading(false);
             }
@@ -136,7 +137,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
-        setError(null);
+        setErrorMessage(null);
         setSuccess(null);
 
         const data = new FormData();
@@ -169,7 +170,7 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
             // Clear file input state after successful upload
             setLogoFile(null);
         } catch (err) {
-            setError(err instanceof Error ? err.message : t('hotelInfo.saveError'));
+            setErrorMessage(err instanceof Error ? err.message : t('hotelInfo.saveError'));
         } finally {
             setIsSaving(false);
         }
@@ -198,7 +199,6 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                 </div>
             </div>
 
-            {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert">{error}</div>}
             {success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-4" role="alert">{success}</div>}
 
             <form onSubmit={handleSave} className="space-y-6">
@@ -254,6 +254,11 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                     </button>
                 </div>
             </form>
+            <ErrorModal
+                isOpen={!!errorMessage}
+                onClose={() => setErrorMessage(null)}
+                message={errorMessage}
+            />
         </div>
     );
 };

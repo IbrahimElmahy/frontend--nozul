@@ -7,6 +7,7 @@ import UserPlusIcon from './icons-redesign/UserPlusIcon';
 import TrashIcon from './icons-redesign/TrashIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
+import ErrorModal from './ErrorModal';
 import { TranslationKey } from '../translations';
 import {
     listNotifications,
@@ -36,7 +37,7 @@ const NotificationsPage: React.FC = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -46,7 +47,7 @@ const NotificationsPage: React.FC = () => {
                 setNotifications(data);
             } catch (error) {
                 console.error("Failed to fetch notifications", error);
-                setError(error instanceof Error ? error.message : t('common.unexpectedError'));
+                setErrorMessage(error instanceof Error ? error.message : t('common.unexpectedError'));
             } finally {
                 setLoading(false);
             }
@@ -60,6 +61,7 @@ const NotificationsPage: React.FC = () => {
             setNotifications(prev => prev.map(n => n.pk === id ? { ...n, unread: false } : n));
         } catch (error) {
             console.error("Failed to mark as read", error);
+            setErrorMessage(t('common.error'));
         }
     };
 
@@ -69,6 +71,7 @@ const NotificationsPage: React.FC = () => {
             setNotifications(prev => prev.filter(n => n.pk !== id));
         } catch (error) {
             console.error("Failed to delete notification", error);
+            setErrorMessage(t('common.error'));
         }
     };
 
@@ -78,6 +81,7 @@ const NotificationsPage: React.FC = () => {
             setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
         } catch (error) {
             console.error("Failed to mark all as read", error);
+            setErrorMessage(t('common.error'));
         }
     };
 
@@ -133,12 +137,6 @@ const NotificationsPage: React.FC = () => {
             </header>
 
             <div className="p-6 space-y-6">
-                {error && (
-                    <div className="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
-                        <span className="font-semibold">{t('common.error')}: </span>
-                        <span>{error}</span>
-                    </div>
-                )}
                 {groupedNotifications.length > 0 ? (
                     groupedNotifications.map((group, index) => (
                         <div key={index}>
@@ -180,6 +178,11 @@ const NotificationsPage: React.FC = () => {
                     </div>
                 )}
             </div>
+            <ErrorModal
+                isOpen={!!errorMessage}
+                onClose={() => setErrorMessage(null)}
+                message={errorMessage}
+            />
         </div>
     );
 };

@@ -69,13 +69,14 @@ const GuestsPage: React.FC = () => {
             }
 
             // Fetch guests with current pagination and search
-            const query: any = {
-                start: (pagination.currentPage - 1) * pagination.itemsPerPage,
-                length: pagination.itemsPerPage,
-            };
-            if (searchTerm) query.search = searchTerm;
+            // Fetch guests with current pagination and search
+            const params = new URLSearchParams();
+            params.append('start', ((pagination.currentPage - 1) * pagination.itemsPerPage).toString());
+            params.append('length', pagination.itemsPerPage.toString());
 
-            const guestsRes = await listGuests(query);
+            if (searchTerm) params.append('search', searchTerm);
+
+            const guestsRes = await listGuests(params);
             setGuests(guestsRes.data);
             setPagination(p => ({ ...p, totalRecords: guestsRes.recordsFiltered }));
 
@@ -146,7 +147,7 @@ const GuestsPage: React.FC = () => {
             }
             fetchGuestsAndOptions(); // Refresh data
         } catch (err) {
-            alert(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
+            setErrorMessage(`${t('common.error')}: ${err instanceof Error ? err.message : t('common.unexpectedError')}`);
         } finally {
             setGuestToAction(null);
         }

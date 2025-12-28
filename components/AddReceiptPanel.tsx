@@ -4,6 +4,7 @@ import { LanguageContext } from '../contexts/LanguageContext';
 import { Receipt, User } from '../types';
 import XMarkIcon from './icons-redesign/XMarkIcon';
 import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
+import XCircleIcon from './icons-redesign/XCircleIcon';
 import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
 import DatePicker from './DatePicker';
 import SearchableSelect from './SearchableSelect';
@@ -66,6 +67,7 @@ const AddReceiptPanel: React.FC<AddReceiptPanelProps> = ({ initialData, isEditin
     const [expenses, setExpenses] = useState<Option[]>([]);
     const [customers, setCustomers] = useState<Option[]>([]);
     const [loadingData, setLoadingData] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const isPaymentView = voucherType === 'payment';
 
@@ -128,9 +130,10 @@ const AddReceiptPanel: React.FC<AddReceiptPanelProps> = ({ initialData, isEditin
     const toOptions = isPaymentView ? expenses : fundsAndBanks;
 
     const handleSaveClick = async () => {
+        setError(null);
         // Validation
         if (!formData.value || !selectedCurrency || !selectedPaymentMethod || !selectedPaymentFrom || !selectedPaymentTo) {
-            alert("Please fill all required fields.");
+            setError("Please fill all required fields.");
             return;
         }
 
@@ -165,7 +168,7 @@ const AddReceiptPanel: React.FC<AddReceiptPanelProps> = ({ initialData, isEditin
             onSave(formData);
 
         } catch (error) {
-            alert(`Error saving transaction: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            setError(`Error saving transaction: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
@@ -197,6 +200,15 @@ const AddReceiptPanel: React.FC<AddReceiptPanelProps> = ({ initialData, isEditin
                         <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div></div>
                     ) : (
                         <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+                            {error && (
+                                <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 flex items-start gap-3">
+                                    <div className="flex-shrink-0">
+                                        <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                                    </div>
+                                    <div className="text-sm text-red-700 dark:text-red-200">{error}</div>
+                                </div>
+                            )}
+
                             <section>
                                 <SectionHeader title={isPaymentView ? t('receipts.addPaymentVoucherPanel.paymentVoucherInfo') : t('receipts.addReceiptPanel.receiptInfo')} />
                                 <div className="space-y-4">

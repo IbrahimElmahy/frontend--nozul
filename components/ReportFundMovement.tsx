@@ -8,11 +8,13 @@ import PrinterIcon from './icons-redesign/PrinterIcon';
 import ArrowDownTrayIcon from './icons-redesign/ArrowDownTrayIcon';
 import DatePicker from './DatePicker';
 import SearchableSelect from './SearchableSelect';
+import ErrorModal from './ErrorModal';
 
 const ReportFundMovement: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
     const [data, setData] = useState<FundReportItem[]>([]);
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [summary, setSummary] = useState({ totalDebit: 0, totalCredit: 0, netBalance: 0 });
 
     // Filter Options State
@@ -164,7 +166,7 @@ const ReportFundMovement: React.FC = () => {
             document.body.removeChild(link);
         } catch (error) {
             console.error("Export failed", error);
-            alert("Export failed");
+            setErrorMessage("Export failed");
         } finally {
             setLoading(false);
         }
@@ -254,7 +256,7 @@ const ReportFundMovement: React.FC = () => {
             }
         } catch (error) {
             console.error("Print failed", error);
-            alert("Print failed");
+            setErrorMessage("Print failed");
         } finally {
             setLoading(false);
         }
@@ -414,6 +416,11 @@ const ReportFundMovement: React.FC = () => {
                     </table>
                 </div>
             </div>
+            <ErrorModal
+                isOpen={!!errorMessage}
+                onClose={() => setErrorMessage(null)}
+                message={errorMessage}
+            />
         </div>
     );
 };

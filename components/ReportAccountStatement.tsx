@@ -8,6 +8,7 @@ import PrinterIcon from './icons-redesign/PrinterIcon';
 import ArrowDownTrayIcon from './icons-redesign/ArrowDownTrayIcon';
 import DatePicker from './DatePicker';
 import SearchableSelect from './SearchableSelect';
+import ErrorModal from './ErrorModal';
 
 interface AccountNode {
     id: string;
@@ -22,6 +23,7 @@ const ReportAccountStatement: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
     const [data, setData] = useState<FundReportItem[]>([]);
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [summary, setSummary] = useState({ totalDebit: 0, totalCredit: 0, netBalance: 0 });
 
     // Filter Options State
@@ -90,12 +92,13 @@ const ReportAccountStatement: React.FC = () => {
     }, [language]);
 
     const handleSearch = async () => {
+        setErrorMessage(null);
         if (!filters.account) {
-            alert(t('common.requiredField' as any) || "Account is required");
+            setErrorMessage(t('common.requiredField' as any) || "Account is required");
             return;
         }
         if (!filters.currency) {
-            alert(t('common.requiredField' as any) || "Currency is required");
+            setErrorMessage(t('common.requiredField' as any) || "Currency is required");
             return;
         }
 
@@ -171,7 +174,7 @@ const ReportAccountStatement: React.FC = () => {
             document.body.removeChild(link);
         } catch (error) {
             console.error("Export failed", error);
-            alert("Export failed");
+            setErrorMessage("Export failed");
         } finally {
             setLoading(false);
         }
@@ -252,7 +255,7 @@ const ReportAccountStatement: React.FC = () => {
             }
         } catch (error) {
             console.error("Print failed", error);
-            alert("Print failed");
+            setErrorMessage("Print failed");
         } finally {
             setLoading(false);
         }
@@ -392,6 +395,11 @@ const ReportAccountStatement: React.FC = () => {
                     </table>
                 </div>
             </div>
+            <ErrorModal
+                isOpen={!!errorMessage}
+                onClose={() => setErrorMessage(null)}
+                message={errorMessage}
+            />
         </div>
     );
 };

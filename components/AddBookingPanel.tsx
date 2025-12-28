@@ -238,7 +238,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
             setIsAddingUnit(false);
             setIsUnitPanelOpen(true);
         } else {
-            alert(t('bookings.alerts.selectUnitFirst'));
+            showError(t('bookings.alerts.selectUnitFirst'));
         }
     };
 
@@ -246,12 +246,11 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
         const unitId = formData.unitName;
         const unit = units.find(u => u.id.toString() === unitId?.toString());
         if (unit) {
-            // Re-using edit panel for view, maybe add read-only mode later
             setEditingUnit(unit);
             setIsAddingUnit(false);
             setIsUnitPanelOpen(true);
         } else {
-            alert(t('bookings.alerts.selectUnitFirst'));
+            showError(t('bookings.alerts.selectUnitFirst'));
         }
     };
 
@@ -345,7 +344,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
         // Ideally we pass the booking ID, but for new bookings we might not have it.
         // Alert user if booking not saved?
         if (!('id' in formData)) {
-            alert(t('bookings.alerts.saveBookingFirst'));
+            showError(t('bookings.alerts.saveBookingFirst'));
             return;
         }
         setIsReceiptPanelOpen(true);
@@ -353,7 +352,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
 
     const handleAddOrderClick = () => {
         if (!('id' in formData)) {
-            alert(t('bookings.alerts.saveBookingFirst'));
+            showError(t('bookings.alerts.saveBookingFirst'));
             return;
         }
         setIsOrderPanelOpen(true);
@@ -431,7 +430,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
         try {
             // orderData coming from AddOrderPanel has bookingNumber set to reservationId
             if (!orderData.bookingNumber) {
-                alert(t('bookings.alerts.saveBookingFirst'));
+                showError(t('bookings.alerts.saveBookingFirst'));
                 return;
             }
 
@@ -452,7 +451,7 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
         } catch (err) {
             console.error("Error saving order", err);
             // ErrorContext should handle this if configured, or alert
-            alert(typeof err === 'string' ? err : 'Failed to save order');
+            showError(typeof err === 'string' ? err : 'Failed to save order');
         }
     };
 
@@ -687,9 +686,9 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                             <div className="flex-grow">
                                                 <SearchableSelect id="returnVouchers" options={[]} value={formData.returnVouchers || ''} onChange={(val) => setFormData(p => ({ ...p, returnVouchers: val }))} placeholder="" />
                                             </div>
-                                            <ActionButton icon={PlusIcon} color="bg-green-500" onClick={() => alert(t('bookings.alerts.addingNewReturnVoucher'))} />
-                                            <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.editingReturnVoucher', formData.returnVouchers))} disabled={!formData.returnVouchers} />
-                                            <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.previewingReturnVoucher', formData.returnVouchers))} disabled={!formData.returnVouchers} />
+                                            <ActionButton icon={PlusIcon} color="bg-green-500" onClick={() => showError(t('bookings.alerts.addingNewReturnVoucher'))} />
+                                            <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => showError(t('bookings.alerts.editingReturnVoucher', formData.returnVouchers))} disabled={!formData.returnVouchers} />
+                                            <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => showError(t('bookings.alerts.previewingReturnVoucher', formData.returnVouchers))} disabled={!formData.returnVouchers} />
                                         </div>
                                     </div>
                                     <div>
@@ -698,9 +697,9 @@ const AddBookingPanel: React.FC<AddBookingPanelProps> = ({ initialData, isEditin
                                             <div className="flex-grow">
                                                 <SearchableSelect id="invoices" options={[]} value={formData.invoices || ''} onChange={(val) => setFormData(p => ({ ...p, invoices: val }))} placeholder="" />
                                             </div>
-                                            <ActionButton icon={PlusIcon} color="bg-green-500" onClick={() => alert(t('bookings.alerts.addingNewInvoice'))} />
-                                            <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.editingInvoice', formData.invoices))} disabled={!formData.invoices} />
-                                            <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => alert(t('bookings.alerts.previewingInvoice', formData.invoices))} disabled={!formData.invoices} />
+                                            <ActionButton icon={PlusIcon} color="bg-green-500" onClick={() => showError(t('bookings.alerts.addingNewInvoice'))} />
+                                            <ActionButton icon={PencilIcon} color="bg-blue-500" onClick={() => showError(t('bookings.alerts.editingInvoice', formData.invoices))} disabled={!formData.invoices} />
+                                            <ActionButton icon={EyeIcon} color="bg-blue-500" onClick={() => showError(t('bookings.alerts.previewingInvoice', formData.invoices))} disabled={!formData.invoices} />
                                         </div>
                                     </div>
                                     <div>

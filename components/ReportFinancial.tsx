@@ -9,6 +9,7 @@ import PrinterIcon from './icons-redesign/PrinterIcon';
 import ArrowDownTrayIcon from './icons-redesign/ArrowDownTrayIcon';
 import DatePicker from './DatePicker';
 import SearchableSelect from './SearchableSelect';
+import ErrorModal from './ErrorModal';
 
 // This component handles the "Statement Account Report" which shares the same API as Fund Movement 
 // but typically implies filtering for a specific financial account history.
@@ -16,6 +17,7 @@ const ReportFinancial: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
     const [data, setData] = useState<FundReportItem[]>([]);
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [summary, setSummary] = useState({ totalDebit: 0, totalCredit: 0, netBalance: 0 });
 
     // Filter Options State
@@ -133,7 +135,7 @@ const ReportFinancial: React.FC = () => {
             document.body.removeChild(link);
         } catch (error) {
             console.error("Export failed", error);
-            alert("Export failed");
+            setErrorMessage("Export failed");
         } finally {
             setLoading(false);
         }
@@ -276,6 +278,11 @@ const ReportFinancial: React.FC = () => {
                     </table>
                 </div>
             </div>
+            <ErrorModal
+                isOpen={!!errorMessage}
+                onClose={() => setErrorMessage(null)}
+                message={errorMessage}
+            />
         </div>
     );
 };
