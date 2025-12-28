@@ -33,7 +33,8 @@ export const login = async (credentials: FormData): Promise<LoginResponse> => {
 
     return apiClient<LoginResponse>('/ar/auth/api/sessions/login/', {
         method: 'POST',
-        body: credentials // apiClient handles FormData
+        body: credentials, // apiClient handles FormData
+        skipAuth: true
     });
 };
 

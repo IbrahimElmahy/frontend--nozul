@@ -16,12 +16,14 @@ interface ApiClientOptions {
     body?: any;
     responseType?: 'json' | 'blob';
     headers?: HeadersInit;
+    skipAuth?: boolean;
 }
 
 export const apiClient = async <T>(endpoint: string, options: ApiClientOptions = {}): Promise<T> => {
-    const { method = 'GET', body = null, responseType = 'json', headers: customHeaders = {} } = options;
+    const { method = 'GET', body = null, responseType = 'json', headers: customHeaders = {}, skipAuth = false } = options;
     const token = localStorage.getItem('accessToken');
-    if (!token) {
+
+    if (!token && !skipAuth) {
         throw new Error('Authentication token not found. Please log in again.');
     }
 
