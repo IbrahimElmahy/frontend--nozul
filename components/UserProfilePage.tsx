@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { updateProfile } from '../services/users';
+import { updateProfile, getProfile } from '../services/users';
 import { API_BASE_URL } from '../config/api';
 import ProfileStatCard from './ProfileStatCard';
 import InformationCircleIcon from './icons-redesign/InformationCircleIcon';
@@ -106,28 +106,51 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
             }
 
             if (selectedFile) {
-                // Docs specify 'profile[image]' for file upload
+                // Docs specify 'profile[image]', but we'll send 'image' too just in case
                 formData.append('profile[image]', selectedFile);
+                formData.append('image', selectedFile);
             }
 
-            // Using PUT to update profile without specific ID (as ID endpoint gave 404)
-            const updatedUserResponse = await updateProfile(formData);
+            // 1. Send Update
+            const updateResponse = await updateProfile(formData);
+            console.log("Update Response:", updateResponse);
 
-            // Update local storage with the new user data
-            // We need to merge the new data with the existing token/refresh info just in case
-            // or assume the response is the full user object (usually is for profile endpoints).
-            if (user) {
-                const newUserData = { ...user, ...updatedUserResponse };
+            // 2. Fetch Fresh Profile to confirm
+            // This ensures we get exactly what the server has stored
+            const freshUser = await getProfile();
+            console.log("Fresh Profile:", freshUser);
 
-                // If backend returns 'image' but not 'image_url', clear the stale 'image_url'
-                if ('image' in updatedUserResponse && !('image_url' in updatedUserResponse)) {
-                    newUserData.image_url = null;
+            if (user && freshUser) {
+                // Merge existing user data (tokens etc) with fresh profile data
+                // We trust 'freshUser' for profile fields like image, name, etc.
+                const newUserData = { ...user, ...freshUser };
+
+                // Ensure image_url is populated
+                // If backend returns 'image' but not 'image_url' (or vice versa), fix it
+                if (!newUserData.image_url && newUserData.image) {
+                    newUserData.image_url = newUserData.image;
+                }
+
+                // If nested profile exists and has image, prioritize it? or merge it?
+                // Often 'profile.image' is the source of truth
+                // @ts-ignore
+                if (freshUser.profile && freshUser.profile.image) {
+                    // @ts-ignore
+                    newUserData.image = freshUser.profile.image;
+                    // @ts-ignore
+                    newUserData.image_url = freshUser.profile.image;
+                } else if (updateResponse && updateResponse.image) {
+                    // Fallback to update response if getProfile missed it for some reason (race condition?)
+                    // @ts-ignore
+                    newUserData.image = updateResponse.image;
+                    // @ts-ignore
+                    newUserData.image_url = updateResponse.image;
                 }
 
                 localStorage.setItem('user', JSON.stringify(newUserData));
             }
 
-            // Reload page to reflect changes (App.tsx will read new localStorage)
+            // Reload page to reflect changes
             window.location.reload();
 
         } catch (error) {

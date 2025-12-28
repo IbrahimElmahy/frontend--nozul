@@ -40,3 +40,7 @@ export const updateProfile = async (formData: FormData) => {
         body: formData,
     });
 };
+
+export const getProfile = async () => {
+    return apiClient<User>('/ar/user/api/profile/', { method: 'GET' });
+};
