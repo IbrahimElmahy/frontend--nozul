@@ -19,8 +19,12 @@ interface UserProfilePageProps {
     user: User | null;
 }
 
-const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
+const UserProfilePage: React.FC<UserProfilePageProps> = ({ user: initialUser }) => {
     const { t, language } = useContext(LanguageContext);
+
+    // Internal state for the user to ensure we display the absolute latest data
+    const [currentUser, setCurrentUser] = useState<User | null>(initialUser);
+
     const [profileData, setProfileData] = useState({
         name: '',
         gender: 'ذكر',
@@ -33,22 +37,53 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    // Memoize timestamp to prevent image refreshing on every keystroke/render
-    const mountTime = React.useMemo(() => new Date().getTime(), []);
+
+    // Force refresh timestamp
+    const [imageRefreshKey, setImageRefreshKey] = useState(new Date().getTime());
+
+    // Effect to fetch fresh user data on mount
+    useEffect(() => {
+        const fetchLatestProfile = async () => {
+            // If we have an initial user, sync state first
+            if (initialUser) {
+                setCurrentUser(initialUser);
+            }
+            try {
+                const freshProfile = await getProfile();
+                console.log("Mounted & Fetched Profile:", freshProfile);
+                if (freshProfile) {
+                    setCurrentUser(prev => {
+                        if (!prev) return freshProfile;
+                        return { ...prev, ...freshProfile };
+                    });
+                    // Also update local storage to keep App.tsx in sync eventually
+                    const stored = localStorage.getItem('user');
+                    if (stored) {
+                        const merged = { ...JSON.parse(stored), ...freshProfile };
+                        localStorage.setItem('user', JSON.stringify(merged));
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch fresh profile on mount", err);
+            }
+        };
+
+        fetchLatestProfile();
+    }, [initialUser]);
 
     useEffect(() => {
-        if (user) {
+        if (currentUser) {
             setProfileData({
-                name: user.name || '',
+                name: currentUser.name || '',
                 gender: 'ذكر',
                 dob: '2000-02-29',
                 notes: '',
-                username: user.username || '',
-                phoneNumber: user.phone_number || '',
-                email: user.email || '',
+                username: currentUser.username || '',
+                phoneNumber: currentUser.phone_number || '',
+                email: currentUser.email || '',
             });
         }
-    }, [user]);
+    }, [currentUser]);
 
     // Cleanup preview URL on unmount
     useEffect(() => {
@@ -82,7 +117,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user) return;
+        if (!currentUser) return;
 
         setLoading(true);
         try {
@@ -118,21 +153,18 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
             // 2. Fetch Fresh Profile to confirm
             // This ensures we get exactly what the server has stored
             const freshUser = await getProfile();
-            console.log("Fresh Profile:", freshUser);
+            console.log("Fresh Profile after Save:", freshUser);
 
-            if (user && freshUser) {
+            if (currentUser && freshUser) {
                 // Merge existing user data (tokens etc) with fresh profile data
-                // We trust 'freshUser' for profile fields like image, name, etc.
-                const newUserData = { ...user, ...freshUser };
+                const newUserData = { ...currentUser, ...freshUser };
 
                 // Ensure image_url is populated
-                // If backend returns 'image' but not 'image_url' (or vice versa), fix it
                 if (!newUserData.image_url && newUserData.image) {
                     newUserData.image_url = newUserData.image;
                 }
 
-                // If nested profile exists and has image, prioritize it? or merge it?
-                // Often 'profile.image' is the source of truth
+                // If nested profile exists and has image, prioritize it
                 // @ts-ignore
                 if (freshUser.profile && freshUser.profile.image) {
                     // @ts-ignore
@@ -140,18 +172,24 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                     // @ts-ignore
                     newUserData.image_url = freshUser.profile.image;
                 } else if (updateResponse && updateResponse.image) {
-                    // Fallback to update response if getProfile missed it for some reason (race condition?)
                     // @ts-ignore
                     newUserData.image = updateResponse.image;
                     // @ts-ignore
                     newUserData.image_url = updateResponse.image;
                 }
 
+                // Update local component state
+                setCurrentUser(newUserData);
+
+                // Update Refresh Key to force image re-render if URL is same
+                setImageRefreshKey(new Date().getTime());
+
                 localStorage.setItem('user', JSON.stringify(newUserData));
             }
 
-            // Reload page to reflect changes
-            window.location.reload();
+            alert(t('common.saveSuccess', 'Saved successfully'));
+            // Remove reload to check if instant update works cleanly now
+            // window.location.reload(); 
 
         } catch (error) {
             console.error("Failed to update profile:", error);
@@ -238,7 +276,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                         <div className="relative">
                             <label htmlFor="photo" className={labelAlignClass}>{t('profilePage.photo')}</label>
                             <img
-                                src={previewUrl || `${getImageUrl(user?.image_url || user?.image)}?t=${mountTime}`}
+                                src={previewUrl || `${getImageUrl(currentUser?.image_url || currentUser?.image)}?t=${imageRefreshKey}`}
                                 alt="Profile"
                                 loading="lazy"
                                 onError={(e) => {
@@ -285,7 +323,7 @@ const UserProfilePage: React.FC<UserProfilePageProps> = ({ user }) => {
                         {/* User Role */}
                         <div>
                             <label htmlFor="role" className={labelAlignClass}>{t('profilePage.userRole')}</label>
-                            <input type="text" id="role" name="role" value={user?.role_name || t('profilePage.hotel')} className={`w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-gray-500 dark:text-slate-400 ${textAlignClass}`} readOnly />
+                            <input type="text" id="role" name="role" value={currentUser?.role_name || t('profilePage.hotel')} className={`w-full px-4 py-2 bg-slate-200 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-md text-gray-500 dark:text-slate-400 ${textAlignClass}`} readOnly />
                         </div>
                     </div>
 
