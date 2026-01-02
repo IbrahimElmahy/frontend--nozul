@@ -9,6 +9,7 @@ import PhoneNumberInput from './PhoneNumberInput';
 import SearchableSelect from './SearchableSelect';
 import Switch from './Switch';
 import { getCountries, getGuestTypes, getDiscountTypes, getIdTypes } from '../services/guests';
+import { detectCountryCode } from '../utils/phoneUtils';
 
 interface AddAgencyPanelProps {
     initialData: Omit<BookingAgency, 'id' | 'created_at' | 'updated_at'> | null;
@@ -139,6 +140,18 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
         fetchIdTypes();
     }, [formData.guest_type, agentTypes, isEditing]); // Removed formData.ids from dep array to avoid loop
 
+    // Auto-detect country from phone number
+    useEffect(() => {
+        if (formData.phone_number) {
+            const detected = detectCountryCode(formData.phone_number);
+            // Only update if detected and different, and if it exists in our countries list
+            if (detected && detected !== formData.country && countries[detected]) {
+                setFormData(prev => ({ ...prev, country: detected }));
+            }
+        }
+    }, [formData.phone_number, countries]);
+
+
 
     const handleSaveClick = () => {
         const data = new FormData();
@@ -223,7 +236,7 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
                                 <label htmlFor="phone_number" className={labelBaseClass}>{t('agencies.th_mobileNumber')}</label>
-                                <PhoneNumberInput value={formData.phone_number} onChange={val => setFormData(p => ({ ...p, phone_number: val }))} />
+                                <PhoneNumberInput value={formData.phone_number || ''} onChange={val => setFormData(p => ({ ...p, phone_number: val }))} />
                             </div>
                             <div>
                                 <label htmlFor="work_number" className={labelBaseClass}>{t('guests.workNumber')}</label>
@@ -311,7 +324,7 @@ const AddAgencyPanel: React.FC<AddAgencyPanelProps> = ({ initialData, isEditing,
 
                         <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                             <span className="font-semibold text-slate-800 dark:text-slate-200">{t('agencies.th_status')}</span>
-                            <Switch id="is_active" checked={formData.is_active} onChange={(c) => setFormData(p => ({ ...p, is_active: c }))} />
+                            <Switch id="is_active" checked={!!formData.is_active} onChange={(c) => setFormData(p => ({ ...p, is_active: c }))} />
                         </div>
                     </form>
                 </div>

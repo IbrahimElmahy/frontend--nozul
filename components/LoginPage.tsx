@@ -55,6 +55,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             const data = await login(formData);
 
             localStorage.setItem('accessToken', data.access_token);
+            // Save refresh token if available (standard keys: 'refresh' or 'refresh_token')
+            if (data.refresh) localStorage.setItem('refreshToken', data.refresh);
+            else if (data.refresh_token) localStorage.setItem('refreshToken', data.refresh_token);
+
             // Assuming data contains user info or we need to fetch it separately?
             // LoginPage logic: localStorage.setItem('user', JSON.stringify(data));
             localStorage.setItem('user', JSON.stringify(data));

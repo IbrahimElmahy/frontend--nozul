@@ -7,6 +7,7 @@ import { Page } from '../App';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ErrorModal from './ErrorModal';
 import { getHotelDetails, updateHotelDetails, listCountries } from '../services/hotel';
+import { detectCountryCode } from '../utils/phoneUtils';
 
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -121,7 +122,19 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
         };
 
         fetchHotelData();
+        fetchHotelData();
     }, []);
+
+    // Auto-detect country from phone/mobile
+    useEffect(() => {
+        const phone = formData.mobileNumber || formData.phoneNumber;
+        if (phone) {
+            const detected = detectCountryCode(phone);
+            if (detected && detected !== formData.country && countries.some(c => c[0] === detected)) {
+                setFormData(prev => ({ ...prev, country: detected }));
+            }
+        }
+    }, [formData.mobileNumber, formData.phoneNumber, countries]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;

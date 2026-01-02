@@ -5,30 +5,34 @@ interface AgencyListResponse {
     recordsFiltered: number;
 }
 
+const ENDPOINT = '/ar/guest/api/guests/';
+
 export const listAgencies = async (params?: URLSearchParams) => {
     const qs = params ? `?${params.toString()}` : '';
-    return apiClient<AgencyListResponse>(`/ar/agency/api/agencies/${qs}`);
+    return apiClient<AgencyListResponse>(`${ENDPOINT}${qs}`);
 };
 
 export const createAgency = async (formData: FormData) => {
-    return apiClient('/ar/agency/api/agencies/', {
+    return apiClient(ENDPOINT, {
         method: 'POST',
-        body: formData
+        body: formData,
+        suppressGlobalError: true
     });
 };
 
 export const updateAgency = async (id: string | number, formData: FormData) => {
-    return apiClient(`/ar/agency/api/agencies/${id}/`, {
+    return apiClient(`${ENDPOINT}${id}/`, {
         method: 'PUT',
-        body: formData
+        body: formData,
+        suppressGlobalError: true
     });
 };
 
 export const deleteAgency = async (id: string | number) => {
-    return apiClient(`/ar/agency/api/agencies/${id}/`, { method: 'DELETE' });
+    return apiClient(`${ENDPOINT}${id}/`, { method: 'DELETE', suppressGlobalError: true });
 };
 
 export const toggleAgencyStatus = async (id: string | number, isActive: boolean) => {
     const action = isActive ? 'active' : 'disable';
-    return apiClient(`/ar/agency/api/agencies/${id}/${action}/`, { method: 'POST' });
+    return apiClient(`${ENDPOINT}${id}/${action}/`, { method: 'POST', suppressGlobalError: true });
 };

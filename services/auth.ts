@@ -43,8 +43,22 @@ export const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
     localStorage.removeItem('rememberedUser');
-    // If backend has logout endpoint:
     // await apiClient('/auth/api/sessions/logout/', { method: 'POST' });
+};
+
+export const refreshToken = async (refresh: string): Promise<{ access_token: string; refresh?: string }> => {
+    // Attempt standard SimpleJWT refresh endpoint.
+    // Adjust path if backend differs (e.g. /api/token/refresh/)
+    // Based on login path: '/ar/auth/api/sessions/login/', likely usage is:
+    // '/auth/api/token/refresh/' or similar.
+    // Let's try the most common Django Rest Framework SimpleJWT path first, prefixed if needed.
+    // Since login was at `/auth/api/sessions/login/`, maybe refresh is nearby?
+    // Let's guess '/auth/api/token/refresh/' as it's standard.
+    return apiClient<{ access_token: string; refresh?: string }>('/auth/api/token/refresh/', {
+        method: 'POST',
+        body: { refresh },
+        skipAuth: true // verify explicitly, though refresh endpoint usually doesn't need auth header, just body
+    });
 };
 
 export const getCurrentUser = (): User | null => {

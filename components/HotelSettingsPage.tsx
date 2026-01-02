@@ -62,6 +62,7 @@ const HotelSettingsPage: React.FC<HotelSettingsPageProps> = ({ setCurrentPage })
         { id: 'manageFunds', icon: ArchiveBoxIcon, page: 'funds' as Page },
         { id: 'manageBanks', icon: CreditCardIcon, page: 'banks' as Page },
         { id: 'manageExpenses', icon: CreditCardIcon, page: 'expenses' as Page },
+        { id: 'managePaymentMethods', icon: CreditCardIcon, page: 'payment-methods' as Page },
         { id: 'manageConditions', icon: ClipboardDocumentListIcon, page: 'hotel-conditions' as Page },
     ];
 

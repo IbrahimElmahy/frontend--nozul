@@ -440,6 +440,18 @@ export interface Expense {
     account?: string; // UUID for financial account
 }
 
+export interface PaymentMethod {
+    id: string; // Changed to string for UUID
+    name_en: string;
+    name_ar: string;
+    description?: string;
+    status?: 'active' | 'inactive'; // Normalized
+    is_active?: boolean; // API field
+    created_at: string;
+    updated_at: string;
+    account?: string; // UUID for financial account
+}
+
 export interface ArchiveLog {
     content_type: string;
     action_type: string;

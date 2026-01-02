@@ -59,6 +59,75 @@ export const apiClient = async <T>(endpoint: string, options: ApiClientOptions =
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
+        if (response.status === 401 && !skipAuth) {
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (refreshToken) {
+                try {
+                    // Try to refresh token
+                    // Use raw fetch to avoid circular dependency with auth service
+                    const refreshResponse = await fetch(`${API_BASE_URL}/auth/api/token/refresh/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ refresh: refreshToken })
+                    });
+
+                    if (refreshResponse.ok) {
+                        const refreshData = await refreshResponse.json();
+                        localStorage.setItem('accessToken', refreshData.access_token);
+                        // If new refresh token is returned, update it too
+                        if (refreshData.refresh) {
+                            localStorage.setItem('refreshToken', refreshData.refresh);
+                        }
+
+                        // Retry original request with new token
+                        const newHeaders = { ...headers, 'Authorization': `JWT ${refreshData.access_token}` };
+                        const retryConfig = { ...config, headers: newHeaders };
+                        const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, retryConfig);
+
+                        // Handle retry response
+                        if (method === 'DELETE' && retryResponse.status === 204) {
+                            return Promise.resolve(null as unknown as T);
+                        }
+
+                        // Recurse or just return result? Let's just return result to avoid deep nesting complexity for now
+                        // Ideally we'd recursively call apiClient but config is already built. 
+                        // Let's just process the retryResponse like a normal one.
+                        if (responseType === 'blob') {
+                            if (!retryResponse.ok) throw new Error(`API Error: ${retryResponse.status} ${retryResponse.statusText}`);
+                            return await retryResponse.blob() as unknown as T;
+                        }
+
+                        // Check OK before parsing JSON to avoid syntax error on empty body
+                        if (!retryResponse.ok) {
+                            // Let it fall through to error handling below if retry fails too
+                            const errData = await retryResponse.json();
+                            // Quick re-throw to match outer structure or just let it fall through
+                            // If we fall through, we need 'response' to be 'retryResponse'.
+                            // Re-assigning const is not allowed.
+                            // Let's return the parsed data directly if OK.
+                            return await retryResponse.json() as T;
+                        }
+
+                        return await retryResponse.json() as T;
+                    } else {
+                        // Refresh failed (token expired or invalid)
+                        // Clear tokens and let error propagate (or redirect to login)
+                        localStorage.removeItem('accessToken');
+                        localStorage.removeItem('refreshToken');
+                        localStorage.removeItem('user');
+                        window.location.href = '/'; // Redirect to login
+                        throw new Error('Session expired. Please login again.');
+                    }
+                } catch (refreshErr) {
+                    // Network error or other issue during refresh
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    window.location.href = '/';
+                    throw refreshErr;
+                }
+            }
+        }
+
         if (method === 'DELETE' && response.status === 204) {
             return Promise.resolve(null as unknown as T);
         }

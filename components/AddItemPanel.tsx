@@ -27,7 +27,14 @@ const AddItemPanel: React.FC<AddItemPanelProps> = ({ initialData, mode, type, is
 
     useEffect(() => {
         if (isOpen) {
-            setFormData(initialData);
+            let normalizedData: any = initialData ? { ...initialData } : null;
+
+            // Normalize category if it's an object (API might return populated object)
+            if (type === 'services' && normalizedData && typeof normalizedData.category === 'object') {
+                normalizedData.category = normalizedData.category.id;
+            }
+
+            setFormData(normalizedData);
             if (type === 'services') {
                 fetchCategories();
             }

@@ -6,6 +6,7 @@ import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 import DatePicker from './DatePicker';
 import PhoneNumberInput from './PhoneNumberInput';
 import SearchableSelect from './SearchableSelect';
+import { detectCountryCode } from '../utils/phoneUtils';
 
 interface AddGuestPanelProps {
     initialData: Guest | null;
@@ -119,6 +120,18 @@ const AddGuestPanel: React.FC<AddGuestPanelProps> = ({ initialData, isEditing, i
             setFormData(prev => ({ ...prev, ids: '' }));
         }
     }, [availableIdTypes, formData.ids, isOpen]);
+
+    // Auto-detect country from phone number
+    useEffect(() => {
+        if (formData.phone_number) {
+            const detected = detectCountryCode(formData.phone_number);
+            // Only update if detected and different, and if it exists in our countries list
+            if (detected && detected !== formData.country && countries[detected]) {
+                setFormData(prev => ({ ...prev, country: detected }));
+            }
+        }
+    }, [formData.phone_number, countries]);
+
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;

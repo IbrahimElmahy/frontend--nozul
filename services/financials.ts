@@ -118,9 +118,32 @@ export const toggleCurrencyStatus = async (id: string | number, isActive: boolea
     return apiClient(`/ar/currency/api/currencies/${id}/${action}/`, { method: 'POST' });
 };
 
-export const listPaymentMethods = async (): Promise<any[]> => {
-    const response = await apiClient<{ data: any[] }>('/ar/payment/api/payments-methods/');
-    return response.data;
+export const listPaymentMethods = async (params?: URLSearchParams) => {
+    const qs = params ? `?${params.toString()}` : '';
+    return apiClient<ListResponse<any>>(`/ar/payment/api/payments-methods/${qs}`);
+};
+
+export const createPaymentMethod = async (formData: FormData) => {
+    return apiClient('/ar/payment/api/payments-methods/', {
+        method: 'POST',
+        body: formData
+    });
+};
+
+export const updatePaymentMethod = async (id: string | number, formData: FormData) => {
+    return apiClient(`/ar/payment/api/payments-methods/${id}/`, {
+        method: 'PUT',
+        body: formData
+    });
+};
+
+export const deletePaymentMethod = async (id: string | number) => {
+    return apiClient(`/ar/payment/api/payments-methods/${id}/`, { method: 'DELETE' });
+};
+
+export const togglePaymentMethodStatus = async (id: string | number, isActive: boolean) => {
+    const action = isActive ? 'active' : 'disable';
+    return apiClient(`/ar/payment/api/payments-methods/${id}/${action}/`, { method: 'POST' });
 };
 
 // Funds lookup was previously listFunds, now getFundsLookup to avoid name collision or standardized

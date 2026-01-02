@@ -48,7 +48,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({ value, onChange }) 
                 }
             }
         }
-        
+
         if (bestMatch) {
             setSelectedCountry(bestMatch);
             setLocalPhoneNumber(value.substring(bestMatch.code.length));
@@ -60,7 +60,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({ value, onChange }) 
             if (value && value.startsWith('+')) {
                 console.warn(`PhoneNumberInput: The initial value "${value}" does not have a recognized country code prefix. Defaulting to ${saudiArabia.name} (${saudiArabia.code}).`);
             }
-            
+
             // Use the full value as the local number since we can't parse it
             setLocalPhoneNumber(value || '');
         }
@@ -88,11 +88,18 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({ value, onChange }) 
     const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newNumber = e.target.value;
         setLocalPhoneNumber(newNumber);
-        onChange(`${selectedCountry.code}${newNumber}`);
+
+        // If the number starts with +, treat it as a full international number
+        // and let the parent/useEffect handle country extraction.
+        if (newNumber.startsWith('+')) {
+            onChange(newNumber);
+        } else {
+            onChange(`${selectedCountry.code}${newNumber}`);
+        }
     };
-    
-    const filteredCountries = sortedCountries.filter(c => 
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+
+    const filteredCountries = sortedCountries.filter(c =>
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.code.includes(searchTerm)
     );
 

@@ -28,6 +28,7 @@ const CurrenciesPage = React.lazy(() => import('./components/CurrenciesPage'));
 const FundsPage = React.lazy(() => import('./components/FundsPage'));
 const BanksPage = React.lazy(() => import('./components/BanksPage'));
 const ExpensesPage = React.lazy(() => import('./components/ExpensesPage'));
+const PaymentMethodsPage = React.lazy(() => import('./components/PaymentMethodsPage'));
 const HotelConditionsPage = React.lazy(() => import('./components/HotelConditionsPage'));
 import SettingsCog from './components/SettingsCog';
 import { LanguageContext } from './contexts/LanguageContext';
@@ -51,7 +52,7 @@ export interface ThemeSettings {
   isSidebarFixed?: boolean;
 }
 
-export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports' | 'archives' | 'notifications' | 'hotel-settings' | 'hotel-info' | 'hotel-users' | 'apartment-prices' | 'peak-times' | 'taxes' | 'items' | 'currencies' | 'funds' | 'banks' | 'expenses' | 'hotel-conditions';
+export type Page = 'dashboard' | 'profile' | 'units' | 'bookings' | 'guests' | 'agencies' | 'orders' | 'receipts' | 'reports' | 'archives' | 'notifications' | 'hotel-settings' | 'hotel-info' | 'hotel-users' | 'apartment-prices' | 'peak-times' | 'taxes' | 'items' | 'currencies' | 'funds' | 'banks' | 'expenses' | 'payment-methods' | 'hotel-conditions';
 
 const defaultSettings: ThemeSettings = {
   colorScheme: 'light',
@@ -195,6 +196,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ onLogout, settings, setSe
               {currentPage === 'funds' && <FundsPage />}
               {currentPage === 'banks' && <BanksPage />}
               {currentPage === 'expenses' && <ExpensesPage />}
+              {currentPage === 'payment-methods' && <PaymentMethodsPage />}
               {currentPage === 'hotel-conditions' && <HotelConditionsPage />}
             </Suspense>
           </main>
@@ -303,6 +305,7 @@ const App: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     setIsAuthenticated(false);
   };

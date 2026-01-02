@@ -95,7 +95,7 @@ const ApartmentPriceEditPanel: React.FC<ApartmentPriceEditPanelProps> = ({ data,
 
                 <div className="flex-grow p-6 overflow-y-auto">
                     <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-                        <SectionHeader title={"Hourly"} />
+                        <SectionHeader title={t('apartmentPrices.th_hourly')} />
                         <div className="grid grid-cols-2 gap-4">
                             <FormField label={t('apartmentPrices.th_price')}>
                                 <input type="number" name="hourly_price" value={formData.hourly_price} onChange={handleInputChange} className={inputBaseClass} disabled={isViewMode} />
@@ -145,7 +145,7 @@ const ApartmentPriceEditPanel: React.FC<ApartmentPriceEditPanelProps> = ({ data,
                             ) : (
                                 <CheckCircleIcon className="w-5 h-5" />
                             )}
-                            <span>{isSaving ? 'Saving...' : t('units.saveChanges')}</span>
+                            <span>{isSaving ? t('common.saving') : t('units.saveChanges')}</span>
                         </button>
                     )}
                     <button onClick={onClose} className="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 font-semibold py-2 px-5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200">
