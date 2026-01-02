@@ -80,6 +80,8 @@ const HotelInfoPage: React.FC<HotelInfoPageProps> = ({ setCurrentPage }) => {
                     listCountries()
                 ]);
 
+                console.log("DEBUG: Hotel Data API Response:", hotelData);
+
                 const countryCode = Object.keys(countriesData).find(code => countriesData[code] === hotelData.country) || '';
 
                 setFormData({

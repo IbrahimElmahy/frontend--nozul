@@ -13,6 +13,7 @@ import GlobeAltIcon from './icons-redesign/GlobeAltIcon';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { TranslationKey } from '../translations';
 import { User, Notification } from '../types';
+import { checkZakatStatus } from '../services/zakat';
 import { listNotifications } from '../services/notifications';
 import { API_BASE_URL } from '../config/api';
 import IntegrationRequestModal from './IntegrationRequestModal';
@@ -114,6 +115,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [showZakatModal, setShowZakatModal] = useState(false);
     const [selectedSystem, setSelectedSystem] = useState('');
+    const [isZakatActive, setIsZakatActive] = useState(false);
 
     const { language, setLanguage, t } = useContext(LanguageContext);
 
@@ -135,10 +137,24 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                 console.error("Failed to fetch notifications", error);
             }
         }
+
+        const fetchZakatStatus = async () => {
+            try {
+                const status = await checkZakatStatus(language);
+                setIsZakatActive(status.is_ready);
+            } catch (error) {
+                console.error("Failed to check Zakat status", error);
+            }
+        };
+
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 60000); // Poll every minute
+        fetchZakatStatus();
+        const interval = setInterval(() => {
+            fetchNotifications();
+            // Optional: poll zakat status too if needed, or just on mount/modal success
+        }, 60000); // Poll every minute
         return () => clearInterval(interval);
-    }, []);
+    }, [language]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -205,10 +221,27 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
     }
 
     const handleSystemClick = (systemName: string, isActive: boolean) => {
-        if (!isActive) {
-            if (systemName === 'zakat') {
-                setShowZakatModal(true);
-            } else {
+        if (systemName === 'zakat') {
+            setShowZakatModal(true);
+        } else {
+            // For other systems, we only show the request modal if NOT active (for now)
+            // Or if we want to show a similar status modal later, we'd remove this check too.
+            // But per user request "show verification page", let's open it.
+            // However, the other modal (IntegrationRequestModal) is just a form.
+            // For now, let's keep others strictly as is (only open if inactive to request), 
+            // BUT since user asked generically, maybe he implies others too?
+            // "any platform... show verification page"
+            // Since others are never active yet, this change primarily affects Zakat.
+            // Let's just allow opening the appropriate modal.
+
+            // Actually, for the *others*, if they ARE active (which they aren't yet), 
+            // we don't have a "Status Modal" for them. We only have `IntegrationRequestModal`.
+            // So for others, if active, maybe we shouldn't open the "Request" modal?
+            // But currently they are always inactive. 
+            // So removing the check is safe for Zakat.
+            // Let's logic: if Zakat, always open (it handles both states).
+            // If others, open Request Modal (which is for requesting).
+            if (!isActive) {
                 setSelectedSystem(systemName);
                 setShowIntegrationModal(true);
             }
@@ -288,7 +321,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                     />
                     <SystemStatusBadge
                         name="هيئة الزكاة"
-                        isActive={false} // Would ideally come from checking Zakat status
+                        isActive={isZakatActive}
                         imageSrc={zakatLogo}
                         systemKey="zakat"
                         onClick={handleSystemClick}
@@ -462,6 +495,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
             <ZakatIntegrationModal
                 isOpen={showZakatModal}
                 onClose={() => setShowZakatModal(false)}
+                onSuccess={() => setIsZakatActive(true)}
             />
         </header>
     );
