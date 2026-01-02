@@ -16,6 +16,7 @@ import { User, Notification } from '../types';
 import { listNotifications } from '../services/notifications';
 import { API_BASE_URL } from '../config/api';
 import IntegrationRequestModal from './IntegrationRequestModal';
+import ZakatIntegrationModal from './ZakatIntegrationModal';
 
 // Icons for notifications and status
 import UserPlusIcon from './icons-redesign/UserPlusIcon';
@@ -83,6 +84,7 @@ const Clock = () => {
 import wafiqLogo from '../images/wafeq-off.png';
 import shomoosLogo from '../images/shomos.png';
 import ntmLogo from '../images/minstry_active.png';
+import zakatLogo from '../images/zacat.png';
 
 // System Status Badge Component
 const SystemStatusBadge = ({ name, isActive, imageSrc, systemKey, onClick }: { name: string, isActive: boolean, imageSrc: string, systemKey: string, onClick: (key: string, active: boolean) => void }) => (
@@ -108,7 +110,9 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Integration Modal State
+    // Integration Modal State
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
+    const [showZakatModal, setShowZakatModal] = useState(false);
     const [selectedSystem, setSelectedSystem] = useState('');
 
     const { language, setLanguage, t } = useContext(LanguageContext);
@@ -202,8 +206,12 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
 
     const handleSystemClick = (systemName: string, isActive: boolean) => {
         if (!isActive) {
-            setSelectedSystem(systemName);
-            setShowIntegrationModal(true);
+            if (systemName === 'zakat') {
+                setShowZakatModal(true);
+            } else {
+                setSelectedSystem(systemName);
+                setShowIntegrationModal(true);
+            }
         }
     };
 
@@ -276,6 +284,13 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                         isActive={false}
                         imageSrc={ntmLogo}
                         systemKey="ntm"
+                        onClick={handleSystemClick}
+                    />
+                    <SystemStatusBadge
+                        name="هيئة الزكاة"
+                        isActive={false} // Would ideally come from checking Zakat status
+                        imageSrc={zakatLogo}
+                        systemKey="zakat"
                         onClick={handleSystemClick}
                     />
                 </div>
@@ -443,6 +458,10 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                     phone: user?.phone_number || ''
                 }}
                 initialSystemType={selectedSystem}
+            />
+            <ZakatIntegrationModal
+                isOpen={showZakatModal}
+                onClose={() => setShowZakatModal(false)}
             />
         </header>
     );

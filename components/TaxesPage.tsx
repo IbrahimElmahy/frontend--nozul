@@ -16,6 +16,8 @@ import ConfirmationModal from './ConfirmationModal';
 import TaxDetailsModal from './TaxDetailsModal';
 import { listTaxes, deleteTax, toggleTaxStatus } from '../services/taxes';
 import Switch from './Switch';
+import ErrorModal from './ErrorModal';
+
 
 const newTaxTemplate: Omit<Tax, 'id' | 'created_at' | 'updated_at'> = {
     name: '',
@@ -30,12 +32,13 @@ const newTaxTemplate: Omit<Tax, 'id' | 'created_at' | 'updated_at'> = {
 };
 
 const TaxesPage: React.FC = () => {
-    const { t } = useContext(LanguageContext);
+    const { t, language } = useContext(LanguageContext);
     const [taxes, setTaxes] = useState<Tax[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [loading, setLoading] = useState(true);
     const [totalRecords, setTotalRecords] = useState(0);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // UI State
     const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
@@ -98,7 +101,7 @@ const TaxesPage: React.FC = () => {
                 fetchTaxes();
                 setTaxToDelete(null);
             } catch (error) {
-                alert(`${t('taxes.deleteError' as any)}: ${error instanceof Error ? error.message : t('common.unexpectedError')}`);
+                setErrorMessage(`${t('taxes.deleteError' as any)}: ${error instanceof Error ? error.message : t('common.unexpectedError')}`);
             }
         }
     };
@@ -108,7 +111,7 @@ const TaxesPage: React.FC = () => {
             await toggleTaxStatus(tax.id, newStatus);
             setTaxes(prev => prev.map(t => t.id === tax.id ? { ...t, is_active: newStatus } : t));
         } catch (error) {
-            alert(`${t('taxes.statusError' as any)}: ${error instanceof Error ? error.message : t('common.unexpectedError')}`);
+            setErrorMessage(`${t('taxes.statusError' as any)}: ${error instanceof Error ? error.message : t('common.unexpectedError')}`);
         }
     };
 
@@ -131,10 +134,13 @@ const TaxesPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('taxes.pageTitle')}</h2>
-                <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
-                    <PlusCircleIcon className="w-5 h-5" />
-                    <span>{t('taxes.addTax')}</span>
-                </button>
+                <div className="flex items-center gap-3">
+
+                    <button onClick={handleAddNewClick} className="flex items-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                        <PlusCircleIcon className="w-5 h-5" />
+                        <span>{t('taxes.addTax')}</span>
+                    </button>
+                </div>
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
@@ -233,6 +239,8 @@ const TaxesPage: React.FC = () => {
                 isEditing={!!editingTax}
             />
 
+
+
             <TaxDetailsModal tax={viewingTax} onClose={() => setViewingTax(null)} />
 
             <ConfirmationModal
@@ -241,6 +249,12 @@ const TaxesPage: React.FC = () => {
                 onConfirm={handleConfirmDelete}
                 title={t('taxes.deleteTaxTitle')}
                 message={t('taxes.confirmDeleteMessage')}
+            />
+
+            <ErrorModal
+                isOpen={!!errorMessage}
+                onClose={() => setErrorMessage(null)}
+                message={errorMessage}
             />
         </div>
     );
