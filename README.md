@@ -1,20 +1,89 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🏨 Nozulkum Frontend (نزلكم)
 
-# Run and deploy your AI Studio app
+**Nozulkum** is a comprehensive, modern **Hotel Management System (PMS)** designed to streamline hotel operations, from booking management to financial reporting and government integrations.
 
-This contains everything you need to run your app locally.
+This repository contains the **React frontend** application, built with **TypeScript**, **Vite**, and **Tailwind CSS**.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1_galLZGhWtWGHi3aAJYyeud-x4wvwXhl
+## ✨ Key Features
 
-## Run Locally
+### 📅 Front Desk & Bookings
+*   **Booking Management:** Create, edit, and manage reservations with a drag-and-drop calendar view.
+*   **Check-in / Check-out:** Streamlined process for guests.
+*   **Room/Unit Management:** Manage apartments, rooms, cleaning status, and maintenance.
+*   **Daily Reports:** Automated daily booking and revenue reports.
 
-**Prerequisites:**  Node.js
+### 👥 Guest Management
+*   **Guest Profiles:** Detailed guest history, preferences, and contact info.
+*   **Blacklist Management:** Manage banned guests.
+*   **Agency Management:** specialized booking for agencies (Booking.com, Agoda, etc.).
 
+### 💰 Financials & Accounting
+*   **Invoicing:** Generate VAT-compliant invoices.
+*   **ZATCA (Zakat) Integration:** Electronic invoicing integration with Phase 2 (Fatoora) support.
+*   **Expenses & Receipts:** Track operational expenses and generate receipts.
+*   **Tax Management:** Configurable tax rates.
+*   **Currencies & Funds:** Multi-currency support and fund management.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### ⚙️ System Configuration
+*   **User Management:** Role-based access control (RBAC) and detailed permissions.
+*   **Pricing Engine:** Dynamic pricing, seasonal rates, and peak time management.
+*   **Integrations:**
+    *   **Shomoos:** Security integration.
+    *   **ZATCA:** Tax authority integration.
+    *   **NTM:** Tourism monitoring.
+
+### 🌍 Localization
+*   **Bilingual Interface:** Fully supported **Arabic (RTL)** and **English (LTR)** interfaces.
+*   **Theme Support:** Light and Dark mode.
+
+## 🛠️ Tech Stack
+
+*   **Framework:** React 19
+*   **Language:** TypeScript
+*   **Build Tool:** Vite
+*   **Styling:** Tailwind CSS 4
+*   **State Management:** React Context API
+*   **Icons:** Heroicons
+
+## 🚀 Getting Started
+
+### Prerequisites
+*   Node.js (v18 or higher recommended)
+*   npm or yarn
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/nozulkum123123/nozulkum_frontend.git
+    cd nozulkum_frontend
+    ```
+
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Start the development server:
+    ```bash
+    npm run dev
+    ```
+
+## 📦 Deployment
+
+Build the application for production:
+
+```bash
+npm run build
+```
+
+## 🤝 Contributing
+
+1.  Fork the repository.
+2.  Create your feature branch (`git checkout -b feature/AmazingFeature`).
+3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4.  Push to the branch (`git push origin feature/AmazingFeature`).
+5.  Open a Pull Request.
+
+---
+**Developed by [Osus Ideas](https://www.osusideas.online)**
