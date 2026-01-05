@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
-// Mock specific matchMedia for keycloak or responsive components
+// Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockImplementation(query => ({
@@ -23,8 +23,10 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
     disconnect: vi.fn(),
 }));
 
-// Mock API Client to prevent actual network calls during tests unless specifically tested
-vi.mock('./apiClient', () => ({
-    apiClient: vi.fn(),
-    API_BASE_URL: 'http://localhost:8000',
+// Mock IntersectionObserver
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+    takeRecords: vi.fn(),
 }));
