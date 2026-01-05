@@ -48,7 +48,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewClick, onEditC
     const { t, language } = useContext(LanguageContext);
 
     const config = statusConfig[booking.status];
-    const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { day: '2-digit', month: 'short' });
+    const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString(language === 'ur' ? 'ur-PK' : (language === 'ar' ? 'ar-SA' : 'en-US'), { day: '2-digit', month: 'short' });
 
     const handleActionClick = (e: React.MouseEvent, action: () => void) => {
         e.stopPropagation();

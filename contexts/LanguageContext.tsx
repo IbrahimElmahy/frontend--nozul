@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { translations, TranslationKey, translations as translationsData } from '../translations';
 
-type Language = 'ar' | 'en';
+type Language = 'ar' | 'en' | 'ur';
 
 type TranslationDataObject = typeof translationsData.ar;
 
@@ -14,7 +14,7 @@ interface LanguageContextType {
 
 export const LanguageContext = createContext<LanguageContextType>({
     language: 'ar',
-    setLanguage: () => {},
+    setLanguage: () => { },
     t: () => '',
     translationData: translationsData.ar,
 });
@@ -28,7 +28,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
     useEffect(() => {
         const savedLanguage = localStorage.getItem('language') as Language;
-        if (savedLanguage && (savedLanguage === 'ar' || savedLanguage === 'en')) {
+        if (savedLanguage && (savedLanguage === 'ar' || savedLanguage === 'en' || savedLanguage === 'ur')) {
             setLanguage(savedLanguage);
         }
     }, []);
@@ -37,20 +37,20 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         setLanguage(lang);
         localStorage.setItem('language', lang);
     };
-    
+
     const t = (key: TranslationKey, ...args: any[]): string => {
         const keyParts = key.split('.');
         // FIX: By typing `translation` as `any`, we allow dynamic property access.
         // This resolves an issue where TypeScript would incorrectly infer the type as `never`
         // within the string check, and allows removal of the `@ts-ignore`.
         let translation: any = translations[language];
-        
+
         try {
             for (const part of keyParts) {
                 translation = translation[part];
             }
             if (typeof translation === 'string') {
-                 // Basic interpolation
+                // Basic interpolation
                 return translation.replace(/\{(\d+)\}/g, (match, index) => {
                     return typeof args[index] !== 'undefined' ? args[index] : match;
                 });

@@ -61,6 +61,7 @@ const pageDetails: Record<Page, { title: TranslationKey, breadcrumb: Translation
     banks: { title: 'banksPage.pageTitle', breadcrumb: 'hotelSettings.manageBanks', parent: 'sidebar.settings' },
     expenses: { title: 'expensesPage.pageTitle', breadcrumb: 'hotelSettings.manageExpenses', parent: 'sidebar.settings' },
     'hotel-conditions': { title: 'hotelConditions.pageTitle', breadcrumb: 'hotelSettings.manageConditions', parent: 'sidebar.settings' },
+    'payment-methods': { title: 'paymentMethodsPage.pageTitle', breadcrumb: 'hotelSettings.managePaymentMethods', parent: 'sidebar.settings' },
 }
 
 // Clock Component
@@ -118,6 +119,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
     const [isZakatActive, setIsZakatActive] = useState(false);
 
     const { language, setLanguage, t } = useContext(LanguageContext);
+    const isRTL = language === 'ar' || language === 'ur';
 
 
     const userDropdownRef = useRef<HTMLDivElement>(null);
@@ -140,7 +142,8 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
 
         const fetchZakatStatus = async () => {
             try {
-                const status = await checkZakatStatus(language);
+                const apiLang = (language === 'ur' || language === 'en') ? 'ar' : language;
+                const status = await checkZakatStatus(apiLang);
                 setIsZakatActive(status.is_ready);
             } catch (error) {
                 console.error("Failed to check Zakat status", error);
@@ -254,7 +257,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
         ? 'bg-slate-800 text-slate-300 border-b border-slate-700'
         : 'bg-white dark:bg-slate-800 dark:border-b dark:border-slate-700';
 
-    const dropdownPosition = language === 'ar' ? 'left-0' : 'right-0';
+    const dropdownPosition = isRTL ? 'left-0' : 'right-0';
 
     const getTimeAgo = (isoDate: string) => {
         const date = new Date(isoDate);
@@ -297,7 +300,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
 
             {/* Center Section: System Status & Clock (Hidden on small screens) */}
             <div className="hidden lg:flex items-center gap-6 absolute left-1/2 transform -translate-x-1/2">
-                <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <SystemStatusBadge
                         name="وافق"
                         isActive={false}
@@ -333,7 +336,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                 <div className="flex flex-col items-center">
                     <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
                         <CheckCircleIcon className="w-3 h-3" />
-                        <span>{language === 'ar' ? 'نشط' : 'Active'}</span>
+                        <span>{language === 'en' ? 'Active' : (language === 'ar' ? 'نشط' : 'فعال')}</span>
                     </div>
                     <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 tracking-wide">PLAN A</span>
                 </div>
@@ -367,6 +370,12 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                             >
                                 English
                             </button>
+                            <button
+                                onClick={() => { setLanguage('ur'); setIsLangDropdownOpen(false); }}
+                                className={`w-full text-right flex items-center px-4 py-2 text-sm ${language === 'ur' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'} hover:bg-gray-100 dark:hover:bg-slate-700`}
+                            >
+                                اردو
+                            </button>
                         </div>
                     )}
                 </div>
@@ -395,7 +404,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                     >
                         <BellIcon className="w-6 h-6" />
                         {unreadCount > 0 && (
-                            <span className={`absolute -top-1 ${language === 'ar' ? '-right-1' : '-left-1'} flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white`}>
+                            <span className={`absolute -top-1 ${isRTL ? '-right-1' : '-left-1'} flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white`}>
                                 {unreadCount}
                             </span>
                         )}
@@ -417,10 +426,10 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                                             onClick={(e) => { e.preventDefault(); handleMarkAsRead(notification.pk); }}
                                             className={`flex items-start p-3 text-sm transition-colors duration-150 ${!notification.unread ? 'text-gray-600 dark:text-gray-400' : 'bg-blue-50/50 dark:bg-blue-500/10 text-gray-800 dark:text-gray-200'} hover:bg-gray-100 dark:hover:bg-slate-700`}
                                         >
-                                            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${language === 'ar' ? 'ml-3' : 'mr-3'} ${!notification.unread ? 'bg-slate-200 dark:bg-slate-600' : 'bg-blue-100 dark:bg-blue-500/20'}`}>
+                                            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'} ${!notification.unread ? 'bg-slate-200 dark:bg-slate-600' : 'bg-blue-100 dark:bg-blue-500/20'}`}>
                                                 <InformationCircleIcon className={`w-5 h-5 ${!notification.unread ? 'text-slate-500' : 'text-blue-500'}`} />
                                             </div>
-                                            <div className={`flex-grow ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                                            <div className={`flex-grow ${isRTL ? 'text-right' : 'text-left'}`}>
                                                 <p className="font-medium">{notification.verb}</p>
                                                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{getTimeAgo(notification.timestamp)}</p>
                                             </div>
@@ -450,8 +459,8 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                             className="w-10 h-10 rounded-full object-cover"
                         />
                         <div className="hidden sm:block">
-                            <div className={`font-semibold text-sm text-slate-700 dark:text-slate-300 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.name || t('walid_ullah')}</div>
-                            <div className={`text-xs text-gray-500 dark:text-gray-400 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{user?.role_name || t('manager')}</div>
+                            <div className={`font-semibold text-sm text-slate-700 dark:text-slate-300 ${isRTL ? 'text-right' : 'text-left'}`}>{user?.name || t('walid_ullah')}</div>
+                            <div className={`text-xs text-gray-500 dark:text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>{user?.role_name || t('manager')}</div>
                         </div>
                         <ChevronDownIcon className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
@@ -462,15 +471,15 @@ const Header: React.FC<HeaderProps> = ({ onLogout, settings, onMenuButtonClick, 
                                 onClick={handleProfileClick}
                                 className={`flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 ${language === 'en' ? 'flex-row-reverse justify-end' : ''}`}
                             >
-                                <UserIcon className={`w-5 h-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
+                                <UserIcon className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
                                 {/* FIX: Use namespaced translation key 'userMenu.profile' to resolve TypeScript error. */}
                                 <span>{t('userMenu.profile')}</span>
                             </a>
                             <button
                                 onClick={handleLogoutClick}
-                                className={`w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 ${language === 'ar' ? 'text-right' : 'text-left'} ${language === 'en' ? 'flex-row-reverse justify-between' : ''}`}
+                                className={`w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 ${isRTL ? 'text-right' : 'text-left'} ${language === 'en' ? 'flex-row-reverse justify-between' : ''}`}
                             >
-                                <ArrowLeftOnRectangleIcon className={`w-5 h-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
+                                <ArrowLeftOnRectangleIcon className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'}`} />
                                 {/* FIX: Use namespaced translation key 'userMenu.logout' to resolve TypeScript error. */}
                                 <span>{t('userMenu.logout')}</span>
                             </button>

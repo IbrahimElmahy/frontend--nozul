@@ -27,6 +27,7 @@ import CheckCircleIcon from './icons-redesign/CheckCircleIcon';
 
 const GuestsPage: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
+    const isRTL = language === 'ar' || language === 'ur';
 
     // Data and loading states
     const [guests, setGuests] = useState<Guest[]>([]);
@@ -180,8 +181,8 @@ const GuestsPage: React.FC = () => {
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
                     <div className="relative flex-grow sm:flex-grow-0 sm:w-96">
-                        <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${language === 'ar' ? 'right-3' : 'left-3'}`} />
-                        <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder={t('guests.searchPlaceholder')} className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${language === 'ar' ? 'pr-10' : 'pl-10'}`} />
+                        <MagnifyingGlassIcon className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder={t('guests.searchPlaceholder')} className={`w-full py-2 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900 dark:text-slate-200 ${isRTL ? 'pr-10' : 'pl-10'}`} />
                     </div>
                     <div className="flex items-center gap-2">
                         <button onClick={() => setViewMode('table')} className={`p-2 rounded-lg transition-colors ${viewMode === 'table' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'}`} aria-label="Table View"><TableCellsIcon className="w-5 h-5" /></button>

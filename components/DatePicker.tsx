@@ -13,6 +13,7 @@ interface DatePickerProps {
 
 const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, selectedDate }) => {
     const { language, translationData } = useContext(LanguageContext);
+    const isRTL = language === 'ar' || language === 'ur';
 
     // Use selectedDate if provided (API compatibility with AddGuestPanel), otherwise fallback to value string logic
     // AddGuestPanel passes: selectedDate={formData.birthdate ? new Date(formData.birthdate) : null}
@@ -117,7 +118,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, selecte
         );
     };
 
-    const popoverPositionClass = language === 'ar' ? 'right-0' : 'left-0';
+    const popoverPositionClass = isRTL ? 'right-0' : 'left-0';
 
     return (
         <div className="relative" ref={datepickerRef}>
@@ -128,19 +129,19 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, label, selecte
                 value={effectiveValue}
                 onClick={() => setIsOpen(!isOpen)}
                 placeholder="YYYY-MM-DD"
-                className={`w-full px-4 py-2 bg-white dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 cursor-pointer ${language === 'ar' ? 'text-right' : 'text-left'}`}
+                className={`w-full px-4 py-2 bg-white dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-slate-200 cursor-pointer ${isRTL ? 'text-right' : 'text-left'}`}
             />
             {isOpen && (
                 <div className={`absolute top-full mt-2 z-10 w-72 bg-white dark:bg-slate-800 rounded-lg shadow-lg border dark:border-slate-700 p-2 ${popoverPositionClass}`}>
                     <div className="flex justify-between items-center mb-2 px-2">
-                        <button onClick={() => changeMonth(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${language === 'ar' ? 'rotate-180' : ''}`} /></button>
+                        <button onClick={() => changeMonth(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${isRTL ? 'rotate-180' : ''}`} /></button>
                         <div className="font-semibold text-gray-800 dark:text-gray-200">{MONTH_NAMES[viewDate.getMonth()]}</div>
-                        <button onClick={() => changeMonth(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${language === 'ar' ? 'rotate-180' : ''} transform rotate-180`} /></button>
+                        <button onClick={() => changeMonth(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${isRTL ? 'rotate-180' : ''} transform rotate-180`} /></button>
                     </div>
                     <div className="flex justify-between items-center mb-2 px-2">
-                        <button onClick={() => changeYear(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${language === 'ar' ? 'rotate-180' : ''}`} /></button>
+                        <button onClick={() => changeYear(-1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${isRTL ? 'rotate-180' : ''}`} /></button>
                         <div className="font-semibold text-gray-800 dark:text-gray-200">{viewDate.getFullYear()}</div>
-                        <button onClick={() => changeYear(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${language === 'ar' ? 'rotate-180' : ''} transform rotate-180`} /></button>
+                        <button onClick={() => changeYear(1)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"><ChevronRightIcon className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${isRTL ? 'rotate-180' : ''} transform rotate-180`} /></button>
                     </div>
                     {renderCalendar()}
                 </div>

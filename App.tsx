@@ -279,7 +279,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     document.documentElement.lang = language;
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.dir = (language === 'ar' || language === 'ur') ? 'rtl' : 'ltr';
   }, [language]);
 
 
