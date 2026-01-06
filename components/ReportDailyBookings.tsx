@@ -29,12 +29,63 @@ const getStatusColor = (status: string) => {
     }
 };
 
+// Inline Modal for Print Preview
+const PrintPreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; url: string; t: any }> = ({ isOpen, onClose, url, t }) => {
+    if (!isOpen) return null;
+
+    const handlePrintFrame = () => {
+        const iframe = document.getElementById('print-frame') as HTMLIFrameElement;
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.print();
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden ring-1 ring-slate-900/5">
+                <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">{t('reportsPage.labels.printPreview')}</h3>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handlePrintFrame}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium"
+                        >
+                            <PrinterIcon className="w-4 h-4" />
+                            {t('receipts.print')}
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                        >
+                            {t('common.close')}
+                        </button>
+                    </div>
+                </div>
+                <div className="flex-1 bg-slate-200/50 dark:bg-slate-900/50 p-6 overflow-hidden relative flex justify-center">
+                    <iframe
+                        id="print-frame"
+                        src={url}
+                        className="w-full h-full max-w-[210mm] shadow-lg bg-white"
+                        style={{ aspectRatio: '210/297' }}
+                        title="Report Preview"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ReportDailyBookings: React.FC = () => {
+    // ... Existing state ...
     const { t, language } = useContext(LanguageContext);
     const [data, setData] = useState<DailyBookingItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [pagination, setPagination] = useState({ currentPage: 1, itemsPerPage: 10, totalRecords: 0 });
+
+    // New State for Print Preview
+    const [showReportPrintModal, setShowReportPrintModal] = useState(false);
+    const [reportPrintUrl, setReportPrintUrl] = useState('');
 
     // Filters Options
     const [statusOptions, setStatusOptions] = useState<ReportFilterOption[]>([]);
@@ -61,6 +112,63 @@ const ReportDailyBookings: React.FC = () => {
 
     const [itemToDelete, setItemToDelete] = useState<any>(null);
     const [printingReservation, setPrintingReservation] = useState<Reservation | null>(null);
+
+    // ... useEffect ...
+    // ... buildQuery ...
+    // ... fetchData ...
+
+    // ... other handlers ...
+
+    const handlePrintReport = async () => {
+        // Build Params based on current filters
+        const query = buildQuery();
+
+        // Convert query object to URLSearchParams
+        const params = new URLSearchParams();
+        Object.entries(query).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '' && key !== 'start' && key !== 'length') {
+                params.append(key, String(value));
+            }
+        });
+
+        const targetUrl = `https://www.osusideas.online/ar/hpanel/reports/daily_reservations_movements/print/?${params.toString()}`;
+
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(targetUrl, {
+                headers: {
+                    'Authorization': `JWT ${token}`,
+                    'Accept-Language': language
+                }
+            });
+
+            if (!response.ok) throw new Error("Failed to load print view");
+
+            let htmlContent = await response.text();
+
+            const baseUrl = 'https://www.osusideas.online';
+            htmlContent = htmlContent
+                .replace(/(href|src)=["']\/([^"']+)["']/g, `$1="${baseUrl}/$2"`);
+
+            htmlContent = htmlContent.replace('<head>', `<head><base href="${baseUrl}/" />`);
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+
+            setReportPrintUrl(blobUrl);
+            setShowReportPrintModal(true);
+        } catch (error) {
+            console.error("Print preview failed", error);
+            setErrorMessage("Failed to load print preview");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Keep existing handlePrint for safety or remove if unused, but the button calls handlePrintReport now
+
+    // ... rest of hooks ...
 
     useEffect(() => {
         const fetchFilters = async () => {
@@ -326,7 +434,7 @@ const ReportDailyBookings: React.FC = () => {
                             <MagnifyingGlassIcon className="w-4 h-4" />
                             {t('phone.search')}
                         </button>
-                        <button onClick={handlePrint} className="bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 px-5 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors flex items-center gap-2 shadow-sm text-sm font-medium">
+                        <button onClick={handlePrintReport} className="bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 px-5 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors flex items-center gap-2 shadow-sm text-sm font-medium">
                             <PrinterIcon className="w-4 h-4" />
                             {t('receipts.print')}
                         </button>
@@ -500,6 +608,13 @@ const ReportDailyBookings: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            <PrintPreviewModal
+                isOpen={showReportPrintModal}
+                onClose={() => setShowReportPrintModal(false)}
+                url={reportPrintUrl}
+                t={t}
+            />
         </div >
     );
 };

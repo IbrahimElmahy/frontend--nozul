@@ -31,15 +31,12 @@ const toFormData = (payload: Record<string, any>) => {
 };
 
 // Fund movement / statement account share the same endpoint + export
+// Fund movement / statement account share the same endpoint + export
 export const fetchStatementAccount = (query?: Query) =>
     apiClient<DataTableResponse<any>>(`/ar/report/api/statement-account/${buildQueryString(query)}`);
 
-export const exportStatementAccount = (payload?: Record<string, any>) =>
-    apiClient<Blob>('/ar/report/api/statement-account/export-excel-file/', {
-        method: payload ? 'POST' : 'GET',
-        body: payload ? toFormData(payload) : undefined,
-        responseType: 'blob',
-    });
+export const exportStatementAccount = (query?: Query) =>
+    apiClient<DataTableResponse<any>>(`/ar/report/api/statement-account/${buildQueryString(query)}&is_export=true`);
 
 // Balady
 export const fetchBalady = (query?: Query) =>

@@ -704,7 +704,16 @@ export const translations = {
             },
             exportFailed: "فشل التصدير",
             editReadOnly: "وظيفة التعديل للتقارير هي للقراءة فقط في هذا العرض.",
-
+            labels: {
+                accountType: "نوع الحساب",
+                account: "الحساب",
+                startDate: "تاريخ البداية",
+                endDate: "تاريخ النهاية",
+                printPreview: "معاينة الطباعة",
+                totalDebit: "إجمالي المدين",
+                totalCredit: "إجمالي الدائن",
+                netBalance: "صافي الرصيد",
+            },
         },
         archivesPage: {
             title: "الأرشيفات",
@@ -1876,7 +1885,16 @@ export const translations = {
                 }
             },
             exportFailed: "Export Failed",
-
+            labels: {
+                accountType: "Account Type",
+                account: "Account",
+                startDate: "Start Date",
+                endDate: "End Date",
+                printPreview: "Print Preview",
+                totalDebit: "Total Debit",
+                totalCredit: "Total Credit",
+                netBalance: "Net Balance",
+            },
         },
         archivesPage: {
             title: "Archives",
@@ -3460,7 +3478,7 @@ export const translations = {
             applyTo_bookings: "بکنگ",
             applyTo_services: "خدمات",
         },
-    }
+    },
 };
 
 // Recursive type helper to extract all keys (nested) from the translation object

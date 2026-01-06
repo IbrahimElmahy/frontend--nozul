@@ -5,6 +5,7 @@ import ArrowDownTrayIcon from './icons-redesign/ArrowDownTrayIcon';
 import ChevronLeftIcon from './icons-redesign/ChevronLeftIcon';
 import ChevronRightIcon from './icons-redesign/ChevronRightIcon';
 import MagnifyingGlassIcon from './icons-redesign/MagnifyingGlassIcon';
+import PrinterIcon from './icons-redesign/PrinterIcon';
 import ErrorModal from './ErrorModal';
 
 interface BaladyItem {
@@ -23,6 +24,51 @@ interface BaladyItem {
     total: number;
     balance: number;
 }
+// Inline Modal for Print Preview
+const PrintPreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; url: string; t: any }> = ({ isOpen, onClose, url, t }) => {
+    if (!isOpen) return null;
+
+    const handlePrintFrame = () => {
+        const iframe = document.getElementById('print-frame') as HTMLIFrameElement;
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.print();
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden ring-1 ring-slate-900/5">
+                <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">{t('reportsPage.labels.printPreview')}</h3>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handlePrintFrame}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium"
+                        >
+                            <PrinterIcon className="w-4 h-4" />
+                            {t('receipts.print')}
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                        >
+                            {t('common.close')}
+                        </button>
+                    </div>
+                </div>
+                <div className="flex-1 bg-slate-200/50 dark:bg-slate-900/50 p-6 overflow-hidden relative flex justify-center">
+                    <iframe
+                        id="print-frame"
+                        src={url}
+                        className="w-full h-full max-w-[210mm] shadow-lg bg-white"
+                        style={{ aspectRatio: '210/297' }}
+                        title="Report Preview"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const ReportBalady: React.FC = () => {
     const { t, language } = useContext(LanguageContext);
@@ -30,6 +76,8 @@ const ReportBalady: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [pagination, setPagination] = useState({ currentPage: 1, itemsPerPage: 10, totalRecords: 0 });
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [printUrl, setPrintUrl] = useState('');
 
     // Filter State
     const currentYear = new Date().getFullYear();
@@ -39,6 +87,7 @@ const ReportBalady: React.FC = () => {
     const months = Array.from({ length: 12 }, (_, i) => i + 1);
     const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i); // Last 2 years to next 2 years
 
+    // ... fetchData ...
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
@@ -54,12 +103,12 @@ const ReportBalady: React.FC = () => {
                 id: item.id,
                 contract_number: item.number || item.id.toString(),
                 guest_name: item.guest || '-',
-                national_id: item.guest_id_number || '-', // Assuming these fields exist in "additional reservation details" or similar
+                national_id: item.guest_id_number || '-',
                 mobile: item.guest_phone || '-',
                 check_in: item.check_in_date,
                 check_out: item.check_out_date,
                 unit_number: item.apartment || '-',
-                contract_date: item.created_at || '-', // Might need to be derived if not directly in response
+                contract_date: item.created_at || '-',
                 status_display: item.status_display || item.status,
                 rental_display: item.rental_display || item.rental_type,
                 amount: parseFloat(item.amount || 0),
@@ -89,10 +138,9 @@ const ReportBalady: React.FC = () => {
     const handleExport = async () => {
         try {
             setLoading(true);
-            // Fetch all data for export (or a large limit)
             const query: Record<string, any> = {
                 start: 0,
-                length: 1000, // Reasonable limit for client-side export
+                length: 1000,
                 check_out_date__lte: `${selectedMonth}/${selectedYear}`
             };
 
@@ -158,6 +206,66 @@ const ReportBalady: React.FC = () => {
             setLoading(false);
         }
     };
+
+    const handlePrint = async () => {
+        const params = new URLSearchParams();
+        // Construct query similar to fetchData/handleExport
+        // Balady report seems to filter by check_out_date__lte
+        params.append('check_out_date__lte', `${selectedMonth}/${selectedYear}`);
+
+        // Assumption: Endpoint follows pattern /reports/balady/print/
+        const targetUrl = `https://www.osusideas.online/ar/hpanel/reports/balady/print/?${params.toString()}`;
+
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(targetUrl, {
+                headers: {
+                    'Authorization': `JWT ${token}`,
+                    'Accept-Language': language
+                }
+            });
+
+            if (!response.ok) throw new Error("Failed to load print view");
+
+            let htmlContent = await response.text();
+
+            const baseUrl = 'https://www.osusideas.online';
+            htmlContent = htmlContent
+                .replace(/(href|src)=["']\/([^"']+)["']/g, `$1="${baseUrl}/$2"`);
+
+            htmlContent = htmlContent.replace('<head>', `<head><base href="${baseUrl}/" />`);
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+
+            setPrintUrl(blobUrl);
+            setShowPrintModal(true);
+        } catch (error) {
+            console.error("Print preview failed", error);
+            setErrorMessage("Failed to load print preview");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    <div className="flex gap-2 justify-end">
+        <button onClick={handleSearch} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <MagnifyingGlassIcon className="w-5 h-5" />
+            {t('phone.search')}
+        </button>
+        <button onClick={handlePrint} className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2">
+            <PrinterIcon className="w-5 h-5" />
+            {t('receipts.print')}
+        </button>
+        <button onClick={handleExport} className="bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-teal-600 transition-colors flex items-center gap-2">
+            <ArrowDownTrayIcon className="w-5 h-5" />
+            {t('units.export')}
+        </button>
+    </div>
+
+    // Duplicate methods removed
 
     const totalPages = Math.ceil(pagination.totalRecords / pagination.itemsPerPage);
 
@@ -288,6 +396,13 @@ const ReportBalady: React.FC = () => {
                 isOpen={!!errorMessage}
                 onClose={() => setErrorMessage(null)}
                 message={errorMessage}
+            />
+
+            <PrintPreviewModal
+                isOpen={showPrintModal}
+                onClose={() => setShowPrintModal(false)}
+                url={printUrl}
+                t={t}
             />
         </div>
     );

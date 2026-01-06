@@ -19,13 +19,63 @@ interface AccountNode {
     code?: string;
 }
 
+// Inline Modal for Print Preview
+const PrintPreviewModal: React.FC<{ isOpen: boolean; onClose: () => void; url: string; t: any }> = ({ isOpen, onClose, url, t }) => {
+    if (!isOpen) return null;
+
+    const handlePrintFrame = () => {
+        const iframe = document.getElementById('print-frame') as HTMLIFrameElement;
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.print();
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden ring-1 ring-slate-900/5">
+                <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">{t('reportsPage.labels.printPreview')}</h3>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handlePrintFrame}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium"
+                        >
+                            <PrinterIcon className="w-4 h-4" />
+                            {t('receipts.print')}
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                        >
+                            {t('common.close')}
+                        </button>
+                    </div>
+                </div>
+                <div className="flex-1 bg-slate-200/50 dark:bg-slate-900/50 p-6 overflow-hidden relative flex justify-center">
+                    <iframe
+                        id="print-frame"
+                        src={url}
+                        className="w-full h-full max-w-[210mm] shadow-lg bg-white"
+                        style={{ aspectRatio: '210/297' }}
+                        title="Report Preview"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ReportAccountStatement: React.FC = () => {
+    // ... existing setup ...
     const { t, language } = useContext(LanguageContext);
     const [data, setData] = useState<FundReportItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [summary, setSummary] = useState({ totalDebit: 0, totalCredit: 0, netBalance: 0 });
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [printUrl, setPrintUrl] = useState('');
 
+    // ... (rest of state) ...
     // Filter Options State
     const [accountTree, setAccountTree] = useState<ReportFilterOption[]>([]);
     const [currencies, setCurrencies] = useState<ReportFilterOption[]>([]);
@@ -35,11 +85,128 @@ const ReportAccountStatement: React.FC = () => {
     const [filters, setFilters] = useState({
         account: '', // Account ID from Tree
         currency: '',
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
         endDate: new Date().toISOString().split('T')[0],
         userId: '',
         reservationNumber: '',
     });
+
+    // ... hooks ...
+
+    const handlePrint = async () => {
+        if (!filters.account || !filters.currency) return;
+
+        try {
+            setLoading(true);
+            const params = new URLSearchParams();
+            if (filters.account) params.append('account', filters.account);
+            if (filters.currency) params.append('currency', filters.currency);
+            if (filters.startDate) params.append('start_date', filters.startDate);
+            if (filters.endDate) params.append('end_date', filters.endDate);
+            if (filters.userId) params.append('created_by', filters.userId);
+            if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
+            params.append('is_export', 'true');
+
+            const response = await fetchStatementAccount(Object.fromEntries(params));
+
+            const rawResponse: any = response;
+            const responseData: any = rawResponse.data && rawResponse.data.legs ? rawResponse.data : rawResponse;
+            const legs = responseData.legs || [];
+            const summaryData = {
+                debit: responseData.debit || 0,
+                credit: responseData.credit || 0,
+                balance: responseData.balance || 0
+            };
+
+            const printContent = `
+                <!DOCTYPE html>
+                <html dir="${language === 'ar' ? 'rtl' : 'ltr'}">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${t('receipts.searchInfo')}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #1e293b; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
+                        .header h1 { margin: 0; color: #0f172a; font-size: 24px; }
+                        .meta { margin-top: 10px; font-size: 14px; color: #64748b; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+                        th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: ${language === 'ar' ? 'right' : 'left'}; }
+                        th { background-color: #f8fafc; font-weight: 600; color: #475569; }
+                        tr:nth-child(even) { background-color: #f8fafc; }
+                        .amount { font-family: 'Courier New', monospace; font-weight: 600; }
+                        .footer { margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
+                        .summary-grid { display: flex; justify-content: flex-end; gap: 40px; }
+                        .summary-item { text-align: center; }
+                        .summary-label { display: block; font-size: 12px; color: #64748b; margin-bottom: 4px; }
+                        .summary-value { font-size: 16px; font-weight: bold; color: #0f172a; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>${t('receipts.searchInfo')} Report</h1>
+                        <div class="meta">
+                            ${t('reportsPage.labels.startDate')}: ${filters.startDate} | ${t('reportsPage.labels.endDate')}: ${filters.endDate}
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>${t('receipts.th_date')}</th>
+                                <th>${t('receipts.addReceiptPanel.voucher')}</th>
+                                <th>${t('receipts.th_transactionNumber')}</th>
+                                <th>${t('receipts.addReceiptPanel.description')}</th>
+                                <th>${t('receipts.addReceiptPanel.debitAccount')}</th>
+                                <th>${t('receipts.addReceiptPanel.creditAccount')}</th>
+                                <th>${t('bookings.balance')}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${legs.map((item: any, index: number) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td dir="ltr">${item.date}</td>
+                                    <td>${item.type}</td>
+                                    <td>${item.number}</td>
+                                    <td>${item.description}</td>
+                                    <td class="amount">${parseFloat(item.debit || 0).toFixed(2)}</td>
+                                    <td class="amount">${parseFloat(item.credit || 0).toFixed(2)}</td>
+                                    <td class="amount">${parseFloat(item.balance || 0).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="footer">
+                         <div class="summary-grid">
+                            <div class="summary-item">
+                                <span class="summary-label">Total Debit</span>
+                                <span class="summary-value">${parseFloat(summaryData.debit).toFixed(2)}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Total Credit</span>
+                                <span class="summary-value">${parseFloat(summaryData.credit).toFixed(2)}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Net Balance</span>
+                                <span class="summary-value">${parseFloat(summaryData.balance).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([printContent], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+            setPrintUrl(blobUrl);
+            setShowPrintModal(true);
+        } catch (error) {
+            console.error("Print preview failed", error);
+            setErrorMessage("Failed to load print preview");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         const fetchOptions = async () => {
@@ -114,7 +281,8 @@ const ReportAccountStatement: React.FC = () => {
 
             const response = await fetchStatementAccount(Object.fromEntries(params));
 
-            const responseData: any = (response as any).data || {};
+            const rawResponse: any = response;
+            const responseData: any = rawResponse.data && rawResponse.data.legs ? rawResponse.data : rawResponse;
             const rawLegs = responseData.legs || [];
 
             const mappedData: FundReportItem[] = rawLegs.map((item: any) => ({
@@ -163,103 +331,71 @@ const ReportAccountStatement: React.FC = () => {
             params.append('end_date', filters.endDate);
             if (filters.userId) params.append('created_by', filters.userId);
             if (filters.reservationNumber) params.append('reservation', filters.reservationNumber);
+            params.append('is_export', 'true');
 
-            const blob = await exportStatementAccount(Object.fromEntries(params));
+            const response = await fetchStatementAccount(Object.fromEntries(params));
+            const rawResponse: any = response;
+            const responseData: any = rawResponse.data && rawResponse.data.legs ? rawResponse.data : rawResponse;
+            const legs = responseData.legs || [];
+            const summaryData = {
+                debit: responseData.debit || 0,
+                credit: responseData.credit || 0,
+                balance: responseData.balance || 0
+            };
+
+            let csvContent = "\uFEFF";
+            const headers = [
+                '#',
+                t('receipts.th_date'),
+                t('receipts.addReceiptPanel.voucher'),
+                t('receipts.th_transactionNumber'),
+                t('receipts.addReceiptPanel.description'),
+                t('receipts.addReceiptPanel.debitAccount'),
+                t('receipts.addReceiptPanel.creditAccount'),
+                t('bookings.balance'),
+                t('receipts.th_paymentMethod')
+            ];
+            csvContent += headers.join(',') + "\n";
+
+            legs.forEach((item: any, index: number) => {
+                const row = [
+                    index + 1,
+                    item.date,
+                    item.type,
+                    item.number,
+                    `"${(item.description || '').replace(/"/g, '""')}"`,
+                    item.debit,
+                    item.credit,
+                    item.balance,
+                    item.category || ''
+                ];
+                csvContent += row.join(',') + "\n";
+            });
+
+            csvContent += "\n";
+            csvContent += `,,,,"${t('reportsPage.labels.totalDebit' as any)}",${summaryData.debit},,,\n`;
+            csvContent += `,,,,"${t('reportsPage.labels.totalCredit' as any)}",${summaryData.credit},,,\n`;
+            csvContent += `,,,,"${t('reportsPage.labels.netBalance' as any)}",${summaryData.balance},,,\n`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `account_statement_${new Date().toISOString().split('T')[0]}.xlsx`);
+            link.setAttribute('download', `account_statement_${new Date().toISOString().split('T')[0]}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+
         } catch (error) {
             console.error("Export failed", error);
-            setErrorMessage("Export failed");
+            setErrorMessage(t('reportsPage.exportFailed') || "Export failed");
         } finally {
             setLoading(false);
         }
     };
 
-    const handlePrint = async () => {
-        if (!filters.account || !filters.currency) return;
-        try {
-            setLoading(true);
-            const response = await fetchStatementAccount(Object.fromEntries(filters as any));
-            const data: any = (response as any).data || {};
-            const legs = data.legs || [];
-            const summary = {
-                debit: data.debit,
-                credit: data.credit,
-                balance: data.balance
-            };
+    // Old handlePrint removed
 
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-                printWindow.document.write(`
-                    <html>
-                        <head>
-                            <title>Account Statement Report</title>
-                            <style>
-                                body { font-family: sans-serif; direction: ${language === 'ar' ? 'rtl' : 'ltr'}; }
-                                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                                th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-                                th { background-color: #f2f2f2; }
-                                .header { text-align: center; margin-bottom: 20px; }
-                                .summary { margin-top: 20px; display: flex; justify-content: flex-end; gap: 20px; }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="header">
-                                <h2>${t('receipts.searchInfo')}</h2>
-                                <p>${filters.startDate} - ${filters.endDate}</p>
-                            </div>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>${t('receipts.th_date')}</th>
-                                        <th>${t('receipts.addReceiptPanel.voucher')}</th>
-                                        <th>${t('receipts.th_transactionNumber')}</th>
-                                        <th>${t('receipts.addReceiptPanel.description')}</th>
-                                        <th>${t('receipts.addReceiptPanel.debitAccount')}</th>
-                                        <th>${t('receipts.addReceiptPanel.creditAccount')}</th>
-                                        <th>${t('bookings.balance')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${legs.map((item: any) => `
-                                        <tr>
-                                            <td>${item.date}</td>
-                                            <td>${item.type}</td>
-                                            <td>${item.number}</td>
-                                            <td>${item.description}</td>
-                                            <td>${item.debit}</td>
-                                            <td>${item.credit}</td>
-                                            <td>${item.balance}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="4"><strong>Total</strong></td>
-                                        <td><strong>${summary.debit}</strong></td>
-                                        <td><strong>${summary.credit}</strong></td>
-                                        <td><strong>${summary.balance}</strong></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </body>
-                    </html>
-                `);
-                printWindow.document.close();
-                printWindow.print();
-            }
-        } catch (error) {
-            console.error("Print failed", error);
-            setErrorMessage("Print failed");
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const labelClass = `block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 ${language === 'ar' ? 'text-right' : 'text-left'}`;
     const inputClass = `w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-slate-200 text-sm`;
@@ -376,17 +512,17 @@ const ReportAccountStatement: React.FC = () => {
                         {!loading && data.length > 0 && (
                             <tfoot className="bg-slate-50 dark:bg-slate-700 font-bold text-slate-800 dark:text-slate-200">
                                 <tr>
-                                    <td colSpan={5} className="px-4 py-3 text-end border-r dark:border-slate-600">Total debit</td>
+                                    <td colSpan={5} className="px-4 py-3 text-end border-r dark:border-slate-600">{t('reportsPage.labels.totalDebit' as any)}</td>
                                     <td className="px-4 py-3 border-r dark:border-slate-600">{summary.totalDebit.toFixed(2)}</td>
                                     <td colSpan={3}></td>
                                 </tr>
                                 <tr>
-                                    <td colSpan={5} className="px-4 py-3 text-end border-r dark:border-slate-600">Total credit</td>
+                                    <td colSpan={5} className="px-4 py-3 text-end border-r dark:border-slate-600">{t('reportsPage.labels.totalCredit' as any)}</td>
                                     <td className="px-4 py-3 border-r dark:border-slate-600">{summary.totalCredit.toFixed(2)}</td>
                                     <td colSpan={3}></td>
                                 </tr>
                                 <tr className="bg-blue-50 dark:bg-blue-900/20">
-                                    <td colSpan={5} className="px-4 py-3 text-end border-r dark:border-slate-600">Net balance</td>
+                                    <td colSpan={5} className="px-4 py-3 text-end border-r dark:border-slate-600">{t('reportsPage.labels.netBalance' as any)}</td>
                                     <td colSpan={3} className="px-4 py-3 text-center border-r dark:border-slate-600">{summary.netBalance.toFixed(2)}</td>
                                     <td></td>
                                 </tr>
@@ -399,6 +535,13 @@ const ReportAccountStatement: React.FC = () => {
                 isOpen={!!errorMessage}
                 onClose={() => setErrorMessage(null)}
                 message={errorMessage}
+            />
+
+            <PrintPreviewModal
+                isOpen={showPrintModal}
+                onClose={() => setShowPrintModal(false)}
+                url={printUrl}
+                t={t}
             />
         </div>
     );

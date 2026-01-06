@@ -235,6 +235,12 @@ const BookingAgenciesPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            {error && (
+                <div className="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
+                    <span className="font-semibold">{t('common.error')}: </span>
+                    <span>{error}</span>
+                </div>
+            )}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">{t('agencies.manageAgencies')}</h2>
                 <div className="flex flex-wrap items-center gap-2">

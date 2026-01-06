@@ -34,6 +34,7 @@ export const apiClient = async <T>(endpoint: string, options: ApiClientOptions =
     const headers: HeadersInit = {
         'Authorization': `JWT ${token}`,
         'Accept-Language': document.documentElement.lang || 'ar',
+        'X-Requested-With': 'XMLHttpRequest', // Required for many Django JSON views
         ...customHeaders as any,
     };
 
